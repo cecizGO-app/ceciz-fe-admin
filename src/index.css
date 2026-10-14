@@ -1,37 +1,70 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Ceciz GO design tokens — mengikuti dokumen design system (Color Tokens, Shape & Elevation) */
+@theme {
+  --font-sans:
+    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+
+  --color-canvas: #fdf2f8;
+  --color-surface: #ffffff;
+  --color-subpanel: #fff5fa;
+  --color-primary: #ec4899;
+  --color-primary-hover: #db2777;
+  --color-border: #fbcfe8;
+  --color-divider: #fce7f3;
+  --color-focus: rgba(236, 72, 153, 0.24);
+  --color-ink: #18181b;
+  --color-ink-2: #71717a;
+  --color-ink-3: #a1a1aa;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
+
+  --radius-panel: 24px;
+  --radius-control: 12px;
+
+  --shadow-card: 0 20px 40px rgba(236, 72, 153, 0.1);
+  --shadow-hover: 0 10px 24px rgba(236, 72, 153, 0.15);
+  --shadow-focus: 0 0 0 4px rgba(236, 72, 153, 0.24);
+}
+
+/* Font weight helpers (Inter) */
+@utility f-reg { font-weight: 400; }
+@utility f-med { font-weight: 500; }
+@utility f-semi { font-weight: 600; }
+@utility f-bold { font-weight: 700; }
+
+/* Type scale — sesuai dokumen Typography */
+@utility t-h1 { font-weight: 700; font-size: 32px; line-height: 1.2; letter-spacing: -0.8px; }
+@utility t-h2 { font-weight: 600; font-size: 22px; line-height: 1.3; letter-spacing: -0.35px; }
+@utility t-body { font-weight: 400; font-size: 15px; line-height: 1.5; }
+@utility t-body-med { font-weight: 500; font-size: 14px; line-height: 1.45; }
+@utility t-support { font-weight: 400; font-size: 13px; line-height: 1.45; }
+@utility t-micro { font-weight: 500; font-size: 12px; line-height: 1.4; }
+
 @layer base {
   :root {
-    /* Ceciz GO Semantic Palette */
-    --color-canvas: #fdf2f8;
-    --color-surface: #ffffff;
+    /* Legacy tokens — masih dipakai komponen Batch yang ada, hapus setelah dimigrasi ke token di atas */
     --color-sub-panel: #fff5fa;
     --color-primary-brand: #ec4899;
     --color-hover-brand: #db2777;
     --color-border-brand: #fbcfe8;
     --color-divider-brand: #fce7f3;
     --color-focus-halo: rgba(236, 72, 153, 0.24);
-
     --color-text-primary: #18181b;
     --color-text-secondary: #71717a;
-
-    /* Semantic Status (RAG + Info) */
     --color-status-success: #16a34a;
     --color-status-warning: #d97706;
     --color-status-error: #dc2626;
     --color-status-info: #2563eb;
-
-    /* Elevation / Shadows */
     --shadow-surface-default: 0 20px 40px rgba(236, 72, 153, 0.1);
     --shadow-surface-interactive: 0 10px 24px rgba(236, 72, 153, 0.15);
 
-    /* Radius */
-    --radius-panel: 24px;
-    --radius-control: 12px;
-
-    /* Base Font */
     font-family:
       "Inter",
       system-ui,
@@ -48,7 +81,7 @@
 
   body {
     background-color: var(--color-canvas);
-    color: var(--color-text-primary);
+    color: var(--color-ink);
     margin: 0;
     padding: 0;
     min-height: 100vh;
@@ -70,7 +103,7 @@
   }
 }
 
-/* Custom utilities matching Ceciz Design System */
+/* Utilitas lama — dipakai BatchInfoForm dkk, pertahankan sampai komponen dimigrasi ke shadow-card / shadow-hover */
 .shadow-ceciz-surface {
   box-shadow: 0 20px 40px rgba(236, 72, 153, 0.1);
 }
