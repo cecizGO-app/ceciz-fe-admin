@@ -68,6 +68,7 @@ export const BatchInputPage: React.FC = () => {
       currency={form.currentCountry.currency}
       kursRate={form.kursRate}
       overheadPerPc={form.overheadPerPc}
+      isJapan={form.selectedCountry === 'JP'}
       onAddRow={form.handleAddRow}
       onRemoveRow={form.handleRemoveRow}
       onUpdateRow={form.handleUpdateRow}

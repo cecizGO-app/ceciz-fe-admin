@@ -20,6 +20,7 @@ export interface OrderRow {
   itemName: string
   qty: number
   hargaAsli: number
+  hargaJualPerBuyer?: number // Khusus JP: diisi manual oleh admin sesuai PRD B §7.3
 }
 
 export interface CalculationSummary {
@@ -35,4 +36,8 @@ export interface CalculationSummary {
   totalModalBatch: number
   totalTagihanBuyer: number
   estimasiLabaBersih: number
+  isJapan: boolean
+  jpHargaJualTotal: number
+  allJpHargaJualFilled: boolean
+  unfilledJpBuyersCount: number
 }

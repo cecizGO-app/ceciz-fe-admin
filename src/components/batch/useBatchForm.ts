@@ -62,6 +62,59 @@ export function useBatchForm() {
     if (target) {
       setKursRate(target.defaultRate);
     }
+    if (code === "JP") {
+      setWarehouseTujuan("WH Tokyo");
+      setJasaProxy("Neokyo / FromJapan (Proxy JP)");
+      setShippingWHForeign(500); // Shiploc 500 Yen
+      setFeeNyelem(15000); // Nominal TOTAL batch khusus JP
+      setFeeGO(25000);
+      setBatchName("WTS Batch Merch Official Japan (Mercari)");
+      setCatatan("Batch JP: Exclude packing lokal INA, rate yen flat, shiploc split per batch.");
+      setOrderRows([
+        {
+          id: "jp_1",
+          buyerId: REGISTERED_BUYERS[0].id,
+          itemName: "PC Jaemin Bstage Special",
+          qty: 1,
+          hargaAsli: 2500,
+          hargaJualPerBuyer: 320000,
+        },
+        {
+          id: "jp_2",
+          buyerId: REGISTERED_BUYERS[1].id,
+          itemName: "Album Unsealed Ver A",
+          qty: 1,
+          hargaAsli: 1200,
+          hargaJualPerBuyer: 165000,
+        },
+      ]);
+    } else if (code === "INA") {
+      setWarehouseTujuan("WH Jakarta");
+      setJasaProxy("Shopee Indonesia (Seller Lokal)");
+      setShippingWHForeign(0);
+      setFeeWarehouse(0);
+      setFeeProxy(0);
+      setFeeNyelem(0);
+      setFeeGO(4000); // 2 pcs * 2.000 (default PRD B §7.4: 2k/pc)
+      setBatchName("WTS Batch Ready INA (Split PC NCT Dream)");
+      setCatatan("Batch INA: Pengiriman lokal via J&T/SiCepat.");
+      setOrderRows([
+        {
+          id: "ina_1",
+          buyerId: REGISTERED_BUYERS[0].id,
+          itemName: "PC Mark Glitch Mode",
+          qty: 1,
+          hargaAsli: 45000,
+        },
+        {
+          id: "ina_2",
+          buyerId: REGISTERED_BUYERS[1].id,
+          itemName: "PC Renjun Candy",
+          qty: 1,
+          hargaAsli: 50000,
+        },
+      ]);
+    }
   };
 
   // Row Handlers
@@ -75,6 +128,7 @@ export function useBatchForm() {
         itemName: "",
         qty: 1,
         hargaAsli: 0,
+        hargaJualPerBuyer: selectedCountry === "JP" ? 0 : undefined,
       },
     ]);
   };
@@ -90,8 +144,9 @@ export function useBatchForm() {
     );
   };
 
-  // Real-Time Calculations (PRD 5 Negara Engine)
+  // Real-Time Calculations (PRD 5 Negara Engine & Khusus JP §7.3)
   const { summary, overheadPerPc } = useMemo(() => {
+    const isJapan = selectedCountry === "JP";
     const totalQty = orderRows.reduce(
       (sum, r) => sum + (Number(r.qty) || 0),
       0,
@@ -108,10 +163,41 @@ export function useBatchForm() {
     const feeWHProxyTotal =
       (Number(feeWarehouse) || 0) + (Number(feeProxy) || 0);
     const { fee: feeRekap, tierLabel } = calculateFeeRekap(totalQty);
+
+    // Total Modal Batch (Harga barang + shiploc/shipping + fee WH/Proxy)
     const totalModalBatch =
       konversiIDR + shippingLuarNegeriIDR + feeWHProxyTotal;
-    const totalTagihanBuyer = totalModalBatch + feeGO + feeRekap;
-    const estimasiLabaBersih = feeGO - feeNyelem;
+
+    // Khusus JP: Perhitungan harga jual manual per buyer
+    const jpHargaJualTotal = orderRows.reduce(
+      (sum, r) => sum + (Number(r.qty) || 0) * (Number(r.hargaJualPerBuyer) || 0),
+      0,
+    );
+    const allJpHargaJualFilled =
+      orderRows.length > 0 &&
+      orderRows.every((r) => (Number(r.hargaJualPerBuyer) || 0) > 0);
+    const unfilledJpBuyersCount = orderRows.filter(
+      (r) => !(Number(r.hargaJualPerBuyer) > 0),
+    ).length;
+
+    let totalTagihanBuyer: number;
+    let estimasiLabaBersih: number;
+
+    if (isJapan) {
+      // Sesuai PRD §7.3: Di JP, total tagihan adalah SUM harga_jual_per_buyer jika sudah diisi
+      totalTagihanBuyer =
+        jpHargaJualTotal > 0
+          ? jpHargaJualTotal
+          : totalModalBatch + feeGO + feeRekap;
+      // Laba bersih JP = total pemasukan jual - total modal batch - fee admin nyelem (nominal total)
+      estimasiLabaBersih =
+        jpHargaJualTotal > 0
+          ? jpHargaJualTotal - totalModalBatch - (Number(feeNyelem) || 0)
+          : feeGO - (Number(feeNyelem) || 0);
+    } else {
+      totalTagihanBuyer = totalModalBatch + feeGO + feeRekap;
+      estimasiLabaBersih = feeGO - (Number(feeNyelem) || 0);
+    }
 
     const totalOverheadBatch =
       shippingLuarNegeriIDR + feeWHProxyTotal + feeGO + feeRekap;
@@ -130,10 +216,15 @@ export function useBatchForm() {
       totalModalBatch,
       totalTagihanBuyer,
       estimasiLabaBersih,
+      isJapan,
+      jpHargaJualTotal,
+      allJpHargaJualFilled,
+      unfilledJpBuyersCount,
     };
 
     return { summary, overheadPerPc };
   }, [
+    selectedCountry,
     orderRows,
     kursRate,
     shippingWHForeign,

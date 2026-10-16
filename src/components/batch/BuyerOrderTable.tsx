@@ -8,6 +8,7 @@ interface BuyerOrderTableProps {
   currency: string
   kursRate: number
   overheadPerPc: number
+  isJapan?: boolean
   onAddRow: () => void
   onRemoveRow: (id: string) => void
   onUpdateRow: (id: string, field: keyof OrderRow, value: any) => void
@@ -27,6 +28,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
   currency,
   kursRate,
   overheadPerPc,
+  isJapan = false,
   onAddRow,
   onRemoveRow,
   onUpdateRow,
@@ -150,12 +152,55 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                 </div>
               </div>
 
+              {/* Khusus JP: Harga Jual Manual Input di Mobile */}
+              {isJapan && (
+                <div>
+                  <label className="block text-[11px] font-medium text-[#71717A] mb-1">
+                    Harga Jual ke Buyer (IDR)
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3 text-[11px] font-semibold text-[#A1A1AA] pointer-events-none">
+                      Rp
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      placeholder="0"
+                      value={row.hargaJualPerBuyer || ''}
+                      onChange={(e) =>
+                        onUpdateRow(
+                          row.id,
+                          'hargaJualPerBuyer',
+                          Math.max(0, Number(e.target.value) || 0)
+                        )
+                      }
+                      className="w-full h-11 pl-9 pr-3 rounded-[12px] border border-[#FCE7F3] bg-white text-xs font-semibold text-[#18181B] focus-ceciz-ring hover:border-[#FBCFE8] transition-colors"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Computed Total IDR for this card */}
               <div className="p-3 rounded-[12px] bg-white border border-[#FCE7F3] flex items-center justify-between">
-                <span className="text-[11px] text-[#71717A] font-medium">Total IDR (inc. fee):</span>
-                <span className="text-xs font-bold text-[#EC4899]">
-                  {formatIDR(itemTotalIDR)}
+                <span className="text-[11px] text-[#71717A] font-medium">
+                  {isJapan ? 'Tagihan Buyer:' : 'Total IDR (inc. fee):'}
                 </span>
+                {isJapan ? (
+                  row.hargaJualPerBuyer && row.hargaJualPerBuyer > 0 ? (
+                    <span className="text-xs font-bold text-[#EC4899]">
+                      {formatIDR((Number(row.qty) || 0) * (Number(row.hargaJualPerBuyer) || 0))}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-amber-600 font-medium">
+                      Belum diisi
+                    </span>
+                  )
+                ) : (
+                  <span className="text-xs font-bold text-[#EC4899]">
+                    {formatIDR(itemTotalIDR)}
+                  </span>
+                )}
               </div>
             </div>
           )
@@ -169,11 +214,16 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
             <thead>
               <tr className="bg-[#FFF5FA] border-b border-[#FCE7F3] text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
                 <th className="py-3 px-4 w-12 text-center">NO</th>
-                <th className="py-3 px-4 min-w-[220px]">NAMA BUYER (AKUN)</th>
-                <th className="py-3 px-4 min-w-[200px]">ITEM / VARIAN</th>
+                <th className="py-3 px-4 min-w-[200px]">NAMA BUYER (AKUN)</th>
+                <th className="py-3 px-4 min-w-[180px]">ITEM / VARIAN</th>
                 <th className="py-3 px-4 w-20 text-center">QTY</th>
                 <th className="py-3 px-4 w-32">HARGA ASLI</th>
-                <th className="py-3 px-4 w-36 text-right">TOTAL IDR</th>
+                {isJapan && (
+                  <th className="py-3 px-4 w-44">HARGA JUAL (IDR)</th>
+                )}
+                <th className="py-3 px-4 w-36 text-right">
+                  {isJapan ? 'TAGIHAN BUYER' : 'TOTAL IDR'}
+                </th>
                 <th className="py-3 px-4 w-14 text-center">AKSI</th>
               </tr>
             </thead>
@@ -243,9 +293,49 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                       </div>
                     </td>
 
-                    {/* Computed Total IDR */}
-                    <td className="py-3.5 px-4 text-right font-bold text-[13px] text-[#18181B]">
-                      {formatIDR(itemTotalIDR)}
+                    {/* Khusus JP: Harga Jual Manual Input */}
+                    {isJapan && (
+                      <td className="py-3.5 px-4">
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3 text-[11px] font-semibold text-[#A1A1AA] pointer-events-none">
+                            Rp
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1000"
+                            placeholder="0"
+                            value={row.hargaJualPerBuyer || ''}
+                            onChange={(e) =>
+                              onUpdateRow(
+                                row.id,
+                                'hargaJualPerBuyer',
+                                Math.max(0, Number(e.target.value) || 0)
+                              )
+                            }
+                            className="w-full h-11 pl-9 pr-3 rounded-[12px] border border-[#FCE7F3] bg-white text-xs font-semibold text-[#18181B] focus-ceciz-ring hover:border-[#FBCFE8] transition-colors"
+                          />
+                        </div>
+                      </td>
+                    )}
+
+                    {/* Computed Total IDR / Tagihan */}
+                    <td className="py-3.5 px-4 text-right">
+                      {isJapan ? (
+                        row.hargaJualPerBuyer && row.hargaJualPerBuyer > 0 ? (
+                          <span className="font-bold text-[13px] text-[#18181B]">
+                            {formatIDR((Number(row.qty) || 0) * (Number(row.hargaJualPerBuyer) || 0))}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-amber-600 font-medium">
+                            Belum diisi
+                          </span>
+                        )
+                      ) : (
+                        <span className="font-bold text-[13px] text-[#18181B]">
+                          {formatIDR(itemTotalIDR)}
+                        </span>
+                      )}
                     </td>
 
                     {/* Delete Action */}
@@ -268,12 +358,14 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
         </div>
       </div>
 
-      {/* Proportional Note */}
-      <p className="text-[12px] text-[#71717A] pt-2">
-        Total IDR per baris sudah termasuk pembagian ongkir & fee batch secara proporsional per pcs.
-      </p>
+      {!isJapan && (
+        <p className="text-[12px] text-[#71717A] pt-2">
+          Total IDR per baris sudah termasuk pembagian ongkir &amp; fee batch secara proporsional per pcs.
+        </p>
+      )}
     </div>
   )
 }
 
 export default BuyerOrderTable
+
