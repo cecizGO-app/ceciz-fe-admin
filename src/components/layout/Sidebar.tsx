@@ -84,13 +84,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               onClick={() => onNavigate?.('tracking')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-medium text-xs transition-colors cursor-pointer ${
+              className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-semibold text-xs transition-colors cursor-pointer ${
                 activeMenu === 'tracking'
-                  ? 'bg-[#FFF5FA] text-[#18181B] font-semibold'
+                  ? 'bg-[#FFF5FA] text-[#18181B]'
                   : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
               }`}
             >
-              <Truck className="w-4 h-4 shrink-0 text-[#71717A]" />
+              {activeMenu === 'tracking' && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#EC4899] rounded-r-full"
+                  aria-hidden="true"
+                />
+              )}
+              <Truck className={`w-4 h-4 shrink-0 ${activeMenu === 'tracking' ? 'text-[#EC4899]' : 'text-[#71717A]'}`} />
               <span>Tracking Logistik</span>
             </button>
           </div>

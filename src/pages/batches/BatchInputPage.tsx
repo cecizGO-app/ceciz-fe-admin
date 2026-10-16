@@ -97,10 +97,10 @@ export const BatchInputPage: React.FC = () => {
               Tambah Batch Baru
             </span>
           </nav>
-          <h1 className="text-[20px] sm:text-[24px] font-bold text-[#18181B] tracking-tight">
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-[#18181B] tracking-[-0.8px]">
             Tambah Batch Baru
           </h1>
-          <p className="text-[13px] sm:text-[14px] text-[#71717A]">
+          <p className="text-[14px] sm:text-[15px] text-[#71717A] mt-1">
             Input pesanan group order dan kalkulasi harga real-time
           </p>
         </div>
@@ -108,7 +108,7 @@ export const BatchInputPage: React.FC = () => {
         <div className="hidden sm:flex items-center gap-3">
           <button
             type="button"
-            className="h-10 px-4 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#18181B] text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-xs"
+            className="h-11 px-4 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#18181B] text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-xs"
           >
             <Bookmark className="w-4 h-4 text-[#71717A]" />
             <span>Simpan Draft</span>

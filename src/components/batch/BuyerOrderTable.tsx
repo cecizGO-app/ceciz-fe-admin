@@ -37,16 +37,16 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
     <div className="bg-white rounded-[24px] shadow-ceciz-surface border border-[#FBCFE8]/40 p-6 sm:p-7 space-y-4">
       {/* Header & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="text-[17px] font-bold text-[#18181B] tracking-tight">
+        <h2 className="text-[20px] sm:text-[22px] font-semibold text-[#18181B] tracking-[-0.35px]">
           Daftar Pesanan Buyer
         </h2>
 
         <button
           type="button"
           onClick={onAddRow}
-          className="h-9 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#EC4899] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto shadow-2xs"
+          className="h-10 sm:h-11 px-4 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#EC4899] text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer self-start sm:self-auto shadow-2xs"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-4 h-4" />
           <span>Tambah Baris Buyer</span>
         </button>
       </div>

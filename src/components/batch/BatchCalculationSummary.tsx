@@ -23,7 +23,7 @@ export const BatchCalculationSummary: React.FC<
 > = ({ summary, currency, kursRate, shippingForeign, onPublish }) => {
   return (
     <div className="bg-white rounded-[24px] shadow-ceciz-surface border border-[#FBCFE8]/40 p-6 sm:p-7 space-y-5 lg:sticky lg:top-24">
-      <h2 className="text-[17px] font-bold text-[#18181B] tracking-tight">
+      <h2 className="text-[20px] sm:text-[22px] font-semibold text-[#18181B] tracking-[-0.35px]">
         Ringkasan Kalkulasi
       </h2>
 
