@@ -156,7 +156,9 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
 
           <div className="sm:col-span-6">
             <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Ongkir Luar Negeri (Shipping WH)
+              {selectedCountry === "JP"
+                ? "Shiploc (Shipping Lokal ke WH)"
+                : "Ongkir Luar Negeri (Shipping WH)"}
             </label>
             <div className="relative flex items-center">
               <input
