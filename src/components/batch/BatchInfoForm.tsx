@@ -68,8 +68,8 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-[24px] shadow-ceciz-surface border border-[#FBCFE8]/40 p-6 sm:p-7 space-y-6">
-      <h2 className="text-[17px] font-bold text-[#18181B] tracking-tight">
-        Informasi & Biaya Batch
+      <h2 className="text-[20px] sm:text-[22px] font-semibold text-[#18181B] tracking-[-0.35px]">
+        Informasi &amp; Biaya Batch
       </h2>
 
       {/* Country Selection Pills */}

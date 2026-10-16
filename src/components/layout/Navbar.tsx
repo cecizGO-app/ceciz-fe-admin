@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <input
           type="text"
           placeholder="Cari batch, buyer..."
-          className="w-full h-9 pl-9 pr-11 rounded-[12px] border border-[#FBCFE8]/80 bg-[#FFF5FA] text-xs text-[#18181B] placeholder-[#71717A] focus-ceciz-ring transition-colors"
+          className="w-full h-10 pl-9 pr-11 rounded-[12px] border border-[#FBCFE8]/80 bg-[#FFF5FA] text-xs text-[#18181B] placeholder-[#71717A] focus-ceciz-ring transition-colors"
         />
       </div>
 
