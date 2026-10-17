@@ -1,7 +1,17 @@
 import React from 'react'
-import { Calendar, ChevronDown } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import type { CountryCode, CountryOption } from './types'
 import { CountryFlag } from '../icons/CountryFlag'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface BatchInfoFormProps {
   countries: CountryOption[]
@@ -67,247 +77,228 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
   onChangeCatatan,
 }) => {
   return (
-    <div className="bg-white rounded-[24px] shadow-ceciz-surface border border-[#FBCFE8]/40 p-6 sm:p-7 space-y-6">
-      <h2 className="text-[20px] sm:text-[22px] font-semibold text-[#18181B] tracking-[-0.35px]">
-        Informasi &amp; Biaya Batch
-      </h2>
+    <Card className="gap-6">
+      <CardHeader>
+        <CardTitle>Informasi &amp; Biaya Batch</CardTitle>
+      </CardHeader>
 
-      {/* Country Selection Pills */}
-      <div className="flex flex-wrap gap-2">
-        {countries.map((c) => {
-          const isSelected = selectedCountry === c.code
-          return (
-            <button
-              key={c.code}
-              type="button"
-              onClick={() => onSelectCountry(c.code)}
-              className={`h-9 px-3.5 rounded-[12px] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${isSelected
-                  ? 'bg-[#EC4899] text-white shadow-xs'
-                  : 'bg-white border border-[#FBCFE8] text-[#71717A] hover:bg-[#FFF5FA] hover:text-[#18181B]'
-                }`}
-            >
-              <CountryFlag code={c.code} className="w-5 h-3.5" />
-              <span>{c.name}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Form Fields */}
-      <div className="space-y-4 pt-1">
-        {/* Row 1: Nama, Kode, Tanggal */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-5">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Nama / Judul Batch
-            </label>
-            <input
-              type="text"
-              value={batchName}
-              onChange={(e) => onChangeBatchName(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] focus-ceciz-ring"
-            />
-          </div>
-
-          <div className="sm:col-span-3">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Kode Batch (Auto)
-            </label>
-            <input
-              type="text"
-              value={batchCode}
-              readOnly
-              className="w-full h-11 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-zinc-50 text-xs font-medium text-[#71717A] cursor-not-allowed"
-            />
-          </div>
-
-          <div className="sm:col-span-4">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Tanggal Batch
-            </label>
-            <div className="relative">
-              <input
-                type="date"
-                value={batchDate}
-                onChange={(e) => onChangeBatchDate(e.target.value)}
-                className="w-full h-11 px-3.5 pr-10 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] focus-ceciz-ring"
-              />
-              <Calendar className="w-4 h-4 text-[#71717A] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2: Kurs & Ongkir Luar Negeri */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-6">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Kurs / Exchange Rate (IDR/{currentCurrency})
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-xs text-[#71717A] font-medium">Rp</span>
-              <input
-                type="number"
-                value={kursRate}
-                onChange={(e) => onChangeKursRate(Number(e.target.value) || 0)}
-                className="w-full h-11 pl-9 pr-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold text-[#18181B] focus-ceciz-ring"
-              />
-            </div>
-          </div>
-
-          <div className="sm:col-span-6">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              {selectedCountry === "JP"
-                ? "Shiploc (Shipping Lokal ke WH)"
-                : "Ongkir Luar Negeri (Shipping WH)"}
-            </label>
-            <div className="relative flex items-center">
-              <input
-                type="number"
-                value={shippingForeign}
-                onChange={(e) => onChangeShippingForeign(Number(e.target.value) || 0)}
-                className="w-full h-11 px-3.5 pr-12 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold text-[#18181B] focus-ceciz-ring"
-              />
-              <span className="absolute right-3.5 text-xs font-semibold text-[#71717A]">
-                {currentCurrency}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3: Warehouse & Fee Warehouse */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-6">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Warehouse Tujuan
-            </label>
-            <div className="relative">
-              <select
-                value={warehouse}
-                onChange={(e) => onChangeWarehouse(e.target.value)}
-                className="w-full h-11 px-3.5 pr-8 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] appearance-none focus-ceciz-ring cursor-pointer"
+      <CardContent className="space-y-6">
+        {/* Country Selection Pills */}
+        <div className="flex flex-wrap gap-2">
+          {countries.map((c) => {
+            const isSelected = selectedCountry === c.code
+            return (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => onSelectCountry(c.code)}
+                className={`h-9 px-3.5 rounded-[12px] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${isSelected
+                    ? 'bg-[#EC4899] text-white shadow-xs'
+                    : 'bg-white border border-[#FBCFE8] text-[#71717A] hover:bg-[#FFF5FA] hover:text-[#18181B]'
+                  }`}
               >
-                <option value="WH Guangzhou">WH Guangzhou</option>
-                <option value="WH Seoul">WH Seoul</option>
-                <option value="WH Tokyo">WH Tokyo</option>
-                <option value="WH Bangkok">WH Bangkok</option>
-                <option value="WH Jakarta">WH Jakarta</option>
-              </select>
-              <ChevronDown className="w-4 h-4 text-[#71717A] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="sm:col-span-6">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Fee Warehouse (per batch)
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-xs text-[#71717A] font-medium">Rp</span>
-              <input
-                type="number"
-                value={feeWarehouse}
-                onChange={(e) => onChangeFeeWarehouse(Number(e.target.value) || 0)}
-                className="w-full h-11 pl-9 pr-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] focus-ceciz-ring"
-              />
-            </div>
-          </div>
+                <CountryFlag code={c.code} className="w-5 h-3.5" />
+                <span>{c.name}</span>
+              </button>
+            )
+          })}
         </div>
 
-        {/* Row 4: Jasa Proxy CO & Fee Proxy */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-6">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Jasa Proxy CO
-            </label>
-            <input
+        {/* Form Fields */}
+        <div className="space-y-4 pt-1">
+          {/* Row 1: Nama, Kode, Tanggal */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-5">
+              <Label htmlFor="batch-name">Nama / Judul Batch</Label>
+              <Input
+                id="batch-name"
+                type="text"
+                value={batchName}
+                onChange={(e) => onChangeBatchName(e.target.value)}
+              />
+            </div>
+
+            <div className="sm:col-span-3">
+              <Label htmlFor="batch-code">Kode Batch (Auto)</Label>
+              <Input
+                id="batch-code"
+                type="text"
+                value={batchCode}
+                readOnly
+              />
+            </div>
+
+            <div className="sm:col-span-4">
+              <Label htmlFor="batch-date">Tanggal Batch</Label>
+              <div className="relative">
+                <Input
+                  id="batch-date"
+                  type="date"
+                  value={batchDate}
+                  onChange={(e) => onChangeBatchDate(e.target.value)}
+                  className="pr-10"
+                />
+                <Calendar className="w-4 h-4 text-[#71717A] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Kurs & Ongkir Luar Negeri */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-6">
+              <Label htmlFor="kurs-rate">Kurs / Exchange Rate (IDR/{currentCurrency})</Label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-xs text-[#71717A] font-medium pointer-events-none">Rp</span>
+                <Input
+                  id="kurs-rate"
+                  type="number"
+                  value={kursRate || ''}
+                  onChange={(e) => onChangeKursRate(Number(e.target.value) || 0)}
+                  className="pl-9 font-semibold"
+                />
+              </div>
+            </div>
+
+            <div className="sm:col-span-6">
+              <Label htmlFor="shipping-foreign">
+                {selectedCountry === 'JP'
+                  ? 'Shiploc (Shipping Lokal ke WH)'
+                  : 'Ongkir Luar Negeri (Shipping WH)'}
+              </Label>
+              <div className="relative flex items-center">
+                <Input
+                  id="shipping-foreign"
+                  type="number"
+                  value={shippingForeign || ''}
+                  onChange={(e) => onChangeShippingForeign(Number(e.target.value) || 0)}
+                  className="pr-12 font-semibold"
+                />
+                <span className="absolute right-3.5 text-xs font-semibold text-[#71717A] pointer-events-none">
+                  {currentCurrency}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Warehouse & Fee Warehouse */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-6">
+              <Label htmlFor="warehouse">Warehouse Tujuan</Label>
+              <Select value={warehouse} onValueChange={onChangeWarehouse}>
+                <SelectTrigger id="warehouse">
+                  <SelectValue placeholder="Pilih Warehouse" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="WH Guangzhou">WH Guangzhou</SelectItem>
+                  <SelectItem value="WH Seoul">WH Seoul</SelectItem>
+                  <SelectItem value="WH Tokyo">WH Tokyo</SelectItem>
+                  <SelectItem value="WH Bangkok">WH Bangkok</SelectItem>
+                  <SelectItem value="WH Jakarta">WH Jakarta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="sm:col-span-6">
+              <Label htmlFor="fee-warehouse">Fee Warehouse (per batch)</Label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-xs text-[#71717A] font-medium pointer-events-none">Rp</span>
+                <Input
+                  id="fee-warehouse"
+                  type="number"
+                  value={feeWarehouse || ''}
+                  onChange={(e) => onChangeFeeWarehouse(Number(e.target.value) || 0)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 4: Jasa Proxy CO & Fee Proxy */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-6">
+              <Label htmlFor="jasa-proxy">Jasa Proxy CO</Label>
+              <Input
+                id="jasa-proxy"
+                type="text"
+                value={jasaProxy}
+                onChange={(e) => onChangeJasaProxy(e.target.value)}
+              />
+            </div>
+
+            <div className="sm:col-span-6">
+              <Label htmlFor="fee-proxy">Fee Proxy (per batch)</Label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-xs text-[#71717A] font-medium pointer-events-none">Rp</span>
+                <Input
+                  id="fee-proxy"
+                  type="number"
+                  value={feeProxy || ''}
+                  onChange={(e) => onChangeFeeProxy(Number(e.target.value) || 0)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 5: Admin Nyelem, Fee Nyelem, Fee GO */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-4">
+              <Label htmlFor="admin-nyelem">Admin Nyelem (Relasi Gaji)</Label>
+              <Select value={adminNyelem} onValueChange={onChangeAdminNyelem}>
+                <SelectTrigger id="admin-nyelem">
+                  <SelectValue placeholder="Pilih Admin Nyelem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin 1 (Aurel)">Admin 1 (Aurel)</SelectItem>
+                  <SelectItem value="Admin 2 (Nadia)">Admin 2 (Nadia)</SelectItem>
+                  <SelectItem value="Owner (Cecilia)">Owner (Cecilia)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="sm:col-span-4">
+              <Label htmlFor="fee-nyelem">Fee Nyelem (per batch)</Label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-xs text-[#71717A] font-medium pointer-events-none">Rp</span>
+                <Input
+                  id="fee-nyelem"
+                  type="number"
+                  value={feeNyelem || ''}
+                  onChange={(e) => onChangeFeeNyelem(Number(e.target.value) || 0)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            <div className="sm:col-span-4">
+              <Label htmlFor="fee-go">Fee GO (per batch)</Label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-xs text-[#71717A] font-medium pointer-events-none">Rp</span>
+                <Input
+                  id="fee-go"
+                  type="number"
+                  value={feeGO || ''}
+                  onChange={(e) => onChangeFeeGO(Number(e.target.value) || 0)}
+                  className="pl-9 font-semibold"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 6: Keterangan / Catatan */}
+          <div>
+            <Label htmlFor="catatan">Keterangan Barang &amp; Catatan</Label>
+            <Input
+              id="catatan"
               type="text"
-              value={jasaProxy}
-              onChange={(e) => onChangeJasaProxy(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] focus-ceciz-ring"
+              value={catatan}
+              onChange={(e) => onChangeCatatan(e.target.value)}
+              placeholder="Contoh: Estimasi sampai WH China 3 hari, exclude packing lokal INA..."
             />
           </div>
-
-          <div className="sm:col-span-6">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Fee Proxy (per batch)
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-xs text-[#71717A] font-medium">Rp</span>
-              <input
-                type="number"
-                value={feeProxy}
-                onChange={(e) => onChangeFeeProxy(Number(e.target.value) || 0)}
-                className="w-full h-11 pl-9 pr-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] focus-ceciz-ring"
-              />
-            </div>
-          </div>
         </div>
-
-        {/* Row 5: Admin Nyelem, Fee Nyelem, Fee GO */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-4">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Admin Nyelem (Relasi Gaji)
-            </label>
-            <div className="relative">
-              <select
-                value={adminNyelem}
-                onChange={(e) => onChangeAdminNyelem(e.target.value)}
-                className="w-full h-11 px-3.5 pr-8 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] appearance-none focus-ceciz-ring cursor-pointer"
-              >
-                <option value="Admin 1 (Aurel)">Admin 1 (Aurel)</option>
-                <option value="Admin 2 (Nadia)">Admin 2 (Nadia)</option>
-                <option value="Owner (Cecilia)">Owner (Cecilia)</option>
-              </select>
-              <ChevronDown className="w-4 h-4 text-[#71717A] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="sm:col-span-4">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Fee Nyelem (per batch)
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-xs text-[#71717A] font-medium">Rp</span>
-              <input
-                type="number"
-                value={feeNyelem}
-                onChange={(e) => onChangeFeeNyelem(Number(e.target.value) || 0)}
-                className="w-full h-11 pl-9 pr-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] focus-ceciz-ring"
-              />
-            </div>
-          </div>
-
-          <div className="sm:col-span-4">
-            <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-              Fee GO (per batch)
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-xs text-[#71717A] font-medium">Rp</span>
-              <input
-                type="number"
-                value={feeGO}
-                onChange={(e) => onChangeFeeGO(Number(e.target.value) || 0)}
-                className="w-full h-11 pl-9 pr-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold text-[#18181B] focus-ceciz-ring"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 6: Keterangan / Catatan */}
-        <div>
-          <label className="block text-[12px] font-medium text-[#71717A] mb-1.5">
-            Keterangan Barang & Catatan
-          </label>
-          <input
-            type="text"
-            value={catatan}
-            onChange={(e) => onChangeCatatan(e.target.value)}
-            placeholder="Contoh: Estimasi sampai WH China 3 hari, exclude packing lokal INA..."
-            className="w-full h-11 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs text-[#18181B] placeholder-[#71717A] focus-ceciz-ring"
-          />
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 
