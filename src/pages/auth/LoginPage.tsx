@@ -1,6 +1,9 @@
 import React from "react";
 import { Mail } from "lucide-react";
 import { GoogleIcon } from "../../components/icons/GoogleIcon";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export const LoginPage: React.FC = () => {
   const handleGoogleLogin = () => {
@@ -16,7 +19,7 @@ export const LoginPage: React.FC = () => {
       <div className="absolute top-48 right-10 w-96 h-96 rounded-full bg-[#E9D5FF]/50 blur-3xl pointer-events-none" />
 
       {/* Login Card (Surface) */}
-      <div className="z-10 w-full max-w-[420px] bg-white rounded-[24px] shadow-ceciz-surface border border-[#FBCFE8]/50 p-8 sm:p-10">
+      <Card className="z-10 w-full max-w-[420px] p-8 sm:p-10 border-[#FBCFE8]/50 gap-0">
         {/* Header */}
         <div className="text-center">
           <h1 className="text-[22px] sm:text-[24px] font-bold text-[#18181B] tracking-tight">
@@ -27,18 +30,19 @@ export const LoginPage: React.FC = () => {
 
         {/* Action Button: Lanjutkan dengan Google */}
         <div className="mt-8">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={handleGoogleLogin}
-            className="w-full h-11 rounded-[12px] border border-[#FBCFE8] hover:border-[#DB2777] bg-white hover:bg-[#FCE7F3] active:bg-[#FCE7F3] focus-ceciz-ring text-[14px] font-medium text-[#18181B] flex items-center justify-center gap-3 transition-colors duration-150 cursor-pointer shadow-xs"
+            className="w-full h-11 rounded-[12px] border-[#FBCFE8] hover:border-[#DB2777] bg-white hover:bg-[#FCE7F3] active:bg-[#FCE7F3] text-[14px] font-medium text-[#18181B] flex items-center justify-center gap-3 transition-colors shadow-xs"
           >
             <GoogleIcon className="w-4 h-4 shrink-0" />
             <span>Lanjutkan dengan Google</span>
-          </button>
+          </Button>
         </div>
 
         {/* Divider */}
-        <div className="my-5 border-t border-[#FCE7F3]" />
+        <Separator className="my-5" />
 
         {/* Info Note Sub-panel */}
         <div className="bg-[#FFF5FA] border border-[#FBCFE8] rounded-[12px] px-4 py-3.5 flex items-center gap-2.5">
@@ -47,9 +51,10 @@ export const LoginPage: React.FC = () => {
             Gunakan akun Google yang terdaftar.
           </p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
 
 export default LoginPage;
+

@@ -28,6 +28,37 @@
   --radius-panel: 24px;
   --radius-control: 12px;
 
+  --color-background: #ffffff;
+  --color-foreground: #18181b;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #18181b;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #18181b;
+
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #fff5fa;
+  --color-secondary-foreground: #ec4899;
+
+  --color-muted: #fff5fa;
+  --color-muted-foreground: #71717a;
+
+  --color-accent: #fff5fa;
+  --color-accent-foreground: #18181b;
+
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+
+  --color-input: #fbcfe8;
+  --color-ring: #ec4899;
+
+  --radius-lg: 12px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-xl: 24px;
+
   --shadow-card: 0 20px 40px rgba(236, 72, 153, 0.1);
   --shadow-hover: 0 10px 24px rgba(236, 72, 153, 0.15);
   --shadow-focus: 0 0 0 4px rgba(236, 72, 153, 0.24);

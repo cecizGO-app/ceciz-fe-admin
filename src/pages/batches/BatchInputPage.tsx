@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Bookmark, ArrowRight, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { BatchInfoForm } from "../../components/batch/BatchInfoForm";
 import { BatchCalculationSummary } from "../../components/batch/BatchCalculationSummary";
 import { BuyerOrderTable } from "../../components/batch/BuyerOrderTable";
@@ -91,6 +92,8 @@ export const BatchInputPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-1">
+            <span className="text-[#71717A]">Operasional</span>
+            <span>&gt;</span>
             <span className="hover:text-[#18181B] cursor-pointer">Batch</span>
             <span>&gt;</span>
             <span className="text-[#EC4899] font-medium">
@@ -106,13 +109,14 @@ export const BatchInputPage: React.FC = () => {
         </div>
 
         <div className="hidden sm:flex items-center gap-3">
-          <button
+          <Button
             type="button"
-            className="h-11 px-4 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#18181B] text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-xs"
+            variant="outline"
+            className="h-11 px-4 text-xs font-semibold gap-2 border-[#FBCFE8]"
           >
             <Bookmark className="w-4 h-4 text-[#71717A]" />
             <span>Simpan Draft</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -146,29 +150,31 @@ export const BatchInputPage: React.FC = () => {
         {/* Mobile Sticky Bottom Action Bar */}
         <div className="fixed bottom-0 left-0 right-0 z-30 p-3 sm:p-4 bg-white/95 backdrop-blur-md border-t border-[#FBCFE8] shadow-lg flex items-center justify-between gap-3">
           {currentStep > 1 ? (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => goToStep(currentStep - 1)}
-              className="h-11 px-4 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold text-[#71717A] hover:bg-[#FFF5FA] flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="h-11 px-4 text-xs font-semibold text-[#71717A] gap-1.5"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Kembali</span>
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
-              className="h-11 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold text-[#71717A] hover:bg-[#FFF5FA] flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              variant="outline"
+              className="h-11 px-3.5 text-xs font-semibold text-[#71717A] gap-1.5"
             >
               <Bookmark className="w-3.5 h-3.5 text-[#71717A]" />
               <span>Draft</span>
-            </button>
+            </Button>
           )}
 
           {currentStep < 3 ? (
-            <button
+            <Button
               type="button"
               onClick={() => goToStep(currentStep + 1)}
-              className="h-11 px-4 sm:px-5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] active:scale-[0.98] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-xs ml-auto transition-all"
+              className="h-11 px-4 sm:px-5 text-xs font-semibold gap-2 ml-auto"
             >
               <span>
                 {currentStep === 1
@@ -176,15 +182,15 @@ export const BatchInputPage: React.FC = () => {
                   : "Lanjut: Ringkasan"}
               </span>
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
               onClick={handlePublish}
-              className="h-11 px-5 sm:px-6 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] active:scale-[0.98] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-xs ml-auto transition-all"
+              className="h-11 px-5 sm:px-6 text-xs font-semibold gap-2 ml-auto"
             >
               <span>Terbitkan & Simpan</span>
-            </button>
+            </Button>
           )}
         </div>
       </div>
