@@ -1,6 +1,6 @@
 import React from "react";
 import type { CalculationSummary } from "./types";
-import { Sparkle } from "../icons/Sparkle";
+import { Sparkle } from "@/components/icons/Sparkle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

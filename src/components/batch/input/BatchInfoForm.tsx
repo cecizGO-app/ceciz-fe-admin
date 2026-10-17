@@ -1,7 +1,7 @@
 import React from 'react'
 import { Calendar } from 'lucide-react'
 import type { CountryCode, CountryOption } from './types'
-import { CountryFlag } from '../icons/CountryFlag'
+import { CountryFlag } from '@/components/icons/CountryFlag'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'

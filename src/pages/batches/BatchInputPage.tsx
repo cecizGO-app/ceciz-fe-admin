@@ -1,18 +1,24 @@
 import React, { useState } from "react";
 import { Bookmark, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BatchInfoForm } from "../../components/batch/BatchInfoForm";
-import { BatchCalculationSummary } from "../../components/batch/BatchCalculationSummary";
-import { BuyerOrderTable } from "../../components/batch/BuyerOrderTable";
-import { BatchStepbar } from "../../components/batch/BatchStepbar";
 import {
+  BatchInfoForm,
+  BatchCalculationSummary,
+  BuyerOrderTable,
+  BatchStepbar,
+  useBatchForm,
   COUNTRIES,
   REGISTERED_BUYERS,
   WIZARD_STEPS,
-} from "../../components/batch/constants";
-import { useBatchForm } from "../../components/batch/useBatchForm";
+} from "@/components/batch/input";
 
-export const BatchInputPage: React.FC = () => {
+interface BatchInputPageProps {
+  onBackToList?: () => void;
+}
+
+export const BatchInputPage: React.FC<BatchInputPageProps> = ({
+  onBackToList,
+}) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const form = useBatchForm();
 
@@ -69,7 +75,7 @@ export const BatchInputPage: React.FC = () => {
       currency={form.currentCountry.currency}
       kursRate={form.kursRate}
       overheadPerPc={form.overheadPerPc}
-      isJapan={form.selectedCountry === 'JP'}
+      isJapan={form.selectedCountry === "JP"}
       onAddRow={form.handleAddRow}
       onRemoveRow={form.handleRemoveRow}
       onUpdateRow={form.handleUpdateRow}
@@ -94,7 +100,12 @@ export const BatchInputPage: React.FC = () => {
           <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-1">
             <span className="text-[#71717A]">Operasional</span>
             <span>&gt;</span>
-            <span className="hover:text-[#18181B] cursor-pointer">Batch</span>
+            <span
+              onClick={onBackToList}
+              className="hover:text-[#EC4899] cursor-pointer transition-colors"
+            >
+              Batch
+            </span>
             <span>&gt;</span>
             <span className="text-[#EC4899] font-medium">
               Tambah Batch Baru
