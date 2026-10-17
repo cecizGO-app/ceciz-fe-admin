@@ -35,7 +35,8 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
   const [countryFilter, setCountryFilter] = useState<CountryFilter>("ALL");
   const [showHidden, setShowHidden] = useState(false);
   const [calcModalOpen, setCalcModalOpen] = useState(false);
-  const [selectedBatchForCalc, setSelectedBatchForCalc] = useState<BatchItem | null>(null);
+  const [selectedBatchForCalc, setSelectedBatchForCalc] =
+    useState<BatchItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Daftar warehouse unik untuk dropdown filter
@@ -65,9 +66,9 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
 
     return {
       activeBatches: activeCount,
-      totalPc: activeTotalPc > 0 ? 142 : 0,
+      totalPc: activeTotalPc,
       waitingCalculation: waitingLaba,
-      archivedBatches: archived + 14, // Termasuk historis batch lama sesuai wireframe (18)
+      archivedBatches: archived, // Termasuk historis batch lama sesuai wireframe (18)
     };
   }, [batches]);
 
@@ -117,7 +118,9 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
   const handleCopyBatch = (batch: BatchItem) => {
     const textToCopy = `[Batch ${batch.batchNumber}] ${batch.warehouseProxy} - ${batch.buyerCount} buyer (${batch.totalPc} PC) - Status: ${batch.status}`;
     navigator.clipboard.writeText(textToCopy);
-    setToastMessage(`Info batch ${batch.batchNumber} berhasil disalin ke clipboard!`);
+    setToastMessage(
+      `Info batch ${batch.batchNumber} berhasil disalin ke clipboard!`,
+    );
     setTimeout(() => {
       setToastMessage(null);
     }, 2500);
@@ -131,18 +134,29 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchNumber = batch.batchNumber.toLowerCase().includes(query);
-        const matchWarehouse = batch.warehouseProxy.toLowerCase().includes(query);
+        const matchWarehouse = batch.warehouseProxy
+          .toLowerCase()
+          .includes(query);
         const matchCountry = batch.countryCode.toLowerCase().includes(query);
         if (!matchNumber && !matchWarehouse && !matchCountry) return false;
       }
 
       if (statusFilter !== "ALL" && batch.status !== statusFilter) return false;
-      if (warehouseFilter !== "ALL" && batch.warehouseProxy !== warehouseFilter) return false;
-      if (countryFilter !== "ALL" && batch.countryCode !== countryFilter) return false;
+      if (warehouseFilter !== "ALL" && batch.warehouseProxy !== warehouseFilter)
+        return false;
+      if (countryFilter !== "ALL" && batch.countryCode !== countryFilter)
+        return false;
 
       return true;
     });
-  }, [batches, searchQuery, statusFilter, warehouseFilter, countryFilter, showHidden]);
+  }, [
+    batches,
+    searchQuery,
+    statusFilter,
+    warehouseFilter,
+    countryFilter,
+    showHidden,
+  ]);
 
   return (
     <div className="space-y-6 pb-12">
@@ -164,7 +178,8 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
             Batch &amp; Kalkulasi Harga
           </h1>
           <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
-            Kelola batch group order, pantau status operasional, dan lakukan kalkulasi internal laba.
+            Kelola batch group order, pantau status operasional, dan lakukan
+            kalkulasi internal laba.
           </p>
         </div>
 
