@@ -1,15 +1,15 @@
-import React from 'react'
-import { Search, Menu } from 'lucide-react'
+import React from "react";
+import { Search, Menu } from "lucide-react";
 
 interface NavbarProps {
-  userName?: string
-  userInitial?: string
-  onToggleSidebar?: () => void
+  userName?: string;
+  userInitial?: string;
+  onToggleSidebar?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  userName = 'Aurel',
-  userInitial = 'A',
+  userName = "Aurel",
+  userInitial = "A",
   onToggleSidebar,
 }) => {
   return (
@@ -42,21 +42,29 @@ export const Navbar: React.FC<NavbarProps> = ({
         <input
           type="text"
           placeholder="Cari batch, buyer..."
-          className="w-full h-10 pl-9 pr-11 rounded-[12px] border border-[#FBCFE8]/80 bg-[#FFF5FA] text-xs text-[#18181B] placeholder-[#71717A] focus-ceciz-ring transition-colors"
+          className="w-full h-10 pl-9 pr-12 rounded-[12px] border border-[#FBCFE8]/80 bg-[#FFF5FA] text-xs text-[#18181B] placeholder-[#71717A] focus-ceciz-ring transition-colors"
         />
+        <kbd className="hidden sm:inline-flex absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-semibold text-[#71717A] bg-white border border-[#FBCFE8] rounded-[6px] shadow-2xs pointer-events-none">
+          ⌘K
+        </kbd>
       </div>
 
       {/* Right: User Profile */}
-      <div className="flex items-center gap-2 cursor-pointer group shrink-0">
-        <div className="w-8 h-8 rounded-full bg-[#FCE7F3] text-[#EC4899] font-bold text-xs flex items-center justify-center border border-[#FBCFE8]">
+      <div className="flex items-center gap-2.5 cursor-pointer group shrink-0">
+        <div className="w-9 h-9 rounded-full bg-[#FCE7F3] text-[#EC4899] font-bold text-xs flex items-center justify-center border border-[#FBCFE8]">
           {userInitial}
         </div>
-        <span className="text-xs font-semibold text-[#18181B] group-hover:text-[#EC4899] transition-colors hidden sm:inline">
-          {userName}
-        </span>
+        <div className="hidden sm:flex flex-col text-left">
+          <span className="text-xs font-semibold text-[#18181B] group-hover:text-[#EC4899] transition-colors leading-tight">
+            {userName}
+          </span>
+          <span className="text-[11px] text-[#71717A] leading-tight font-normal">
+            Owner
+          </span>
+        </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
