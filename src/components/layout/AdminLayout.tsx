@@ -1,35 +1,50 @@
-import React, { useState } from 'react'
-import { Navbar } from './Navbar'
-import { Sidebar } from './Sidebar'
+import React, { useState } from "react";
+import { Navbar } from "./Navbar";
+import { Sidebar } from "./Sidebar";
 
 interface AdminLayoutProps {
-  children: React.ReactNode
-  activeMenu?: string
-  onNavigate?: (menu: string) => void
+  children: React.ReactNode;
+  activeMenu?: string;
+  onNavigate?: (menu: string) => void;
+  userRole?: "owner" | "staff";
+  onChangeRole?: (role: "owner" | "staff") => void;
+  onLogout?: () => void;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   children,
-  activeMenu = 'batch',
+  activeMenu = "batch",
   onNavigate,
+  userRole = "owner",
+  onChangeRole,
+  onLogout,
 }) => {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleMenuClick = (menu: string) => {
-    onNavigate?.(menu)
-    setMobileSidebarOpen(false)
-  }
+    onNavigate?.(menu);
+    setMobileSidebarOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#FDF2F8] text-[#18181B] font-sans antialiased selection:bg-[#FCE7F3] selection:text-[#EC4899]">
       {/* Top Navbar Header (Full Width) */}
-      <Navbar onToggleSidebar={() => setMobileSidebarOpen((prev) => !prev)} />
+      <Navbar
+        userRole={userRole}
+        onChangeRole={onChangeRole}
+        onLogout={onLogout}
+        onToggleSidebar={() => setMobileSidebarOpen((prev) => !prev)}
+      />
 
       {/* Main Body: Responsive Sidebar + Content */}
       <div className="flex relative">
         {/* Desktop Sidebar (Persistent) */}
         <div className="hidden md:block">
-          <Sidebar activeMenu={activeMenu} onNavigate={onNavigate} />
+          <Sidebar
+            activeMenu={activeMenu}
+            onNavigate={onNavigate}
+            userRole={userRole}
+          />
         </div>
 
         {/* Mobile Sidebar Drawer (Overlay) */}
@@ -43,7 +58,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             />
             {/* Drawer */}
             <div className="relative z-50 w-64 bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
-              <Sidebar activeMenu={activeMenu} onNavigate={handleMenuClick} />
+              <Sidebar
+                activeMenu={activeMenu}
+                onNavigate={handleMenuClick}
+                userRole={userRole}
+              />
             </div>
           </div>
         )}
@@ -54,7 +73,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </main>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminLayout
+export default AdminLayout;

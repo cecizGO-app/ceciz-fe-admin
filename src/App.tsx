@@ -10,6 +10,7 @@ export function App() {
   const [currentPage, setCurrentPage] = useState<
     "batch-list" | "batch-new" | "tracking" | "verifikasi" | "login"
   >("verifikasi");
+  const [userRole, setUserRole] = useState<"owner" | "staff">("owner");
 
   if (currentPage === "login") {
     return (
@@ -21,7 +22,12 @@ export function App() {
         >
           Lihat Dashboard Admin &rarr;
         </button>
-        <LoginPage onLoginSuccess={() => setCurrentPage("batch-list")} />
+        <LoginPage
+          onLoginSuccess={(role) => {
+            setUserRole(role);
+            setCurrentPage("batch-list");
+          }}
+        />
       </div>
     );
   }
@@ -51,7 +57,13 @@ export function App() {
         &larr; Lihat Login Page
       </button>
 
-      <AdminLayout activeMenu={activeMenu} onNavigate={handleNavigate}>
+      <AdminLayout
+        activeMenu={activeMenu}
+        onNavigate={handleNavigate}
+        userRole={userRole}
+        onChangeRole={setUserRole}
+        onLogout={() => setCurrentPage("login")}
+      >
         {currentPage === "verifikasi" && <PaymentVerificationPage />}
 
         {currentPage === "batch-list" && (
