@@ -16,12 +16,12 @@ export function App() {
       <div className="relative">
         <button
           type="button"
-          onClick={() => setCurrentPage("verifikasi")}
+          onClick={() => setCurrentPage("batch-list")}
           className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
         >
           Lihat Dashboard Admin &rarr;
         </button>
-        <LoginPage />
+        <LoginPage onLoginSuccess={() => setCurrentPage("batch-list")} />
       </div>
     );
   }
@@ -36,7 +36,7 @@ export function App() {
           : "dashboard";
 
   const handleNavigate = (menu: string) => {
-    if (menu === "batch") setCurrentPage("batch-list");
+    if (menu === "dashboard" || menu === "batch") setCurrentPage("batch-list");
     if (menu === "tracking") setCurrentPage("tracking");
     if (menu === "verifikasi") setCurrentPage("verifikasi");
   };

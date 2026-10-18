@@ -1,11 +1,15 @@
 import { z } from "zod";
 
 export const adminLoginSchema = z.object({
-  email: z
+  username: z
     .string()
-    .min(1, "Email wajib diisi")
-    .email("Format email tidak valid"),
-  password: z.string().min(6, "Password minimal 6 karakter"),
+    .min(1, "Username atau email wajib diisi")
+    .min(3, "Username minimal 3 karakter"),
+  password: z
+    .string()
+    .min(1, "Password wajib diisi")
+    .min(6, "Password minimal 6 karakter"),
+  rememberMe: z.boolean(),
 });
 
 export type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
