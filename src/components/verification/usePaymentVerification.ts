@@ -205,6 +205,14 @@ export function usePaymentVerification() {
     }
   };
 
+  const handleAddManualPayment = (newPayment: PaymentItem) => {
+    setItems((prev) => [newPayment, ...prev]);
+    showToast(
+      `Pembayaran manual ${newPayment.buyerName} (Rp ${newPayment.nominal.toLocaleString("id-ID")}) berhasil ditambahkan!`,
+      "success",
+    );
+  };
+
   return {
     items,
     activeTab,
@@ -235,5 +243,6 @@ export function usePaymentVerification() {
     handleApproveSingle,
     handleBulkApprove,
     handleConfirmReject,
+    handleAddManualPayment,
   };
 }

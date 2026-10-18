@@ -38,6 +38,7 @@ const METHOD_DOTS: Record<string, string> = {
   QRIS: "bg-fuchsia-600",
   SeaBank: "bg-orange-500",
   ShopeePay: "bg-amber-600",
+  "Tunai / Cash": "bg-emerald-600",
 };
 
 export const VerificationTable: React.FC<VerificationTableProps> = ({
@@ -90,7 +91,10 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({
               <TableHead className="text-[11px] font-bold text-[#71717A] tracking-wider uppercase min-w-[100px]">
                 Metode
               </TableHead>
-              <TableHead className="text-[11px] font-bold text-[#71717A] tracking-wider uppercase min-w-[150px]">
+              <TableHead className="text-[11px] font-bold text-[#71717A] tracking-wider uppercase min-w-[85px]">
+                Sumber
+              </TableHead>
+              <TableHead className="text-[11px] font-bold text-[#71717A] tracking-wider uppercase min-w-[160px]">
                 Keterangan
               </TableHead>
               <TableHead className="text-[11px] font-bold text-[#71717A] tracking-wider uppercase min-w-[120px]">
@@ -112,7 +116,7 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({
             {items.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={10}
+                  colSpan={11}
                   className="py-12 text-center text-xs text-[#71717A]"
                 >
                   Tidak ada data pembayaran yang sesuai dengan filter.
@@ -171,6 +175,19 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({
                         />
                         <span>{item.paymentMethod}</span>
                       </div>
+                    </TableCell>
+
+                    {/* Sumber Column */}
+                    <TableCell className="py-3.5">
+                      {item.source === "Admin" ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFF5FA] border border-[#FBCFE8] text-[#EC4899]">
+                          Admin
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 text-[#71717A]">
+                          Buyer
+                        </span>
+                      )}
                     </TableCell>
 
                     {/* Keterangan Column */}

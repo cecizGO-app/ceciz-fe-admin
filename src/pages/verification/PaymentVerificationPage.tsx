@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Plus } from "lucide-react";
 import {
   VerificationStatsCards,
   VerificationFilterBar,
   VerificationTable,
   ProofReceiptModal,
   RejectReasonModal,
+  AddManualPaymentModal,
   usePaymentVerification,
   PAGE_SIZE,
   type PaymentItem,
@@ -42,6 +43,7 @@ export const PaymentVerificationPage: React.FC = () => {
     handleApproveSingle,
     handleBulkApprove,
     handleConfirmReject,
+    handleAddManualPayment,
   } = usePaymentVerification();
 
   // Modals state
@@ -53,6 +55,7 @@ export const PaymentVerificationPage: React.FC = () => {
     null,
   );
   const [bulkRejectItems, setBulkRejectItems] = useState<PaymentItem[]>([]);
+  const [addManualModalOpen, setAddManualModalOpen] = useState(false);
 
   const handleViewProof = (item: PaymentItem) => {
     setSelectedProofItem(item);
@@ -95,18 +98,29 @@ export const PaymentVerificationPage: React.FC = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div>
-        <div className="text-[11px] font-bold text-[#EC4899] tracking-wider uppercase mb-1">
-          DASHBOARD &middot; VERIFIKASI PEMBAYARAN
+      {/* Header with Tambah Pembayaran Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="text-[11px] font-bold text-[#EC4899] tracking-wider uppercase mb-1">
+            DASHBOARD &middot; VERIFIKASI PEMBAYARAN
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#18181B] tracking-tight">
+            Verifikasi Pembayaran
+          </h1>
+          <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
+            Tinjau bukti transfer yang diunggah buyer, lakukan verifikasi cepat,
+            atau input pembayaran manual.
+          </p>
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-[#18181B] tracking-tight">
-          Verifikasi Pembayaran
-        </h1>
-        <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
-          Tinjau bukti transfer yang diunggah buyer, lakukan verifikasi cepat,
-          atau tolak dengan alasan yang jelas.
-        </p>
+
+        <button
+          type="button"
+          onClick={() => setAddManualModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Tambah Pembayaran</span>
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -180,6 +194,14 @@ export const PaymentVerificationPage: React.FC = () => {
         onConfirmReject={(reason) =>
           handleConfirmReject(reason, singleRejectItem, bulkRejectItems)
         }
+      />
+
+      {/* Modal: Tambah Pembayaran Manual */}
+      <AddManualPaymentModal
+        open={addManualModalOpen}
+        onOpenChange={setAddManualModalOpen}
+        availableBatches={availableBatches}
+        onAddPayment={handleAddManualPayment}
       />
     </div>
   );

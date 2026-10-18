@@ -6,7 +6,9 @@ export type PaymentMethod =
   | "SeaBank"
   | "ShopeePay"
   | "Bank Mandiri"
-  | "BNI";
+  | "BNI"
+  | "Tunai / Cash"
+  | "Lainnya";
 
 export interface ProofDetail {
   bankSender: string;
@@ -29,6 +31,7 @@ export interface PaymentItem {
   uploadTime: string;
   uploadDate: string;
   status: PaymentStatus;
+  source?: "Buyer" | "Admin"; // Sumber pembayaran: diunggah buyer atau input manual admin
   proofImageUrl: string; // URL / Data URI gambar bukti transfer
   proofDetail: ProofDetail;
   keterangan?: string; // Catatan transaksi / keterangan pembayaran
