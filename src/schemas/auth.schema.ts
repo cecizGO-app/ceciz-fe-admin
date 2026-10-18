@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 export const adminLoginSchema = z.object({
-  username: z
+  email: z
     .string()
-    .min(1, "Username atau email wajib diisi")
-    .min(3, "Username minimal 3 karakter"),
+    .min(1, "Email wajib diisi")
+    .email("Format email tidak valid (contoh: admin@ceciz.com)"),
   password: z
     .string()
     .min(1, "Password wajib diisi")
