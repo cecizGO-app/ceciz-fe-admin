@@ -44,9 +44,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           placeholder="Cari batch, buyer..."
           className="w-full h-10 pl-9 pr-12 rounded-[12px] border border-[#FBCFE8]/80 bg-[#FFF5FA] text-xs text-[#18181B] placeholder-[#71717A] focus-ceciz-ring transition-colors"
         />
-        <kbd className="hidden sm:inline-flex absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-semibold text-[#71717A] bg-white border border-[#FBCFE8] rounded-[6px] shadow-2xs pointer-events-none">
-          ⌘K
-        </kbd>
       </div>
 
       {/* Right: User Profile */}
