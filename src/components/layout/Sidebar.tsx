@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import {
   LayoutGrid,
   Boxes,
@@ -8,15 +8,15 @@ import {
   Receipt,
   BarChart3,
   Settings,
-} from 'lucide-react'
+} from "lucide-react";
 
 interface SidebarProps {
-  activeMenu?: string
-  onNavigate?: (menu: string) => void
+  activeMenu?: string;
+  onNavigate?: (menu: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  activeMenu = 'batch',
+  activeMenu = "batch",
   onNavigate,
 }) => {
   return (
@@ -29,11 +29,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button
             type="button"
-            onClick={() => onNavigate?.('dashboard')}
+            onClick={() => onNavigate?.("dashboard")}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-medium text-xs transition-colors cursor-pointer ${
-              activeMenu === 'dashboard'
-                ? 'bg-[#FFF5FA] text-[#18181B] font-semibold'
-                : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+              activeMenu === "dashboard"
+                ? "bg-[#FFF5FA] text-[#18181B] font-semibold"
+                : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
             }`}
           >
             <LayoutGrid className="w-4 h-4 shrink-0 text-[#71717A]" />
@@ -50,31 +50,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Batch Menu (Active with Left Accent Indicator) */}
             <button
               type="button"
-              onClick={() => onNavigate?.('batch')}
+              onClick={() => onNavigate?.("batch")}
               className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-semibold text-xs transition-colors cursor-pointer ${
-                activeMenu === 'batch'
-                  ? 'bg-[#FFF5FA] text-[#18181B]'
-                  : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+                activeMenu === "batch"
+                  ? "bg-[#FFF5FA] text-[#18181B]"
+                  : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
               }`}
             >
               {/* Vertical Pink Accent Bar on the Left Edge */}
-              {activeMenu === 'batch' && (
+              {activeMenu === "batch" && (
                 <span
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#EC4899] rounded-r-full"
                   aria-hidden="true"
                 />
               )}
-              <Boxes className={`w-4 h-4 shrink-0 ${activeMenu === 'batch' ? 'text-[#EC4899]' : 'text-[#71717A]'}`} />
+              <Boxes
+                className={`w-4 h-4 shrink-0 ${activeMenu === "batch" ? "text-[#EC4899]" : "text-[#71717A]"}`}
+              />
               <span>Batch</span>
             </button>
 
             <button
               type="button"
-              onClick={() => onNavigate?.('rekapan')}
+              onClick={() => onNavigate?.("rekapan")}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-medium text-xs transition-colors cursor-pointer ${
-                activeMenu === 'rekapan'
-                  ? 'bg-[#FFF5FA] text-[#18181B] font-semibold'
-                  : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+                activeMenu === "rekapan"
+                  ? "bg-[#FFF5FA] text-[#18181B] font-semibold"
+                  : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
               }`}
             >
               <FileText className="w-4 h-4 shrink-0 text-[#71717A]" />
@@ -83,20 +85,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <button
               type="button"
-              onClick={() => onNavigate?.('tracking')}
+              onClick={() => onNavigate?.("tracking")}
               className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-semibold text-xs transition-colors cursor-pointer ${
-                activeMenu === 'tracking'
-                  ? 'bg-[#FFF5FA] text-[#18181B]'
-                  : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+                activeMenu === "tracking"
+                  ? "bg-[#FFF5FA] text-[#18181B]"
+                  : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
               }`}
             >
-              {activeMenu === 'tracking' && (
+              {activeMenu === "tracking" && (
                 <span
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#EC4899] rounded-r-full"
                   aria-hidden="true"
                 />
               )}
-              <Truck className={`w-4 h-4 shrink-0 ${activeMenu === 'tracking' ? 'text-[#EC4899]' : 'text-[#71717A]'}`} />
+              <Truck
+                className={`w-4 h-4 shrink-0 ${activeMenu === "tracking" ? "text-[#EC4899]" : "text-[#71717A]"}`}
+              />
               <span>Tracking Logistik</span>
             </button>
           </div>
@@ -110,16 +114,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="space-y-1">
             <button
               type="button"
-              onClick={() => onNavigate?.('verifikasi')}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] font-medium text-xs transition-colors cursor-pointer ${
-                activeMenu === 'verifikasi'
-                  ? 'bg-[#FFF5FA] text-[#18181B] font-semibold'
-                  : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+              onClick={() => onNavigate?.("verifikasi")}
+              className={`relative w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] font-semibold text-xs transition-colors cursor-pointer ${
+                activeMenu === "verifikasi"
+                  ? "bg-[#FFF5FA] text-[#18181B]"
+                  : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
               }`}
             >
+              {activeMenu === "verifikasi" && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#EC4899] rounded-r-full"
+                  aria-hidden="true"
+                />
+              )}
               <div className="flex items-center gap-3 min-w-0">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-[#71717A]" />
-                <span className="truncate">Verifikasi Pembay...</span>
+                <CheckCircle2
+                  className={`w-4 h-4 shrink-0 ${activeMenu === "verifikasi" ? "text-[#EC4899]" : "text-[#71717A]"}`}
+                />
+                <span className="truncate">Verifikasi Pembayaran</span>
               </div>
               <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#FCE7F3] text-[#DC2626]">
                 12
@@ -128,11 +140,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <button
               type="button"
-              onClick={() => onNavigate?.('tax')}
+              onClick={() => onNavigate?.("tax")}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-medium text-xs transition-colors cursor-pointer ${
-                activeMenu === 'tax'
-                  ? 'bg-[#FFF5FA] text-[#18181B] font-semibold'
-                  : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+                activeMenu === "tax"
+                  ? "bg-[#FFF5FA] text-[#18181B] font-semibold"
+                  : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
               }`}
             >
               <Receipt className="w-4 h-4 shrink-0 text-[#71717A]" />
@@ -141,11 +153,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <button
               type="button"
-              onClick={() => onNavigate?.('laporan')}
+              onClick={() => onNavigate?.("laporan")}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-medium text-xs transition-colors cursor-pointer ${
-                activeMenu === 'laporan'
-                  ? 'bg-[#FFF5FA] text-[#18181B] font-semibold'
-                  : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+                activeMenu === "laporan"
+                  ? "bg-[#FFF5FA] text-[#18181B] font-semibold"
+                  : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
               }`}
             >
               <BarChart3 className="w-4 h-4 shrink-0 text-[#71717A]" />
@@ -161,11 +173,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button
             type="button"
-            onClick={() => onNavigate?.('settings')}
+            onClick={() => onNavigate?.("settings")}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] font-medium text-xs transition-colors cursor-pointer ${
-              activeMenu === 'settings'
-                ? 'bg-[#FFF5FA] text-[#18181B] font-semibold'
-                : 'text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]'
+              activeMenu === "settings"
+                ? "bg-[#FFF5FA] text-[#18181B] font-semibold"
+                : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B]"
             }`}
           >
             <Settings className="w-4 h-4 shrink-0 text-[#71717A]" />
@@ -174,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </nav>
     </aside>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;
