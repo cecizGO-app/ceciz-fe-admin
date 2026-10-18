@@ -3,15 +3,25 @@ import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 
 interface AdminLayoutProps {
-  children: React.ReactNode
-  activeMenu?: string
-  onNavigate?: (menu: string) => void
+  children: React.ReactNode;
+  activeMenu?: string;
+  onNavigate?: (menu: string) => void;
+  userRole?: "owner" | "staff";
+  userName?: string;
+  userInitial?: string;
+  onChangeRole?: (role: "owner" | "staff") => void;
+  onLogout?: () => void;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   children,
   activeMenu = 'batch',
   onNavigate,
+  userRole = 'owner',
+  userName,
+  userInitial,
+  onChangeRole,
+  onLogout,
 }) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
@@ -23,13 +33,24 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   return (
     <div className="min-h-screen bg-[#FDF2F8] text-[#18181B] font-sans antialiased selection:bg-[#FCE7F3] selection:text-[#EC4899]">
       {/* Top Navbar Header (Full Width) */}
-      <Navbar onToggleSidebar={() => setMobileSidebarOpen((prev) => !prev)} />
+      <Navbar
+        userName={userName}
+        userInitial={userInitial}
+        userRole={userRole}
+        onChangeRole={onChangeRole}
+        onLogout={onLogout}
+        onToggleSidebar={() => setMobileSidebarOpen((prev) => !prev)}
+      />
 
       {/* Main Body: Responsive Sidebar + Content */}
       <div className="flex relative">
         {/* Desktop Sidebar (Persistent) */}
         <div className="hidden md:block">
-          <Sidebar activeMenu={activeMenu} onNavigate={onNavigate} />
+          <Sidebar
+            activeMenu={activeMenu}
+            onNavigate={onNavigate}
+            userRole={userRole}
+          />
         </div>
 
         {/* Mobile Sidebar Drawer (Overlay) */}
@@ -43,7 +64,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             />
             {/* Drawer */}
             <div className="relative z-50 w-64 bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
-              <Sidebar activeMenu={activeMenu} onNavigate={handleMenuClick} />
+              <Sidebar
+                activeMenu={activeMenu}
+                onNavigate={handleMenuClick}
+                userRole={userRole}
+              />
             </div>
           </div>
         )}
