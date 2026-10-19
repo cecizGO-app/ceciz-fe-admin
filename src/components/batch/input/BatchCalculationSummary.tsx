@@ -1,4 +1,5 @@
 import React from "react";
+import { Loader2 } from "lucide-react";
 import type { CalculationSummary } from "./types";
 import { Sparkle } from "@/components/icons/Sparkle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ interface BatchCalculationSummaryProps {
   kursRate: number;
   shippingForeign: number;
   onPublish: () => void;
+  isSubmitting?: boolean;
 }
 
 function formatIDR(val: number): string {
@@ -24,7 +26,14 @@ function formatIDR(val: number): string {
 
 export const BatchCalculationSummary: React.FC<
   BatchCalculationSummaryProps
-> = ({ summary, currency, kursRate, shippingForeign, onPublish }) => {
+> = ({
+  summary,
+  currency,
+  kursRate,
+  shippingForeign,
+  onPublish,
+  isSubmitting = false,
+}) => {
   return (
     <Card className="gap-5 p-6 sm:p-7 lg:sticky lg:top-24">
       <CardHeader className="p-0">
@@ -62,7 +71,9 @@ export const BatchCalculationSummary: React.FC<
           </div>
 
           <div className="flex justify-between items-center gap-2">
-            <span>Konversi ke IDR (Kurs {kursRate.toLocaleString("id-ID")})</span>
+            <span>
+              Konversi ke IDR (Kurs {kursRate.toLocaleString("id-ID")})
+            </span>
             <span className="font-semibold text-[#18181B] shrink-0 tabular-nums">
               {formatIDR(summary.konversiIDR)}
             </span>
@@ -70,7 +81,8 @@ export const BatchCalculationSummary: React.FC<
 
           <div className="flex justify-between items-center gap-2">
             <span>
-              {summary.isJapan ? "Shiploc Jepang" : "Shipping Luar Negeri"} ({shippingForeign} {currency})
+              {summary.isJapan ? "Shiploc Jepang" : "Shipping Luar Negeri"} (
+              {shippingForeign} {currency})
             </span>
             <span className="font-semibold text-[#18181B] shrink-0 tabular-nums">
               {formatIDR(summary.shippingLuarNegeriIDR)}
@@ -96,7 +108,10 @@ export const BatchCalculationSummary: React.FC<
               <div className="flex justify-between items-center gap-2">
                 <span className="flex items-center gap-1.5">
                   <span>Fee Rekap ({summary.tierLabel})</span>
-                  <Badge variant="secondary" className="gap-1 px-2 py-0.5 rounded-[6px] text-[11px] font-bold">
+                  <Badge
+                    variant="secondary"
+                    className="gap-1 px-2 py-0.5 rounded-[6px] text-[11px] font-bold"
+                  >
                     <Sparkle className="w-3.5 h-3.5" />
                     <span>auto</span>
                   </Badge>
@@ -135,8 +150,11 @@ export const BatchCalculationSummary: React.FC<
           {/* Estimasi Laba Bersih GO */}
           <div className="flex justify-between items-center text-xs">
             <span className="text-[#71717A]">Estimasi Laba Bersih GO</span>
-            <span className={`font-bold tabular-nums ${summary.estimasiLabaBersih >= 0 ? 'text-[#16A34A]' : 'text-red-500'}`}>
-              {summary.estimasiLabaBersih >= 0 ? '+ ' : ''}{formatIDR(summary.estimasiLabaBersih)}
+            <span
+              className={`font-bold tabular-nums ${summary.estimasiLabaBersih >= 0 ? "text-[#16A34A]" : "text-red-500"}`}
+            >
+              {summary.estimasiLabaBersih >= 0 ? "+ " : ""}
+              {formatIDR(summary.estimasiLabaBersih)}
             </span>
           </div>
         </div>
@@ -145,13 +163,21 @@ export const BatchCalculationSummary: React.FC<
         <div className="pt-2">
           <Button
             type="button"
+            disabled={isSubmitting}
             onClick={onPublish}
-            className="w-full h-11 rounded-[12px] text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md"
+            className="w-full h-11 rounded-[12px] text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md gap-2"
           >
-            <span>Terbitkan &amp; Simpan Batch</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Menyimpan Batch ke Backend...</span>
+              </>
+            ) : (
+              <span>Terbitkan &amp; Simpan Batch</span>
+            )}
           </Button>
           <p className="text-[11px] text-[#71717A] text-center mt-2 leading-relaxed">
-            Invoice akan otomatis dibuat untuk tiap buyer
+            Batch akan tersimpan di sistem dan backend Ceciz
           </p>
         </div>
       </CardContent>

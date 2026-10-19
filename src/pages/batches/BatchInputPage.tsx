@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Bookmark, ArrowRight, ArrowLeft } from "lucide-react";
+import {
+  Bookmark,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BatchInfoForm,
@@ -11,6 +17,10 @@ import {
   REGISTERED_BUYERS,
   WIZARD_STEPS,
 } from "@/components/batch/input";
+import {
+  createBatchApi,
+  type BackendCreateBatchInput,
+} from "@/services/batch.service";
 
 interface BatchInputPageProps {
   onBackToList?: () => void;
@@ -20,12 +30,87 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
   onBackToList,
 }) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const form = useBatchForm();
 
-  const handlePublish = () => {
-    alert(
-      `Batch "${form.batchName}" (${form.batchCode}) berhasil diterbitkan!`,
-    );
+  const handlePublish = async () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    // Validasi field wajib sesuai schema Backend
+    const trimmedTitle = form.batchName.trim();
+    if (!trimmedTitle) {
+      setErrorMessage("Judul/Nama batch wajib diisi!");
+      goToStep(1);
+      return;
+    }
+    if (trimmedTitle.length > 50) {
+      setErrorMessage("Judul batch maksimal 50 karakter!");
+      goToStep(1);
+      return;
+    }
+    if (!form.batchNumber || form.batchNumber < 1) {
+      setErrorMessage(
+        "Nomor batch harus berupa angka bulat positif (minimal 1)!",
+      );
+      goToStep(1);
+      return;
+    }
+    if (!form.batchDate) {
+      setErrorMessage("Tanggal batch wajib dipilih!");
+      goToStep(1);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const payload: BackendCreateBatchInput = {
+        countryCode: form.selectedCountry,
+        batchNumber: Number(form.batchNumber),
+        batchDate: form.batchDate,
+        title: trimmedTitle,
+        description: form.catatan
+          ? form.catatan.trim().slice(0, 250)
+          : undefined,
+        shippingFee: Number(form.shippingWHForeign) || 0,
+        feeGo: Number(form.feeGO) || 0,
+        feeRekap: Number(form.summary.feeRekap) || 0,
+        feeNyelem: Number(form.feeNyelem) || 0,
+        rateHarian:
+          form.selectedCountry === "INA"
+            ? undefined
+            : Number(form.kursRate) || undefined,
+        feeWh: Number(form.feeWarehouse) || 0,
+        feeProxy: Number(form.feeProxy) || 0,
+        proxyCoName: form.jasaProxy ? form.jasaProxy.trim() : undefined,
+      };
+
+      const newBatch = await createBatchApi(payload);
+
+      setSuccessMessage(
+        `Batch ${newBatch.countryCode}-${String(newBatch.batchNumber).padStart(3, "0")} (${newBatch.title}) berhasil disimpan ke backend!`,
+      );
+
+      setTimeout(() => {
+        if (onBackToList) {
+          onBackToList();
+        }
+      }, 1500);
+    } catch (err: unknown) {
+      console.error("Gagal menerbitkan batch:", err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Terjadi kesalahan saat menyimpan batch ke backend.";
+      setErrorMessage(msg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const goToStep = (step: number) => {
@@ -41,6 +126,8 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
       onSelectCountry={form.handleCountryChange}
       batchName={form.batchName}
       onChangeBatchName={form.setBatchName}
+      batchNumber={form.batchNumber}
+      onChangeBatchNumber={form.setBatchNumber}
       batchCode={form.batchCode}
       batchDate={form.batchDate}
       onChangeBatchDate={form.setBatchDate}
@@ -89,6 +176,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
       kursRate={form.kursRate}
       shippingForeign={form.shippingWHForeign}
       onPublish={handlePublish}
+      isSubmitting={isSubmitting}
     />
   );
 
@@ -130,6 +218,27 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Alert Error / Success */}
+      {errorMessage && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-semibold block">Gagal Menyimpan Batch:</span>
+            <span>{errorMessage}</span>
+          </div>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-semibold block">Berhasil:</span>
+            <span>{successMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Stepbar (Active on mobile to prevent vertical content overload) */}
       <div className="lg:hidden">

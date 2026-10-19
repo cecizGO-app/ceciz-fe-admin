@@ -8,6 +8,7 @@ import {
   Eye,
   Check,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ interface BatchRowActionsProps {
   onCopy: (batch: BatchItem) => void;
   onToggleHide: (batchId: string) => void;
   onUpdateStatus: (batchId: string, status: BatchStatus) => void;
+  onDelete?: (batchId: string) => void;
 }
 
 export const BatchRowActions: React.FC<BatchRowActionsProps> = ({
@@ -38,6 +40,7 @@ export const BatchRowActions: React.FC<BatchRowActionsProps> = ({
   onCopy,
   onToggleHide,
   onUpdateStatus,
+  onDelete,
 }) => {
   return (
     <DropdownMenu>
@@ -139,6 +142,19 @@ export const BatchRowActions: React.FC<BatchRowActionsProps> = ({
             </>
           )}
         </DropdownMenuItem>
+
+        {onDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onDelete(batch.id)}
+              className="gap-2.5 cursor-pointer text-[#EF4444] hover:text-[#DC2626] hover:bg-rose-50"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="font-medium">Hapus Batch</span>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

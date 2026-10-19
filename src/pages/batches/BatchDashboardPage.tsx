@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Plus, Check } from "lucide-react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { Plus, Check, RefreshCw, Loader2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InternalCalculationModal } from "@/components/batch/InternalCalculationModal";
@@ -7,11 +7,18 @@ import {
   BatchStatsCards,
   BatchFilterBar,
   BatchTable,
-  INITIAL_BATCHES,
   type BatchItem,
   type BatchStatus,
   type CountryFilter,
 } from "@/components/batch/dashboard";
+import {
+  getBatchesApi,
+  patchBatchApi,
+  deleteBatchApi,
+  mapBackendBatchToFrontend,
+  mapFrontendStatusToBackend,
+  type BackendCountryCode,
+} from "@/services/batch.service";
 
 function formatRupiah(amount: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -28,7 +35,9 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
   onCreateNewBatch,
   onEditBatch,
 }) => {
-  const [batches, setBatches] = useState<BatchItem[]>(INITIAL_BATCHES);
+  const [batches, setBatches] = useState<BatchItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [warehouseFilter, setWarehouseFilter] = useState<string>("ALL");
@@ -39,10 +48,86 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
     useState<BatchItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Fetch data dari Backend API
+  const loadBatches = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setFetchError(null);
+
+      const countryParam =
+        countryFilter !== "ALL"
+          ? (countryFilter as BackendCountryCode)
+          : undefined;
+      const statusParam =
+        statusFilter !== "ALL"
+          ? mapFrontendStatusToBackend(statusFilter as BatchStatus)
+          : undefined;
+
+      const data = await getBatchesApi({
+        countryCode: countryParam,
+        status: statusParam,
+      });
+
+      const mapped = data.map(mapBackendBatchToFrontend);
+      setBatches(mapped);
+    } catch (err: unknown) {
+      console.error("Gagal memuat batch:", err);
+      const msg =
+        err instanceof Error ? err.message : "Gagal memuat daftar batch.";
+      setFetchError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [countryFilter, statusFilter]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const countryParam =
+      countryFilter !== "ALL"
+        ? (countryFilter as BackendCountryCode)
+        : undefined;
+    const statusParam =
+      statusFilter !== "ALL"
+        ? mapFrontendStatusToBackend(statusFilter as BatchStatus)
+        : undefined;
+
+    getBatchesApi({
+      countryCode: countryParam,
+      status: statusParam,
+    })
+      .then((data) => {
+        if (!ignore) {
+          setBatches(data.map(mapBackendBatchToFrontend));
+        }
+      })
+      .catch((err: unknown) => {
+        if (!ignore) {
+          console.error("Gagal memuat batch:", err);
+          const msg =
+            err instanceof Error ? err.message : "Gagal memuat daftar batch.";
+          setFetchError(msg);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [countryFilter, statusFilter]);
+
   // Daftar warehouse unik untuk dropdown filter
   const warehouses = useMemo(() => {
     const set = new Set<string>();
-    batches.forEach((b) => set.add(b.warehouseProxy));
+    batches.forEach((b) => {
+      if (b.warehouseProxy && b.warehouseProxy !== "-") {
+        set.add(b.warehouseProxy);
+      }
+    });
     return Array.from(set);
   }, [batches]);
 
@@ -68,7 +153,7 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
       activeBatches: activeCount,
       totalPc: activeTotalPc,
       waitingCalculation: waitingLaba,
-      archivedBatches: archived, // Termasuk historis batch lama sesuai wireframe (18)
+      archivedBatches: archived,
     };
   }, [batches]);
 
@@ -79,18 +164,70 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
     );
   };
 
-  // Handler ubah status batch (Open, Closed, Archived)
-  const handleUpdateStatus = (batchId: string, newStatus: BatchStatus) => {
+  // Handler ubah status batch via PATCH API Backend
+  const handleUpdateStatus = async (
+    batchId: string,
+    newStatus: BatchStatus,
+  ) => {
     const target = batches.find((b) => b.id === batchId);
+    const oldStatus = target?.status;
+
+    // Optimistic update di UI
     setBatches((prev) =>
       prev.map((b) => (b.id === batchId ? { ...b, status: newStatus } : b)),
     );
-    setToastMessage(
-      `Status batch ${target?.batchNumber || ""} diubah menjadi ${newStatus}!`,
-    );
+
+    try {
+      await patchBatchApi(batchId, {
+        status: mapFrontendStatusToBackend(newStatus),
+      });
+      setToastMessage(
+        `Status batch ${target?.batchNumber || ""} berhasil diubah menjadi ${newStatus}!`,
+      );
+    } catch (err: unknown) {
+      // Rollback jika request backend gagal
+      if (oldStatus) {
+        setBatches((prev) =>
+          prev.map((b) => (b.id === batchId ? { ...b, status: oldStatus } : b)),
+        );
+      }
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Gagal mengubah status di backend.";
+      setToastMessage(`Error: ${msg}`);
+    }
+
     setTimeout(() => {
       setToastMessage(null);
-    }, 3000);
+    }, 3500);
+  };
+
+  // Handler hapus batch via DELETE API Backend
+  const handleDeleteBatch = async (batchId: string) => {
+    const target = batches.find((b) => b.id === batchId);
+    const confirmed = window.confirm(
+      `Apakah Anda yakin ingin menghapus batch "${target?.batchNumber || ""}"? Tindakan ini tidak dapat dibatalkan.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteBatchApi(batchId);
+      setBatches((prev) => prev.filter((b) => b.id !== batchId));
+      setToastMessage(
+        `Batch ${target?.batchNumber || ""} berhasil dihapus dari database!`,
+      );
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Gagal menghapus batch di backend.";
+      setToastMessage(`Error: ${msg}`);
+    }
+
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
   };
 
   // Handler buka modal internal calculation
@@ -99,7 +236,7 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
     setCalcModalOpen(true);
   };
 
-  // Handler simpan hasil internal calculation
+  // Handler simpan hasil internal calculation (state lokal)
   const handleSaveCalculation = (batchNumber: string, labaBersih: number) => {
     setBatches((prev) =>
       prev.map((b) =>
@@ -183,15 +320,50 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
           </p>
         </div>
 
-        <Button
-          type="button"
-          onClick={onCreateNewBatch}
-          className="h-10 sm:h-11 px-4 sm:px-5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white font-semibold text-xs sm:text-sm gap-2 self-start sm:self-auto shadow-sm transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Buat Batch Baru</span>
-        </Button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={loadBatches}
+            disabled={isLoading}
+            className="h-10 sm:h-11 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#71717A] hover:text-[#EC4899] text-xs font-semibold gap-1.5 transition-colors cursor-pointer"
+            title="Muat ulang data dari backend"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isLoading ? "animate-spin text-[#EC4899]" : ""}`}
+            />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+
+          <Button
+            type="button"
+            onClick={onCreateNewBatch}
+            className="h-10 sm:h-11 px-4 sm:px-5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white font-semibold text-xs sm:text-sm gap-2 shadow-sm transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Buat Batch Baru</span>
+          </Button>
+        </div>
       </div>
+
+      {/* Error Alert Banner */}
+      {fetchError && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span>Tidak dapat terhubung ke server backend: {fetchError}</span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={loadBatches}
+            className="h-8 text-xs font-semibold text-rose-700 border-rose-300 hover:bg-rose-100 self-start sm:self-auto cursor-pointer"
+          >
+            Coba Lagi
+          </Button>
+        </div>
+      )}
 
       {/* Summary Stat Cards Grid */}
       <BatchStatsCards stats={stats} />
@@ -213,15 +385,27 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
           warehouses={warehouses}
         />
 
-        <BatchTable
-          batches={filteredBatches}
-          totalBatchesCount={batches.length}
-          onEditBatch={onEditBatch}
-          onCalculateBatch={handleOpenCalcModal}
-          onCopyBatch={handleCopyBatch}
-          onToggleHideBatch={handleToggleHide}
-          onUpdateBatchStatus={handleUpdateStatus}
-        />
+        {isLoading ? (
+          <div className="py-16 flex flex-col items-center justify-center gap-3 text-center">
+            <div className="w-10 h-10 rounded-full bg-[#FFF5FA] border border-[#FBCFE8] flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-[#EC4899] animate-spin" />
+            </div>
+            <p className="text-xs text-[#71717A] font-medium">
+              Memuat data batch dari backend...
+            </p>
+          </div>
+        ) : (
+          <BatchTable
+            batches={filteredBatches}
+            totalBatchesCount={batches.length}
+            onEditBatch={onEditBatch}
+            onCalculateBatch={handleOpenCalcModal}
+            onCopyBatch={handleCopyBatch}
+            onToggleHideBatch={handleToggleHide}
+            onUpdateBatchStatus={handleUpdateStatus}
+            onDeleteBatch={handleDeleteBatch}
+          />
+        )}
       </Card>
 
       {/* Internal Calculation Modal Dialog */}
