@@ -20,6 +20,7 @@ interface BatchTableProps {
   onCopyBatch: (batch: BatchItem) => void;
   onToggleHideBatch: (batchId: string) => void;
   onUpdateBatchStatus: (batchId: string, status: BatchStatus) => void;
+  onDeleteBatch?: (batchId: string) => void;
 }
 
 function formatRupiah(amount: number): string {
@@ -36,6 +37,7 @@ export const BatchTable: React.FC<BatchTableProps> = ({
   onCopyBatch,
   onToggleHideBatch,
   onUpdateBatchStatus,
+  onDeleteBatch,
 }) => {
   return (
     <>
@@ -94,7 +96,10 @@ export const BatchTable: React.FC<BatchTableProps> = ({
                     {/* Negara Pill */}
                     <TableCell className="py-3.5 px-4">
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[8px] bg-white border border-[#FBCFE8] text-xs font-semibold text-[#18181B] shadow-2xs">
-                        <CountryFlag code={batch.countryCode} className="w-4 h-3 rounded-[2px]" />
+                        <CountryFlag
+                          code={batch.countryCode}
+                          className="w-4 h-3 rounded-[2px]"
+                        />
                         <span>{batch.countryCode}</span>
                       </div>
                     </TableCell>
@@ -178,6 +183,7 @@ export const BatchTable: React.FC<BatchTableProps> = ({
                         onCopy={onCopyBatch}
                         onToggleHide={onToggleHideBatch}
                         onUpdateStatus={onUpdateBatchStatus}
+                        onDelete={onDeleteBatch}
                       />
                     </TableCell>
                   </TableRow>

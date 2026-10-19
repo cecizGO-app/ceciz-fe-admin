@@ -6,10 +6,17 @@ export function useBatchForm() {
   // Selected Country
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>("CH");
 
-  // Form State
+  // Form State (Manual Batch Number sesuai schema Backend)
   const [batchName, setBatchName] = useState("WTS Album Chenle Digipack Ver");
-  const [batchCode] = useState("CN-2610-018");
-  const [batchDate, setBatchDate] = useState("2026-10-02");
+  const [batchNumber, setBatchNumber] = useState<number>(1);
+  const [batchDate, setBatchDate] = useState(
+    () => new Date().toISOString().split("T")[0],
+  );
+
+  // Derived Batch Code: [Negara]-[Nomor 3 Digit]
+  const batchCode = useMemo(() => {
+    return `${selectedCountry}-${String(batchNumber || 1).padStart(3, "0")}`;
+  }, [selectedCountry, batchNumber]);
 
   // Rates & Fees
   const [kursRate, setKursRate] = useState(2250);
@@ -69,7 +76,9 @@ export function useBatchForm() {
       setFeeNyelem(15000); // Nominal TOTAL batch khusus JP
       setFeeGO(25000);
       setBatchName("WTS Batch Merch Official Japan (Mercari)");
-      setCatatan("Batch JP: Exclude packing lokal INA, rate yen flat, shiploc split per batch.");
+      setCatatan(
+        "Batch JP: Exclude packing lokal INA, rate yen flat, shiploc split per batch.",
+      );
       setOrderRows([
         {
           id: "jp_1",
@@ -170,7 +179,8 @@ export function useBatchForm() {
 
     // Khusus JP: Perhitungan harga jual manual per buyer
     const jpHargaJualTotal = orderRows.reduce(
-      (sum, r) => sum + (Number(r.qty) || 0) * (Number(r.hargaJualPerBuyer) || 0),
+      (sum, r) =>
+        sum + (Number(r.qty) || 0) * (Number(r.hargaJualPerBuyer) || 0),
       0,
     );
     const allJpHargaJualFilled =
@@ -240,6 +250,8 @@ export function useBatchForm() {
     currentCountry,
     batchName,
     setBatchName,
+    batchNumber,
+    setBatchNumber,
     batchCode,
     batchDate,
     setBatchDate,
