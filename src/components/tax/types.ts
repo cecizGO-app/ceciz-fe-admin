@@ -67,3 +67,18 @@ export interface AvailableReleaseBatch {
   nonPcCount: number;
   estimatedTax: number;
 }
+
+export function formatReadableDateTime(dtStr: string): string {
+  if (!dtStr) return "-";
+  try {
+    const d = new Date(dtStr);
+    if (isNaN(d.getTime())) return dtStr;
+    return d.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dtStr;
+  }
+}

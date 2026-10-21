@@ -5,6 +5,10 @@ import {
   TaxFilterBar,
   TaxTable,
   TaxPagination,
+  TaxDetailModal,
+  EditTaxInvoiceModal,
+  RejectTaxProofModal,
+  WaivePenaltyModal,
   ReleaseTaxWizardModal,
   initialTaxStats,
   initialTaxInvoices,
@@ -33,7 +37,15 @@ export const TagihanTaxPage: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Wizard modal state
+  // Modals state
+  const [selectedItem, setSelectedItem] = useState<TaxInvoiceItem | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState<TaxInvoiceItem | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectItem, setRejectItem] = useState<TaxInvoiceItem | null>(null);
+  const [waiveModalOpen, setWaiveModalOpen] = useState(false);
+  const [waiveItem, setWaiveItem] = useState<TaxInvoiceItem | null>(null);
   const [releaseWizardOpen, setReleaseWizardOpen] = useState(false);
 
   // Toast feedback state
@@ -73,26 +85,32 @@ export const TagihanTaxPage: React.FC = () => {
         return false;
       }
 
-      // Period filter (Month name)
-      if (periodFilter !== "ALL" && item.periodMonth !== periodFilter) {
+      // Period filter (langsung nama bulan saja: "September 2026", "Agustus 2026", dsb)
+      if (
+        periodFilter !== "ALL" &&
+        item.periodMonth !== periodFilter &&
+        item.period !== periodFilter
+      ) {
         return false;
       }
 
       // Country filter
-      if (countryFilter !== "ALL") {
-        const hasCountry = item.batches.some(
-          (b) => b.country === countryFilter,
-        );
-        if (!hasCountry) return false;
+      if (
+        countryFilter !== "ALL" &&
+        !item.batches.some((b) => b.country === countryFilter)
+      ) {
+        return false;
       }
 
       return true;
     });
   }, [invoices, searchQuery, statusFilter, periodFilter, countryFilter]);
 
-  // Sorted items with multi-column sorting
+  // Sort items according to active sortConfig across all columns
   const sortedInvoices = useMemo(() => {
-    if (!sortConfig) return filteredInvoices;
+    if (!sortConfig) {
+      return filteredInvoices;
+    }
 
     const { field, order } = sortConfig;
     const multiplier = order === "asc" ? 1 : -1;
@@ -100,12 +118,18 @@ export const TagihanTaxPage: React.FC = () => {
     return [...filteredInvoices].sort((a, b) => {
       switch (field) {
         case "buyer": {
-          return multiplier * a.buyerName.localeCompare(b.buyerName);
+          return multiplier * a.buyerName.localeCompare(b.buyerName, "id-ID");
         }
         case "batch": {
-          const aBatch = a.batches[0]?.batchCode || "";
-          const bBatch = b.batches[0]?.batchCode || "";
-          return multiplier * aBatch.localeCompare(bBatch);
+          const aCount = a.batches.length;
+          const bCount = b.batches.length;
+          if (aCount !== bCount) return multiplier * (aCount - bCount);
+          return (
+            multiplier *
+            (a.batches[0]?.batchCode || "").localeCompare(
+              b.batches[0]?.batchCode || "",
+            )
+          );
         }
         case "items": {
           const aQty =
@@ -146,7 +170,7 @@ export const TagihanTaxPage: React.FC = () => {
     return sortedInvoices.slice(start, start + PAGE_SIZE);
   }, [sortedInvoices, currentPage]);
 
-  // Handlers for sorting
+  // Handlers for sorting & modal interactions
   const handleToggleSort = (field: TaxSortField) => {
     setSortConfig((prev) => {
       if (!prev || prev.field !== field) {
@@ -159,27 +183,188 @@ export const TagihanTaxPage: React.FC = () => {
     });
   };
 
+  const handleOpenDetail = (item: TaxInvoiceItem) => {
+    setSelectedItem(item);
+    setDetailModalOpen(true);
+  };
+
+  const handleOpenEdit = (item: TaxInvoiceItem) => {
+    setEditItem(item);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (updatedItem: TaxInvoiceItem) => {
+    const updatedList = invoices.map((i) =>
+      i.id === updatedItem.id ? updatedItem : i,
+    );
+    setInvoices(updatedList);
+
+    // Recalculate stats based on updated data
+    const unpaid = updatedList.filter(
+      (i) => i.status === "Unpaid" || i.status === "Overdue",
+    );
+    const pending = updatedList.filter((i) => i.status === "Pending");
+    const approved = updatedList.filter((i) => i.status === "Approved");
+
+    setStats((prev) => ({
+      ...prev,
+      unpaidCount: unpaid.length,
+      unpaidAmount: unpaid.reduce((sum, i) => sum + i.totalAmount, 0),
+      pendingCount: pending.length,
+      paidAmount: approved.reduce((sum, i) => sum + i.totalAmount, 0),
+    }));
+
+    if (selectedItem?.id === updatedItem.id) {
+      setSelectedItem(updatedItem);
+    }
+
+    showToast(
+      "success",
+      `Tagihan invoice ${updatedItem.id} (${updatedItem.buyerName}) berhasil diperbarui!`,
+    );
+  };
+
+  const handleApprove = (target: TaxInvoiceItem) => {
+    setInvoices((prev) =>
+      prev.map((i) =>
+        i.id === target.id
+          ? {
+              ...i,
+              status: "Approved",
+              proofStatus: "verified_bca",
+              bankName: i.bankName || "BCA",
+            }
+          : i,
+      ),
+    );
+
+    setStats((prev) => ({
+      ...prev,
+      pendingCount: Math.max(0, prev.pendingCount - 1),
+      paidAmount: prev.paidAmount + target.totalAmount,
+    }));
+
+    if (selectedItem?.id === target.id) {
+      setSelectedItem((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "Approved",
+              proofStatus: "verified_bca",
+              bankName: prev.bankName || "BCA",
+            }
+          : null,
+      );
+    }
+
+    showToast(
+      "success",
+      `Pembayaran invoice ${target.id} (${target.buyerName}) berhasil disetujui!`,
+    );
+  };
+
+  const handleOpenReject = (target: TaxInvoiceItem) => {
+    setRejectItem(target);
+    setRejectModalOpen(true);
+  };
+
+  const handleConfirmReject = (reason: string) => {
+    if (!rejectItem) return;
+
+    setInvoices((prev) =>
+      prev.map((i) =>
+        i.id === rejectItem.id
+          ? {
+              ...i,
+              status: "Unpaid",
+              hasProof: false,
+              proofStatus: "none",
+              notes: `Bukti ditolak: ${reason}`,
+            }
+          : i,
+      ),
+    );
+
+    setStats((prev) => ({
+      ...prev,
+      pendingCount: Math.max(0, prev.pendingCount - 1),
+    }));
+
+    if (selectedItem?.id === rejectItem.id) {
+      setSelectedItem((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "Unpaid",
+              hasProof: false,
+              proofStatus: "none",
+              notes: `Bukti ditolak: ${reason}`,
+            }
+          : null,
+      );
+    }
+
+    showToast(
+      "error",
+      `Bukti transfer ${rejectItem.id} ditolak. Status dikembalikan ke Unpaid.`,
+    );
+  };
+
+  const handleOpenWaive = (target: TaxInvoiceItem) => {
+    setWaiveItem(target);
+    setWaiveModalOpen(true);
+  };
+
+  const handleConfirmWaive = (reason: string) => {
+    if (!waiveItem) return;
+
+    setInvoices((prev) =>
+      prev.map((i) =>
+        i.id === waiveItem.id
+          ? {
+              ...i,
+              penaltyWaived: true,
+              penaltyWaiveReason: reason,
+            }
+          : i,
+      ),
+    );
+
+    if (selectedItem?.id === waiveItem.id) {
+      setSelectedItem((prev) =>
+        prev
+          ? {
+              ...prev,
+              penaltyWaived: true,
+              penaltyWaiveReason: reason,
+            }
+          : null,
+      );
+    }
+
+    showToast(
+      "success",
+      `Denda keterlambatan pada ${waiveItem.id} berhasil di-waive (${reason}).`,
+    );
+  };
+
   const handleSuccessRelease = (
     newInvoices: TaxInvoiceItem[],
     periodName: string,
   ) => {
     setInvoices((prev) => [...newInvoices, ...prev]);
-
-    const addedAmount = newInvoices.reduce(
-      (sum, item) => sum + item.totalAmount,
-      0,
-    );
-
     setStats((prev) => ({
       ...prev,
+      activePeriodName: periodName,
       unpaidCount: prev.unpaidCount + newInvoices.length,
-      unpaidAmount: prev.unpaidAmount + addedAmount,
-      activePeriodMonth: periodName,
+      unpaidAmount:
+        prev.unpaidAmount +
+        newInvoices.reduce((acc, inv) => acc + inv.totalAmount, 0),
     }));
 
     showToast(
       "success",
-      `Berhasil merilis ${newInvoices.length} tagihan tax baru untuk periode ${periodName}!`,
+      `Berhasil merilis ${newInvoices.length} invoice tax baru untuk ${periodName}!`,
     );
   };
 
@@ -203,7 +388,7 @@ export const TagihanTaxPage: React.FC = () => {
         </div>
       )}
 
-      {/* Header Section */}
+      {/* Header Section matching screenshot */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="text-[11px] font-bold text-[#EC4899] tracking-wider uppercase mb-1">
@@ -218,7 +403,7 @@ export const TagihanTaxPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Action Button: Release Wizard */}
+        {/* Action Button: Release Wizard Only */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
@@ -234,7 +419,7 @@ export const TagihanTaxPage: React.FC = () => {
       {/* 4 Stats Cards */}
       <TaxStatsCards stats={stats} />
 
-      {/* Filter and Search Bar (Status, Periode langsung nama bulan, Negara) */}
+      {/* Filter and Search Bar aligned with PRD (Status, Periode langsung nama bulan, Negara) */}
       <TaxFilterBar
         searchQuery={searchQuery}
         onSearchChange={(q) => {
@@ -261,8 +446,8 @@ export const TagihanTaxPage: React.FC = () => {
       {/* Invoices Table per buyer with multi-column sorting */}
       <TaxTable
         items={paginatedInvoices}
-        onViewDetail={() => {}}
-        onEdit={() => {}}
+        onViewDetail={handleOpenDetail}
+        onEdit={handleOpenEdit}
         sortConfig={sortConfig}
         onToggleSort={handleToggleSort}
       />
@@ -274,6 +459,43 @@ export const TagihanTaxPage: React.FC = () => {
         totalItems={sortedInvoices.length}
         pageSize={PAGE_SIZE}
         onPageChange={(p) => setCurrentPage(p)}
+      />
+
+      {/* Detail Modal with Proof and Items */}
+      <TaxDetailModal
+        item={selectedItem}
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        onApprove={handleApprove}
+        onOpenReject={handleOpenReject}
+        onOpenWaive={handleOpenWaive}
+        onOpenEdit={handleOpenEdit}
+      />
+
+      {/* Edit Tax Invoice Modal matching wireframe */}
+      <EditTaxInvoiceModal
+        item={editItem}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Reject Modal */}
+      <RejectTaxProofModal
+        open={rejectModalOpen}
+        onOpenChange={setRejectModalOpen}
+        invoiceNo={rejectItem?.id}
+        buyerName={rejectItem?.buyerName}
+        onConfirmReject={handleConfirmReject}
+      />
+
+      {/* Waive Penalty Modal */}
+      <WaivePenaltyModal
+        open={waiveModalOpen}
+        onOpenChange={setWaiveModalOpen}
+        invoiceNo={waiveItem?.id}
+        penaltyAmount={waiveItem?.penaltyAmount || 0}
+        onConfirmWaive={handleConfirmWaive}
       />
 
       {/* Release Wizard 3-Step Modal */}

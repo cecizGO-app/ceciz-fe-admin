@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Calendar,
   AlertTriangle,
   ChevronRight,
   ChevronLeft,
@@ -13,7 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import type { TaxInvoiceItem } from "./types";
+import { type TaxInvoiceItem, formatReadableDateTime } from "./types";
 
 interface ReleaseItemPreview {
   buyerName: string;
@@ -112,7 +111,7 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
   // Step 2 Configuration state
   const [releaseName, setReleaseName] = useState("TAGIHAN TAX 24");
   const [period, setPeriod] = useState("September 2026");
-  const [deadlineDate, setDeadlineDate] = useState("25 Sep 2026");
+  const [deadlineDateTime, setDeadlineDateTime] = useState("2026-09-25T23:59");
   const [buyerNotes, setBuyerNotes] = useState("");
 
   const totalBuyers = 18;
@@ -162,8 +161,8 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
         totalAmount: 117000,
         penaltyAmount: 0,
         penaltyWaived: false,
-        deadline: deadlineDate || "25 Sep 2026",
-        rawDeadline: "2026-09-25T23:59:59",
+        deadline: formatReadableDateTime(deadlineDateTime),
+        rawDeadline: new Date(deadlineDateTime).toISOString(),
         maxCheckoutDate: maxCheckoutDate,
         period: releaseName,
         periodMonth: period,
@@ -394,22 +393,26 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
               </div>
             </div>
 
-            {/* Row 2: Deadline pembayaran */}
+            {/* Row 2: Deadline pembayaran (DateTime Sesuai PRD) */}
             <div>
-              <label className="text-xs font-semibold text-[#18181B] block mb-1.5">
-                Deadline pembayaran
+              <label className="text-xs font-semibold text-[#18181B] block mb-1.5 flex items-center justify-between">
+                <span>Deadline pembayaran (Tanggal &amp; Waktu)</span>
+                <span className="text-[11px] font-normal text-[#71717A]">
+                  Standar PRD: 72 jam sejak rilis
+                </span>
               </label>
               <div className="relative">
                 <input
-                  type="text"
-                  value={deadlineDate}
-                  onChange={(e) => setDeadlineDate(e.target.value)}
-                  placeholder="25 Sep 2026"
+                  type="datetime-local"
+                  value={deadlineDateTime}
+                  onChange={(e) => setDeadlineDateTime(e.target.value)}
                   required
-                  className="w-full h-10 pl-3.5 pr-9 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] outline-none focus:border-[#EC4899] focus:ring-4 focus:ring-[#EC4899]/20"
+                  className="w-full h-10 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold text-[#18181B] outline-none focus:border-[#EC4899] focus:ring-4 focus:ring-[#EC4899]/20"
                 />
-                <Calendar className="w-4 h-4 text-[#71717A] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
+              <p className="text-[11px] text-[#71717A] mt-1">
+                Format Tampilan: {formatReadableDateTime(deadlineDateTime)}
+              </p>
             </div>
 
             {/* Alert Banner: Max Checkout H+60 */}
@@ -487,7 +490,9 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
                 <span className="text-[#71717A] font-medium">
                   Deadline pembayaran
                 </span>
-                <span className="text-[#18181B] font-bold">{deadlineDate}</span>
+                <span className="text-[#18181B] font-bold">
+                  {formatReadableDateTime(deadlineDateTime)}
+                </span>
               </div>
               <div className="py-3 px-4 flex items-center justify-between">
                 <span className="text-[#71717A] font-medium">
