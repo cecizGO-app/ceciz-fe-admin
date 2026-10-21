@@ -4,6 +4,7 @@ import { BatchDashboardPage } from "./pages/batches/BatchDashboardPage";
 import { BatchInputPage } from "./pages/batches/BatchInputPage";
 import { TrackingPage } from "./pages/tracking/TrackingPage";
 import { PaymentVerificationPage } from "./pages/verification/PaymentVerificationPage";
+import { TagihanTaxPage } from "./pages/tax/TagihanTaxPage";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import {
   useSession,
@@ -19,7 +20,13 @@ export function App() {
   const sessionUser = sessionData?.user as unknown as AuthUser | undefined;
 
   const [pageOverride, setPageOverride] = useState<
-    "batch-list" | "batch-new" | "tracking" | "verifikasi" | "login" | null
+    | "batch-list"
+    | "batch-new"
+    | "tracking"
+    | "verifikasi"
+    | "tax"
+    | "login"
+    | null
   >(null);
   const [roleOverride, setRoleOverride] = useState<"owner" | "staff" | null>(
     null,
@@ -94,14 +101,17 @@ export function App() {
       ? "verifikasi"
       : currentPage === "tracking"
         ? "tracking"
-        : currentPage === "batch-list" || currentPage === "batch-new"
-          ? "batch"
-          : "dashboard";
+        : currentPage === "tax"
+          ? "tax"
+          : currentPage === "batch-list" || currentPage === "batch-new"
+            ? "batch"
+            : "dashboard";
 
   const handleNavigate = (menu: string) => {
     if (menu === "dashboard" || menu === "batch") setPageOverride("batch-list");
     if (menu === "tracking") setPageOverride("tracking");
     if (menu === "verifikasi") setPageOverride("verifikasi");
+    if (menu === "tax") setPageOverride("tax");
   };
 
   const displayName =
@@ -130,6 +140,8 @@ export function App() {
         onLogout={handleLogout}
       >
         {currentPage === "verifikasi" && <PaymentVerificationPage />}
+
+        {currentPage === "tax" && <TagihanTaxPage />}
 
         {currentPage === "batch-list" && (
           <BatchDashboardPage
