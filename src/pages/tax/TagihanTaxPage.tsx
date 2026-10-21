@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from "react";
+import { Plus, CheckCircle2, XCircle } from "lucide-react";
 import {
   TaxStatsCards,
   TaxFilterBar,
   TaxTable,
   TaxPagination,
+  ReleaseTaxWizardModal,
   initialTaxStats,
   initialTaxInvoices,
   type TaxInvoiceItem,
@@ -15,8 +17,9 @@ import {
 const PAGE_SIZE = 6;
 
 export const TagihanTaxPage: React.FC = () => {
-  const [invoices] = useState<TaxInvoiceItem[]>(initialTaxInvoices);
-  const [stats] = useState<TaxStats>(initialTaxStats);
+  const [invoices, setInvoices] =
+    useState<TaxInvoiceItem[]>(initialTaxInvoices);
+  const [stats, setStats] = useState<TaxStats>(initialTaxStats);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +32,22 @@ export const TagihanTaxPage: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Wizard modal state
+  const [releaseWizardOpen, setReleaseWizardOpen] = useState(false);
+
+  // Toast feedback state
+  const [toastMessage, setToastMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const showToast = (type: "success" | "error", text: string) => {
+    setToastMessage({ type, text });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
 
   // Filter items
   const filteredInvoices = useMemo(() => {
@@ -140,8 +159,50 @@ export const TagihanTaxPage: React.FC = () => {
     });
   };
 
+  const handleSuccessRelease = (
+    newInvoices: TaxInvoiceItem[],
+    periodName: string,
+  ) => {
+    setInvoices((prev) => [...newInvoices, ...prev]);
+
+    const addedAmount = newInvoices.reduce(
+      (sum, item) => sum + item.totalAmount,
+      0,
+    );
+
+    setStats((prev) => ({
+      ...prev,
+      unpaidCount: prev.unpaidCount + newInvoices.length,
+      unpaidAmount: prev.unpaidAmount + addedAmount,
+      activePeriodMonth: periodName,
+    }));
+
+    showToast(
+      "success",
+      `Berhasil merilis ${newInvoices.length} tagihan tax baru untuk periode ${periodName}!`,
+    );
+  };
+
   return (
     <div className="space-y-6 pb-12">
+      {/* Toast Notification Alert */}
+      {toastMessage && (
+        <div
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-[16px] text-xs font-semibold shadow-lg flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200 border bg-white ${
+            toastMessage.type === "success"
+              ? "text-emerald-900 border-emerald-200/80 shadow-emerald-500/10"
+              : "text-rose-900 border-rose-200/80 shadow-rose-500/10"
+          }`}
+        >
+          {toastMessage.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          ) : (
+            <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          )}
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -155,6 +216,18 @@ export const TagihanTaxPage: React.FC = () => {
             Event penagihan periodik multi-batch untuk barang yang telah tiba di
             warehouse Indonesia.
           </p>
+        </div>
+
+        {/* Action Button: Release Wizard */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setReleaseWizardOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Release Tagihan Tax Baru</span>
+          </button>
         </div>
       </div>
 
@@ -201,6 +274,13 @@ export const TagihanTaxPage: React.FC = () => {
         totalItems={sortedInvoices.length}
         pageSize={PAGE_SIZE}
         onPageChange={(p) => setCurrentPage(p)}
+      />
+
+      {/* Release Wizard 3-Step Modal */}
+      <ReleaseTaxWizardModal
+        open={releaseWizardOpen}
+        onOpenChange={setReleaseWizardOpen}
+        onSuccessRelease={handleSuccessRelease}
       />
     </div>
   );

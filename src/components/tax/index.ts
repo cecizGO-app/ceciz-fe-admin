@@ -5,3 +5,4 @@ export * from "./TaxFilterBar";
 export * from "./TaxInvoiceCard";
 export * from "./TaxTable";
 export * from "./TaxPagination";
+export * from "./ReleaseTaxWizardModal";
