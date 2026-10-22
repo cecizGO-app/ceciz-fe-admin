@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { LoginPage } from "./pages/auth/LoginPage";
+import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { BatchDashboardPage } from "./pages/batches/BatchDashboardPage";
 import { BatchInputPage } from "./pages/batches/BatchInputPage";
 import { TrackingPage } from "./pages/tracking/TrackingPage";
@@ -21,6 +22,7 @@ export function App() {
   const sessionUser = sessionData?.user as unknown as AuthUser | undefined;
 
   const [pageOverride, setPageOverride] = useState<
+    | "dashboard"
     | "batch-list"
     | "batch-new"
     | "tracking"
@@ -55,7 +57,7 @@ export function App() {
 
   // Current page derived from session or user interaction
   const currentPage =
-    pageOverride ?? (sessionUser && isAuthorizedAdmin ? "batch-list" : "login");
+    pageOverride ?? (sessionUser && isAuthorizedAdmin ? "dashboard" : "login");
 
   // Handle logout: clear backend Better Auth session & state
   const handleLogout = async () => {
@@ -97,7 +99,7 @@ export function App() {
       <div className="relative">
         <button
           type="button"
-          onClick={() => setPageOverride("batch-list")}
+          onClick={() => setPageOverride("dashboard")}
           className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
         >
           Bypass ke Dashboard Admin &rarr;
@@ -109,7 +111,7 @@ export function App() {
             setAuthError(null);
             setRoleOverride(role);
             if (user) setDemoUser(user);
-            setPageOverride("batch-list");
+            setPageOverride("dashboard");
           }}
         />
       </div>
@@ -117,18 +119,21 @@ export function App() {
   }
 
   const activeMenu =
-    currentPage === "verifikasi"
-      ? "verifikasi"
-      : currentPage === "tracking"
-        ? "tracking"
-        : currentPage === "tax"
-          ? "tax"
-          : currentPage === "batch-list" || currentPage === "batch-new"
-            ? "batch"
-            : "dashboard";
+    currentPage === "dashboard"
+      ? "dashboard"
+      : currentPage === "verifikasi"
+        ? "verifikasi"
+        : currentPage === "tracking"
+          ? "tracking"
+          : currentPage === "tax"
+            ? "tax"
+            : currentPage === "batch-list" || currentPage === "batch-new"
+              ? "batch"
+              : "dashboard";
 
   const handleNavigate = (menu: string) => {
-    if (menu === "dashboard" || menu === "batch") setPageOverride("batch-list");
+    if (menu === "dashboard") setPageOverride("dashboard");
+    if (menu === "batch") setPageOverride("batch-list");
     if (menu === "tracking") setPageOverride("tracking");
     if (menu === "verifikasi") setPageOverride("verifikasi");
     if (menu === "tax") setPageOverride("tax");
@@ -159,6 +164,14 @@ export function App() {
         onChangeRole={setRoleOverride}
         onLogout={handleLogout}
       >
+        {currentPage === "dashboard" && (
+          <DashboardPage
+            onCreateBatch={() => setPageOverride("batch-new")}
+            onViewAllBatches={() => setPageOverride("batch-list")}
+            onNavigate={handleNavigate}
+          />
+        )}
+
         {currentPage === "verifikasi" && <PaymentVerificationPage />}
 
         {currentPage === "tax" && <TagihanTaxPage />}
