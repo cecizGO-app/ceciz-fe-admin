@@ -1,8 +1,11 @@
-import type { BatchItem, BatchStatus } from "@/components/batch/dashboard/types";
+import type {
+  BatchItem,
+  BatchStatus,
+} from "@/components/batch/dashboard/types";
 
 const BASE_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
-  "http://localhost:3005";
+  "https://ceciz-backend.vercel.app";
 
 export type BackendCountryCode = "CH" | "KR" | "TH" | "JP" | "INA";
 export type BackendBatchStatus = "OPEN" | "CLOSED" | "ARCHIVED";
@@ -81,7 +84,9 @@ export interface BackendBatch {
  * Konversi status dari format Backend ("OPEN" | "CLOSED" | "ARCHIVED")
  * ke format Frontend ("Open" | "Closed" | "Archived")
  */
-export function mapBackendStatusToFrontend(status: BackendBatchStatus): BatchStatus {
+export function mapBackendStatusToFrontend(
+  status: BackendBatchStatus,
+): BatchStatus {
   switch (status) {
     case "OPEN":
       return "Open";
@@ -98,7 +103,9 @@ export function mapBackendStatusToFrontend(status: BackendBatchStatus): BatchSta
  * Konversi status dari format Frontend ("Open" | "Closed" | "Archived")
  * ke format Backend ("OPEN" | "CLOSED" | "ARCHIVED")
  */
-export function mapFrontendStatusToBackend(status: BatchStatus): BackendBatchStatus {
+export function mapFrontendStatusToBackend(
+  status: BatchStatus,
+): BackendBatchStatus {
   switch (status) {
     case "Open":
       return "OPEN";
@@ -136,12 +143,12 @@ export function mapBackendBatchToFrontend(batch: BackendBatch): BatchItem {
   const totalPc =
     batch.items && batch.items.length > 0
       ? batch.items.reduce((sum, item) => sum + (Number(item.pcs) || 1), 0)
-      : batch._count?.items ?? 0;
+      : (batch._count?.items ?? 0);
 
   const buyerCount =
     batch.items && batch.items.length > 0
       ? new Set(batch.items.map((i) => i.buyerId)).size
-      : batch._count?.items ?? 0;
+      : (batch._count?.items ?? 0);
 
   return {
     id: batch.id,
@@ -167,7 +174,8 @@ export async function getBatchesApi(params?: {
   status?: BackendBatchStatus;
 }): Promise<BackendBatch[]> {
   const url = new URL(`${BASE_URL}/api/v1/admin/batches`);
-  if (params?.countryCode) url.searchParams.set("countryCode", params.countryCode);
+  if (params?.countryCode)
+    url.searchParams.set("countryCode", params.countryCode);
   if (params?.status) url.searchParams.set("status", params.status);
 
   const res = await fetch(url.toString(), {
@@ -180,7 +188,9 @@ export async function getBatchesApi(params?: {
 
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.message || "Gagal mengambil daftar batch dari backend");
+    throw new Error(
+      json.message || "Gagal mengambil daftar batch dari backend",
+    );
   }
   return json.data || [];
 }
@@ -209,7 +219,9 @@ export async function getBatchByIdApi(id: string): Promise<BackendBatch> {
  * POST /api/v1/admin/batches
  * Membuat batch baru di backend
  */
-export async function createBatchApi(payload: BackendCreateBatchInput): Promise<BackendBatch> {
+export async function createBatchApi(
+  payload: BackendCreateBatchInput,
+): Promise<BackendBatch> {
   const res = await fetch(`${BASE_URL}/api/v1/admin/batches`, {
     method: "POST",
     credentials: "include",
@@ -223,7 +235,9 @@ export async function createBatchApi(payload: BackendCreateBatchInput): Promise<
   if (!res.ok) {
     if (json.errors && Array.isArray(json.errors)) {
       const details = json.errors
-        .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
+        .map(
+          (e: { field: string; message: string }) => `${e.field}: ${e.message}`,
+        )
         .join(", ");
       throw new Error(`${json.message || "Validasi gagal"}: ${details}`);
     }
@@ -238,7 +252,7 @@ export async function createBatchApi(payload: BackendCreateBatchInput): Promise<
  */
 export async function patchBatchApi(
   id: string,
-  payload: Partial<BackendCreateBatchInput> & { status?: BackendBatchStatus }
+  payload: Partial<BackendCreateBatchInput> & { status?: BackendBatchStatus },
 ): Promise<BackendBatch> {
   const res = await fetch(`${BASE_URL}/api/v1/admin/batches/${id}`, {
     method: "PATCH",

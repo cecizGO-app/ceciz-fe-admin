@@ -29,12 +29,12 @@ export interface AuthSession {
 
 /**
  * Better Auth client connected to backend Ceciz API
- * VITE_AUTH_URL defaults to http://localhost:3005
+ * VITE_AUTH_URL defaults to https://ceciz-backend.vercel.app
  */
 export const authClient = createAuthClient({
   baseURL:
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_AUTH_URL) ||
-    "http://localhost:3005",
+    "https://ceciz-backend.vercel.app",
   fetchOptions: {
     credentials: "include",
   },
@@ -46,7 +46,7 @@ export const { signIn, signUp, signOut, useSession, getSession } = authClient;
  * Helper to map backend Role ("OWNER" | "STAFF") to frontend format ("owner" | "staff")
  */
 export function mapBackendRoleToFrontend(
-  role?: string | null
+  role?: string | null,
 ): "owner" | "staff" | null {
   if (!role) return null;
   const upper = role.toUpperCase();

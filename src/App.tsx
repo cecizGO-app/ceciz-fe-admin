@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { BatchDashboardPage } from "./pages/batches/BatchDashboardPage";
 import { BatchInputPage } from "./pages/batches/BatchInputPage";
@@ -10,6 +10,7 @@ import {
   useSession,
   signOut,
   mapBackendRoleToFrontend,
+  isAllowedAdminRole,
   type AuthUser,
 } from "./lib/auth-client";
 import { Loader2 } from "lucide-react";
@@ -32,14 +33,29 @@ export function App() {
     null,
   );
   const [demoUser, setDemoUser] = useState<AuthUser | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Validate Google OAuth session: prevent BUYER role from accessing Admin Dashboard (PRD RBAC §1.9)
+  useEffect(() => {
+    if (sessionUser && !isAllowedAdminRole(sessionUser.role)) {
+      signOut().catch(() => {});
+      setAuthError(
+        `Akses Ditolak: Akun Google "${sessionUser.email}" terdaftar dengan role ${sessionUser.role || "BUYER"}. Dashboard Admin hanya diperuntukkan bagi OWNER dan STAFF (PRD RBAC §1.9).`,
+      );
+      setPageOverride("login");
+    }
+  }, [sessionUser]);
 
   // Derived user and role from active session or demo login
   const currentUser = demoUser || sessionUser || null;
+  const isAuthorizedAdmin =
+    isAllowedAdminRole(currentUser?.role) || !!roleOverride;
   const backendRole = mapBackendRoleToFrontend(currentUser?.role);
   const userRole: "owner" | "staff" = roleOverride || backendRole || "owner";
 
   // Current page derived from session or user interaction
-  const currentPage = pageOverride ?? (sessionUser ? "batch-list" : "login");
+  const currentPage =
+    pageOverride ?? (sessionUser && isAuthorizedAdmin ? "batch-list" : "login");
 
   // Handle logout: clear backend Better Auth session & state
   const handleLogout = async () => {
@@ -50,6 +66,7 @@ export function App() {
     }
     setDemoUser(null);
     setRoleOverride(null);
+    setAuthError(null);
     setPageOverride("login");
   };
 
@@ -86,7 +103,10 @@ export function App() {
           Bypass ke Dashboard Admin &rarr;
         </button>
         <LoginPage
+          initialError={authError}
+          onClearError={() => setAuthError(null)}
           onLoginSuccess={(role, user) => {
+            setAuthError(null);
             setRoleOverride(role);
             if (user) setDemoUser(user);
             setPageOverride("batch-list");
