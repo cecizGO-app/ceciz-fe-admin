@@ -1,6 +1,6 @@
 import React from 'react'
 import { Plus, Trash2 } from 'lucide-react'
-import type { BuyerOption, OrderRow } from './types'
+import type { BuyerOption, OrderRow } from "@/types/batch";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

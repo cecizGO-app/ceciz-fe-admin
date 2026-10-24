@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, CheckSquare, Square, Package } from 'lucide-react'
-import type { TrackingItem, TrackingStage } from './types'
+import type { TrackingItem, TrackingStage } from '@/types/tracking'
 import { TrackingStatusDropdown } from './TrackingStatusDropdown'
 
 interface TrackingTableProps {

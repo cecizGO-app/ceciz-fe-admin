@@ -1,7 +1,4 @@
-import type {
-  BatchItem,
-  BatchStatus,
-} from "@/components/batch/dashboard/types";
+import type { BatchItem, BatchStatus } from "@/types/batch";
 
 const BASE_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||

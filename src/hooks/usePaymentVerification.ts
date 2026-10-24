@@ -2,8 +2,8 @@ import { useState, useMemo } from "react";
 import {
   INITIAL_PAYMENT_ITEMS,
   INITIAL_VERIFICATION_STATS,
-} from "./mockVerificationData";
-import type { PaymentItem, StatusTab, VerificationStats } from "./types";
+} from "@/mocks/mockVerificationData";
+import type { PaymentItem, StatusTab, VerificationStats } from "@/types/verification";
 
 export const PAGE_SIZE = 8;
 

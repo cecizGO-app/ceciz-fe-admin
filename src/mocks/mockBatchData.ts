@@ -1,4 +1,4 @@
-import type { BatchItem, CountryFilter } from "./types";
+import type { BatchItem, CountryFilter } from "@/types/batch";
 
 export interface CountryPillOption {
   code: CountryFilter;
@@ -133,7 +133,6 @@ export const INITIAL_BATCHES: BatchItem[] = [
     labaAmount: 142750,
     isHidden: false,
   },
-  // 2 Batch tersembunyi
   {
     id: "b-10",
     batchNumber: "TH-010",

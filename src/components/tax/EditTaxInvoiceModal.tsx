@@ -18,14 +18,14 @@ import {
 import {
   availableBuyersList,
   availableBatchCodesList,
-} from "./mockTaxData";
+} from "@/mocks/mockTaxData";
 import {
   type TaxInvoiceItem,
   type TaxStatus,
   type BatchItemRef,
   type CountryCode,
   formatReadableDateTime,
-} from "./types";
+} from "@/types/tax";
 
 interface FormBatchItem {
   id: string;

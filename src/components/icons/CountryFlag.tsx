@@ -1,4 +1,4 @@
-import type { CountryCode } from "../batch/input/types";
+import type { CountryCode } from "@/types/common";
 
 export interface CountryFlagProps {
   code: CountryCode | string;

@@ -1,4 +1,12 @@
 import { useState, useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { BatchDashboardPage } from "./pages/batches/BatchDashboardPage";
@@ -16,21 +24,13 @@ import {
 } from "./lib/auth-client";
 import { Loader2 } from "lucide-react";
 
-export function App() {
+function AppContent() {
   const { data: sessionData, isPending } = useSession();
-
   const sessionUser = sessionData?.user as unknown as AuthUser | undefined;
 
-  const [pageOverride, setPageOverride] = useState<
-    | "dashboard"
-    | "batch-list"
-    | "batch-new"
-    | "tracking"
-    | "verifikasi"
-    | "tax"
-    | "login"
-    | null
-  >(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [roleOverride, setRoleOverride] = useState<"owner" | "staff" | null>(
     null,
   );
@@ -44,9 +44,9 @@ export function App() {
       setAuthError(
         `Akses Ditolak: Akun Google "${sessionUser.email}" terdaftar dengan role ${sessionUser.role || "BUYER"}. Dashboard Admin hanya diperuntukkan bagi OWNER dan STAFF (PRD RBAC §1.9).`,
       );
-      setPageOverride("login");
+      navigate("/login", { replace: true });
     }
-  }, [sessionUser]);
+  }, [sessionUser, navigate]);
 
   // Derived user and role from active session or demo login
   const currentUser = demoUser || sessionUser || null;
@@ -54,10 +54,6 @@ export function App() {
     isAllowedAdminRole(currentUser?.role) || !!roleOverride;
   const backendRole = mapBackendRoleToFrontend(currentUser?.role);
   const userRole: "owner" | "staff" = roleOverride || backendRole || "owner";
-
-  // Current page derived from session or user interaction
-  const currentPage =
-    pageOverride ?? (sessionUser && isAuthorizedAdmin ? "dashboard" : "login");
 
   // Handle logout: clear backend Better Auth session & state
   const handleLogout = async () => {
@@ -69,7 +65,7 @@ export function App() {
     setDemoUser(null);
     setRoleOverride(null);
     setAuthError(null);
-    setPageOverride("login");
+    navigate("/login");
   };
 
   // Initial session check loading screen
@@ -93,50 +89,22 @@ export function App() {
     );
   }
 
-  // Login Page View
-  if (currentPage === "login") {
-    return (
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setPageOverride("dashboard")}
-          className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
-        >
-          Bypass ke Dashboard Admin &rarr;
-        </button>
-        <LoginPage
-          initialError={authError}
-          onClearError={() => setAuthError(null)}
-          onLoginSuccess={(role, user) => {
-            setAuthError(null);
-            setRoleOverride(role);
-            if (user) setDemoUser(user);
-            setPageOverride("dashboard");
-          }}
-        />
-      </div>
-    );
-  }
-
-  const activeMenu =
-    currentPage === "dashboard"
-      ? "dashboard"
-      : currentPage === "verifikasi"
-        ? "verifikasi"
-        : currentPage === "tracking"
-          ? "tracking"
-          : currentPage === "tax"
-            ? "tax"
-            : currentPage === "batch-list" || currentPage === "batch-new"
-              ? "batch"
-              : "dashboard";
+  // Active menu derivation based on current pathname
+  const getActiveMenu = () => {
+    const p = location.pathname;
+    if (p.startsWith("/batches")) return "batch";
+    if (p.startsWith("/verification")) return "verifikasi";
+    if (p.startsWith("/tracking")) return "tracking";
+    if (p.startsWith("/tax")) return "tax";
+    return "dashboard";
+  };
 
   const handleNavigate = (menu: string) => {
-    if (menu === "dashboard") setPageOverride("dashboard");
-    if (menu === "batch") setPageOverride("batch-list");
-    if (menu === "tracking") setPageOverride("tracking");
-    if (menu === "verifikasi") setPageOverride("verifikasi");
-    if (menu === "tax") setPageOverride("tax");
+    if (menu === "dashboard") navigate("/dashboard");
+    if (menu === "batch") navigate("/batches");
+    if (menu === "tracking") navigate("/tracking");
+    if (menu === "verifikasi") navigate("/verification");
+    if (menu === "tax") navigate("/tax");
   };
 
   const displayName =
@@ -146,54 +114,139 @@ export function App() {
     currentUser?.name?.[0]?.toUpperCase() || (userRole === "owner" ? "A" : "S");
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setPageOverride("login")}
-        className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#71717A] hover:text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
-      >
-        &larr; Lihat Login Page
-      </button>
+    <Routes>
+      {/* Public Login Route */}
+      <Route
+        path="/login"
+        element={
+          isAuthorizedAdmin ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setRoleOverride("owner");
+                  navigate("/dashboard");
+                }}
+                className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
+              >
+                Bypass ke Dashboard Admin &rarr;
+              </button>
+              <LoginPage
+                initialError={authError}
+                onClearError={() => setAuthError(null)}
+                onLoginSuccess={(role, user) => {
+                  setAuthError(null);
+                  setRoleOverride(role);
+                  if (user) setDemoUser(user);
+                  navigate("/dashboard");
+                }}
+              />
+            </div>
+          )
+        }
+      />
 
-      <AdminLayout
-        activeMenu={activeMenu}
-        onNavigate={handleNavigate}
-        userRole={userRole}
-        userName={displayName}
-        userInitial={displayInitial}
-        onChangeRole={setRoleOverride}
-        onLogout={handleLogout}
-      >
-        {currentPage === "dashboard" && (
-          <DashboardPage
-            onCreateBatch={() => setPageOverride("batch-new")}
-            onViewAllBatches={() => setPageOverride("batch-list")}
-            onNavigate={handleNavigate}
-          />
-        )}
+      {/* Protected Admin Routes */}
+      <Route
+        path="/*"
+        element={
+          !isAuthorizedAdmin ? (
+            <Navigate to="/login" replace />
+          ) : (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#71717A] hover:text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
+              >
+                &larr; Lihat Login Page
+              </button>
 
-        {currentPage === "verifikasi" && <PaymentVerificationPage />}
+              <AdminLayout
+                activeMenu={getActiveMenu()}
+                onNavigate={handleNavigate}
+                userRole={userRole}
+                userName={displayName}
+                userInitial={displayInitial}
+                onChangeRole={setRoleOverride}
+                onLogout={handleLogout}
+              >
+                <Routes>
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <DashboardPage
+                        onCreateBatch={() => navigate("/batches/new")}
+                        onViewAllBatches={() => navigate("/batches")}
+                        onNavigate={handleNavigate}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/batches"
+                    element={
+                      <BatchDashboardPage
+                        onCreateNewBatch={() => navigate("/batches/new")}
+                        onEditBatch={(batchId) =>
+                          navigate(`/batches/${batchId}/edit`)
+                        }
+                      />
+                    }
+                  />
+                  <Route
+                    path="/batches/new"
+                    element={
+                      <BatchInputPage
+                        onBackToList={() => navigate("/batches")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/batches/:batchId/edit"
+                    element={
+                      <BatchInputPage
+                        onBackToList={() => navigate("/batches")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/verification"
+                    element={<PaymentVerificationPage />}
+                  />
+                  <Route
+                    path="/tracking"
+                    element={
+                      <TrackingPage
+                        onNavigateToBatch={() => navigate("/batches")}
+                      />
+                    }
+                  />
+                  <Route path="/tax" element={<TagihanTaxPage />} />
+                  <Route
+                    path="/"
+                    element={<Navigate to="/dashboard" replace />}
+                  />
+                  <Route
+                    path="*"
+                    element={<Navigate to="/dashboard" replace />}
+                  />
+                </Routes>
+              </AdminLayout>
+            </div>
+          )
+        }
+      />
+    </Routes>
+  );
+}
 
-        {currentPage === "tax" && <TagihanTaxPage />}
-
-        {currentPage === "batch-list" && (
-          <BatchDashboardPage
-            onCreateNewBatch={() => setPageOverride("batch-new")}
-            onEditBatch={() => setPageOverride("batch-new")}
-          />
-        )}
-
-        {currentPage === "batch-new" && (
-          <BatchInputPage onBackToList={() => setPageOverride("batch-list")} />
-        )}
-
-        {currentPage === "tracking" && (
-          <TrackingPage
-            onNavigateToBatch={() => setPageOverride("batch-list")}
-          />
-        )}
-      </AdminLayout>
-    </div>
+export function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

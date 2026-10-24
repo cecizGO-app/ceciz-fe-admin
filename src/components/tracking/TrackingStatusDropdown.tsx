@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
-import { TRACKING_STAGES, type TrackingStage } from './types'
+import { TRACKING_STAGES, type TrackingStage } from '@/types/tracking'
 
 interface TrackingStatusDropdownProps {
   currentStage: TrackingStage

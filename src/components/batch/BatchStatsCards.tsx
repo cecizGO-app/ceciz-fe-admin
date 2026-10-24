@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import type { BatchStats } from "./types";
+import type { BatchStats } from "@/types/batch";
 
 interface BatchStatsCardsProps {
   stats: BatchStats;

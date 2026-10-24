@@ -1,5 +1,5 @@
 import React from "react";
-import type { StatusTab } from "./types";
+import type { StatusTab } from "@/types/verification";
 
 interface VerificationStatusTabsProps {
   activeTab: StatusTab;

@@ -21,7 +21,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import type { BatchItem, BatchStatus } from "./types";
+import type { BatchItem, BatchStatus } from "@/types/batch";
 
 interface BatchRowActionsProps {
   batch: BatchItem;

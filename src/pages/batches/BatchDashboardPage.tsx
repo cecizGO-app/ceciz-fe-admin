@@ -1,30 +1,14 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React from "react";
 import { Plus, Check, RefreshCw, Loader2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { InternalCalculationModal } from "@/components/batch/InternalCalculationModal";
 import {
   BatchStatsCards,
   BatchFilterBar,
   BatchTable,
-  type BatchItem,
-  type BatchStatus,
-  type CountryFilter,
-} from "@/components/batch/dashboard";
-import {
-  getBatchesApi,
-  patchBatchApi,
-  deleteBatchApi,
-  mapBackendBatchToFrontend,
-  mapFrontendStatusToBackend,
-  type BackendCountryCode,
-} from "@/services/batch.service";
-
-function formatRupiah(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+  InternalCalculationModal,
+} from "@/components/batch";
+import { useBatchDashboard } from "@/hooks";
 
 interface BatchDashboardPageProps {
   onCreateNewBatch?: () => void;
@@ -35,265 +19,36 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
   onCreateNewBatch,
   onEditBatch,
 }) => {
-  const [batches, setBatches] = useState<BatchItem[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [warehouseFilter, setWarehouseFilter] = useState<string>("ALL");
-  const [countryFilter, setCountryFilter] = useState<CountryFilter>("ALL");
-  const [showHidden, setShowHidden] = useState(false);
-  const [calcModalOpen, setCalcModalOpen] = useState(false);
-  const [selectedBatchForCalc, setSelectedBatchForCalc] =
-    useState<BatchItem | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Fetch data dari Backend API
-  const loadBatches = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setFetchError(null);
-
-      const countryParam =
-        countryFilter !== "ALL"
-          ? (countryFilter as BackendCountryCode)
-          : undefined;
-      const statusParam =
-        statusFilter !== "ALL"
-          ? mapFrontendStatusToBackend(statusFilter as BatchStatus)
-          : undefined;
-
-      const data = await getBatchesApi({
-        countryCode: countryParam,
-        status: statusParam,
-      });
-
-      const mapped = data.map(mapBackendBatchToFrontend);
-      setBatches(mapped);
-    } catch (err: unknown) {
-      console.error("Gagal memuat batch:", err);
-      const msg =
-        err instanceof Error ? err.message : "Gagal memuat daftar batch.";
-      setFetchError(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [countryFilter, statusFilter]);
-
-  useEffect(() => {
-    let ignore = false;
-
-    const countryParam =
-      countryFilter !== "ALL"
-        ? (countryFilter as BackendCountryCode)
-        : undefined;
-    const statusParam =
-      statusFilter !== "ALL"
-        ? mapFrontendStatusToBackend(statusFilter as BatchStatus)
-        : undefined;
-
-    getBatchesApi({
-      countryCode: countryParam,
-      status: statusParam,
-    })
-      .then((data) => {
-        if (!ignore) {
-          setBatches(data.map(mapBackendBatchToFrontend));
-        }
-      })
-      .catch((err: unknown) => {
-        if (!ignore) {
-          console.error("Gagal memuat batch:", err);
-          const msg =
-            err instanceof Error ? err.message : "Gagal memuat daftar batch.";
-          setFetchError(msg);
-        }
-      })
-      .finally(() => {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [countryFilter, statusFilter]);
-
-  // Daftar warehouse unik untuk dropdown filter
-  const warehouses = useMemo(() => {
-    const set = new Set<string>();
-    batches.forEach((b) => {
-      if (b.warehouseProxy && b.warehouseProxy !== "-") {
-        set.add(b.warehouseProxy);
-      }
-    });
-    return Array.from(set);
-  }, [batches]);
-
-  // Hitung jumlah batch tersembunyi
-  const hiddenCount = useMemo(() => {
-    return batches.filter((b) => b.isHidden).length;
-  }, [batches]);
-
-  // Summary Stats dinamis mengikuti status batch
-  const stats = useMemo(() => {
-    const activeCount = batches.filter(
-      (b) => (b.status === "Open" || b.status === "Closed") && !b.isHidden,
-    ).length;
-    const activeTotalPc = batches
-      .filter((b) => b.status !== "Archived" && !b.isHidden)
-      .reduce((sum, b) => sum + b.totalPc, 0);
-    const waitingLaba = batches.filter(
-      (b) => b.status === "Closed" && b.labaAmount === null && !b.isHidden,
-    ).length;
-    const archived = batches.filter((b) => b.status === "Archived").length;
-
-    return {
-      activeBatches: activeCount,
-      totalPc: activeTotalPc,
-      waitingCalculation: waitingLaba,
-      archivedBatches: archived,
-    };
-  }, [batches]);
-
-  // Handler toggle hide/unhide
-  const handleToggleHide = (batchId: string) => {
-    setBatches((prev) =>
-      prev.map((b) => (b.id === batchId ? { ...b, isHidden: !b.isHidden } : b)),
-    );
-  };
-
-  // Handler ubah status batch via PATCH API Backend
-  const handleUpdateStatus = async (
-    batchId: string,
-    newStatus: BatchStatus,
-  ) => {
-    const target = batches.find((b) => b.id === batchId);
-    const oldStatus = target?.status;
-
-    // Optimistic update di UI
-    setBatches((prev) =>
-      prev.map((b) => (b.id === batchId ? { ...b, status: newStatus } : b)),
-    );
-
-    try {
-      await patchBatchApi(batchId, {
-        status: mapFrontendStatusToBackend(newStatus),
-      });
-      setToastMessage(
-        `Status batch ${target?.batchNumber || ""} berhasil diubah menjadi ${newStatus}!`,
-      );
-    } catch (err: unknown) {
-      // Rollback jika request backend gagal
-      if (oldStatus) {
-        setBatches((prev) =>
-          prev.map((b) => (b.id === batchId ? { ...b, status: oldStatus } : b)),
-        );
-      }
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Gagal mengubah status di backend.";
-      setToastMessage(`Error: ${msg}`);
-    }
-
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
-  };
-
-  // Handler hapus batch via DELETE API Backend
-  const handleDeleteBatch = async (batchId: string) => {
-    const target = batches.find((b) => b.id === batchId);
-    const confirmed = window.confirm(
-      `Apakah Anda yakin ingin menghapus batch "${target?.batchNumber || ""}"? Tindakan ini tidak dapat dibatalkan.`,
-    );
-    if (!confirmed) return;
-
-    try {
-      await deleteBatchApi(batchId);
-      setBatches((prev) => prev.filter((b) => b.id !== batchId));
-      setToastMessage(
-        `Batch ${target?.batchNumber || ""} berhasil dihapus dari database!`,
-      );
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Gagal menghapus batch di backend.";
-      setToastMessage(`Error: ${msg}`);
-    }
-
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
-  };
-
-  // Handler buka modal internal calculation
-  const handleOpenCalcModal = (batch: BatchItem) => {
-    setSelectedBatchForCalc(batch);
-    setCalcModalOpen(true);
-  };
-
-  // Handler simpan hasil internal calculation (state lokal)
-  const handleSaveCalculation = (batchNumber: string, labaBersih: number) => {
-    setBatches((prev) =>
-      prev.map((b) =>
-        b.batchNumber === batchNumber ? { ...b, labaAmount: labaBersih } : b,
-      ),
-    );
-    setToastMessage(
-      `Internal calculation untuk ${batchNumber} tersimpan! Laba bersih: Rp ${formatRupiah(labaBersih)}`,
-    );
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
-  };
-
-  // Handler copy batch info
-  const handleCopyBatch = (batch: BatchItem) => {
-    const textToCopy = `[Batch ${batch.batchNumber}] ${batch.warehouseProxy} - ${batch.buyerCount} buyer (${batch.totalPc} PC) - Status: ${batch.status}`;
-    navigator.clipboard.writeText(textToCopy);
-    setToastMessage(
-      `Info batch ${batch.batchNumber} berhasil disalin ke clipboard!`,
-    );
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2500);
-  };
-
-  // Filter Data
-  const filteredBatches = useMemo(() => {
-    return batches.filter((batch) => {
-      if (!showHidden && batch.isHidden) return false;
-
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const matchNumber = batch.batchNumber.toLowerCase().includes(query);
-        const matchWarehouse = batch.warehouseProxy
-          .toLowerCase()
-          .includes(query);
-        const matchCountry = batch.countryCode.toLowerCase().includes(query);
-        if (!matchNumber && !matchWarehouse && !matchCountry) return false;
-      }
-
-      if (statusFilter !== "ALL" && batch.status !== statusFilter) return false;
-      if (warehouseFilter !== "ALL" && batch.warehouseProxy !== warehouseFilter)
-        return false;
-      if (countryFilter !== "ALL" && batch.countryCode !== countryFilter)
-        return false;
-
-      return true;
-    });
-  }, [
+  const {
     batches,
+    filteredBatches,
+    isLoading,
+    fetchError,
+    loadBatches,
+    stats,
+    warehouses,
+    hiddenCount,
     searchQuery,
+    setSearchQuery,
     statusFilter,
+    setStatusFilter,
     warehouseFilter,
+    setWarehouseFilter,
     countryFilter,
+    setCountryFilter,
     showHidden,
-  ]);
+    setShowHidden,
+    handleToggleHide,
+    handleUpdateStatus,
+    handleDeleteBatch,
+    handleCopyBatch,
+    calcModalOpen,
+    setCalcModalOpen,
+    selectedBatchForCalc,
+    handleOpenCalcModal,
+    handleSaveCalculation,
+    toastMessage,
+  } = useBatchDashboard();
 
   return (
     <div className="space-y-6 pb-12">

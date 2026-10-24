@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import type { VerificationStats } from "./types";
+import type { VerificationStats } from "@/types/verification";
 
 interface VerificationStatsCardsProps {
   stats: VerificationStats;

@@ -16,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { PaymentItem, PaymentMethod } from "./types";
-import { getReceiptImageUrl } from "./receiptImages";
+import type { PaymentItem, PaymentMethod } from "@/types/verification";
+import { getReceiptImageUrl } from "@/mocks/receiptImages";
 
 interface AddManualPaymentModalProps {
   open: boolean;

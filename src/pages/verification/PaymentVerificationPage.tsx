@@ -7,10 +7,9 @@ import {
   ProofReceiptModal,
   RejectReasonModal,
   AddManualPaymentModal,
-  usePaymentVerification,
-  PAGE_SIZE,
-  type PaymentItem,
 } from "@/components/verification";
+import { usePaymentVerification, PAGE_SIZE } from "@/hooks";
+import type { PaymentItem } from "@/types/verification";
 
 export const PaymentVerificationPage: React.FC = () => {
   const {

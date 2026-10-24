@@ -16,8 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CountryFlag } from "@/components/icons/CountryFlag";
-import { getReceiptImageUrl } from "@/components/verification/receiptImages";
-import type { TaxInvoiceItem, CountryCode, BatchItemRef } from "./types";
+import { getReceiptImageUrl } from "@/mocks/receiptImages";
+import type { TaxInvoiceItem, CountryCode, BatchItemRef } from "@/types/tax";
 
 interface TaxDetailModalProps {
   item: TaxInvoiceItem | null;

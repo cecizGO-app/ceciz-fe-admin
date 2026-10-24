@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { VerificationStatusTabs } from "./VerificationStatusTabs";
-import type { StatusTab } from "./types";
+import type { StatusTab } from "@/types/verification";
 
 interface VerificationFilterBarProps {
   activeTab: StatusTab;

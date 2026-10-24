@@ -12,11 +12,11 @@ import {
   BatchCalculationSummary,
   BuyerOrderTable,
   BatchStepbar,
-  useBatchForm,
   COUNTRIES,
   REGISTERED_BUYERS,
   WIZARD_STEPS,
-} from "@/components/batch/input";
+} from "@/components/batch";
+import { useBatchForm } from "@/hooks";
 import {
   createBatchApi,
   type BackendCreateBatchInput,

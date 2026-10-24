@@ -2,7 +2,7 @@ import React from "react";
 import { CheckCircle2, Truck, Package, Receipt } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { TeamActivityItem } from "./types";
+import type { TeamActivityItem } from "@/types/dashboard";
 
 interface TeamActivityCardProps {
   activities: TeamActivityItem[];

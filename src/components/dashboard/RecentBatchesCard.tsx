@@ -11,7 +11,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { RecentBatch } from "./types";
+import type { RecentBatch } from "@/types/dashboard";
 
 interface RecentBatchesCardProps {
   batches: RecentBatch[];

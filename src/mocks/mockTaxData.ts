@@ -2,7 +2,7 @@ import type {
   TaxInvoiceItem,
   TaxStats,
   AvailableReleaseBatch,
-} from "./types";
+} from "@/types/tax";
 
 export const initialTaxStats: TaxStats = {
   activePeriodName: "TAGIHAN TAX 2",
@@ -234,7 +234,6 @@ export const initialTaxInvoices: TaxInvoiceItem[] = [
     refNumber: "TRX-SB-554432",
     transferDate: "24 Sep 2026, 11:10 WIB",
   },
-  // Page 2 items to complete 12 invoices
   {
     id: "TAX-017",
     buyerName: "Adinda Kirana",
@@ -387,7 +386,7 @@ export const initialTaxInvoices: TaxInvoiceItem[] = [
     totalItemsCount: 1,
     itemSummary: "1 PC",
     totalAmount: 60000,
-    penaltyAmount: 6000, // 3 days overdue
+    penaltyAmount: 6000,
     penaltyWaived: false,
     deadline: "17 Sep 2026",
     rawDeadline: "2026-09-17T23:59:59",
