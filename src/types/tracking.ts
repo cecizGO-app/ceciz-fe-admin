@@ -116,3 +116,34 @@ export interface TrackingItem {
   isArchived: boolean // PRD B §6.4 Task 6.0
   updatedAt: string
 }
+
+export const STAGES = [
+  "PO",
+  "On Seller Hand",
+  "Arrived WH Luar",
+  "OTW INA",
+  "Arrived WH INA",
+  "Bisa di CO",
+  "Done",
+] as const;
+
+export type Stage = (typeof STAGES)[number];
+
+export type Pkg = {
+  id: number;
+  batch: string;
+  country: string;
+  buyer: string;
+  handle: string;
+  item: string;
+  warehouse: string;
+  resi: string[];
+  box: string;
+  stage: Stage;
+  co: boolean;
+  album: boolean;
+  updated: string;
+  note: string;
+};
+
+export type TrackingTab = "active" | "done" | "all";

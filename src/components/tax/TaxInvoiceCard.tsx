@@ -1,7 +1,7 @@
 import React from "react";
 import { Eye, FileText, CheckCircle2 } from "lucide-react";
 import { CountryFlag } from "@/components/icons/CountryFlag";
-import type { TaxInvoiceItem } from "./types";
+import type { TaxInvoiceItem } from "@/types/tax";
 
 interface TaxInvoiceCardProps {
   item: TaxInvoiceItem;

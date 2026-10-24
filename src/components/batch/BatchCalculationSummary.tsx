@@ -1,6 +1,7 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
-import type { CalculationSummary } from "./types";
+import type { CalculationSummary } from "@/types/batch";
+
 import { Sparkle } from "@/components/icons/Sparkle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

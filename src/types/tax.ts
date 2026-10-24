@@ -1,6 +1,20 @@
 export type TaxStatus = "Pending" | "Unpaid" | "Approved" | "Overdue";
 
-export type CountryCode = "CH" | "KR" | "TH" | "JP" | "INA";
+import type { CountryCode } from "./common";
+export type { CountryCode };
+
+
+
+
+export type SortOrder = "asc" | "desc";
+
+export type TaxSortField = "buyer" | "batch" | "items" | "amount" | "deadline" | "status";
+
+export interface TaxSortConfig {
+  field: TaxSortField;
+  order: SortOrder;
+}
+
 
 export interface BatchItemRef {
   batchCode: string;

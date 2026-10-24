@@ -1,4 +1,4 @@
-import type { PaymentItem, VerificationStats } from "./types";
+import type { PaymentItem, VerificationStats } from "@/types/verification";
 import { getReceiptImageUrl } from "./receiptImages";
 
 export const INITIAL_VERIFICATION_STATS: VerificationStats = {

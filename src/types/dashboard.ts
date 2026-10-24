@@ -1,4 +1,8 @@
-export type CountryCode = "CH" | "KR" | "JP" | "TH" | "INA";
+import type { CountryCode } from "./common";
+export type { CountryCode };
+
+
+
 
 export interface ExchangeRates {
   yuan: string;

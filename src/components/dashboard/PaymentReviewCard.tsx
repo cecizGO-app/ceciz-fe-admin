@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { PaymentReviewStats } from "./types";
+import type { PaymentReviewStats } from "@/types/dashboard";
 
 interface PaymentReviewCardProps {
   stats: PaymentReviewStats;

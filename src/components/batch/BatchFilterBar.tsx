@@ -10,8 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CountryFlag } from "@/components/icons/CountryFlag";
-import { COUNTRY_PILLS } from "./mockBatchData";
-import type { CountryFilter } from "./types";
+import { COUNTRY_PILLS } from "@/mocks/mockBatchData";
+import type { CountryFilter } from "@/types/batch";
+
 
 interface BatchFilterBarProps {
   searchQuery: string;

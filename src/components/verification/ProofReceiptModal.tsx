@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { PaymentItem } from "./types";
+import type { PaymentItem } from "@/types/verification";
 
 interface ProofReceiptModalProps {
   item: PaymentItem | null;

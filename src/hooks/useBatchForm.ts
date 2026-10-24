@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import type { CountryCode, OrderRow, CalculationSummary } from "./types";
-import { COUNTRIES, REGISTERED_BUYERS, calculateFeeRekap } from "./constants";
+import type { CountryCode, OrderRow } from "@/types/batch";
+import { calculateBatchPreview } from "@/lib/calculations/batch-preview";
+import { COUNTRIES, REGISTERED_BUYERS } from "@/components/batch/constants";
 
 export function useBatchForm() {
   // Selected Country
@@ -153,86 +154,18 @@ export function useBatchForm() {
     );
   };
 
-  // Real-Time Calculations (PRD 5 Negara Engine & Khusus JP §7.3)
+  // Real-Time Calculations (PRD 5 Negara Engine & Khusus JP §7.3 via Pure Function)
   const { summary, overheadPerPc } = useMemo(() => {
-    const isJapan = selectedCountry === "JP";
-    const totalQty = orderRows.reduce(
-      (sum, r) => sum + (Number(r.qty) || 0),
-      0,
-    );
-    const uniqueBuyers = new Set(orderRows.map((r) => r.buyerId)).size;
-
-    const totalHargaAsliValas = orderRows.reduce(
-      (sum, r) => sum + (Number(r.qty) || 0) * (Number(r.hargaAsli) || 0),
-      0,
-    );
-
-    const konversiIDR = totalHargaAsliValas * kursRate;
-    const shippingLuarNegeriIDR = (Number(shippingWHForeign) || 0) * kursRate;
-    const feeWHProxyTotal =
-      (Number(feeWarehouse) || 0) + (Number(feeProxy) || 0);
-    const { fee: feeRekap, tierLabel } = calculateFeeRekap(totalQty);
-
-    // Total Modal Batch (Harga barang + shiploc/shipping + fee WH/Proxy)
-    const totalModalBatch =
-      konversiIDR + shippingLuarNegeriIDR + feeWHProxyTotal;
-
-    // Khusus JP: Perhitungan harga jual manual per buyer
-    const jpHargaJualTotal = orderRows.reduce(
-      (sum, r) =>
-        sum + (Number(r.qty) || 0) * (Number(r.hargaJualPerBuyer) || 0),
-      0,
-    );
-    const allJpHargaJualFilled =
-      orderRows.length > 0 &&
-      orderRows.every((r) => (Number(r.hargaJualPerBuyer) || 0) > 0);
-    const unfilledJpBuyersCount = orderRows.filter(
-      (r) => !(Number(r.hargaJualPerBuyer) > 0),
-    ).length;
-
-    let totalTagihanBuyer: number;
-    let estimasiLabaBersih: number;
-
-    if (isJapan) {
-      // Sesuai PRD §7.3: Di JP, total tagihan adalah SUM harga_jual_per_buyer jika sudah diisi
-      totalTagihanBuyer =
-        jpHargaJualTotal > 0
-          ? jpHargaJualTotal
-          : totalModalBatch + feeGO + feeRekap;
-      // Laba bersih JP = total pemasukan jual - total modal batch - fee admin nyelem (nominal total)
-      estimasiLabaBersih =
-        jpHargaJualTotal > 0
-          ? jpHargaJualTotal - totalModalBatch - (Number(feeNyelem) || 0)
-          : feeGO - (Number(feeNyelem) || 0);
-    } else {
-      totalTagihanBuyer = totalModalBatch + feeGO + feeRekap;
-      estimasiLabaBersih = feeGO - (Number(feeNyelem) || 0);
-    }
-
-    const totalOverheadBatch =
-      shippingLuarNegeriIDR + feeWHProxyTotal + feeGO + feeRekap;
-    const overheadPerPc = totalQty > 0 ? totalOverheadBatch / totalQty : 0;
-
-    const summary: CalculationSummary = {
-      totalQty,
-      totalBuyer: uniqueBuyers,
-      totalHargaAsliValas,
-      konversiIDR,
-      shippingLuarNegeriIDR,
-      feeWHProxyTotal,
+    return calculateBatchPreview({
+      countryCode: selectedCountry,
+      orderRows,
+      kursRate,
+      shippingWHForeign,
+      feeWarehouse,
+      feeProxy,
       feeGO,
-      feeRekap,
-      tierLabel,
-      totalModalBatch,
-      totalTagihanBuyer,
-      estimasiLabaBersih,
-      isJapan,
-      jpHargaJualTotal,
-      allJpHargaJualFilled,
-      unfilledJpBuyersCount,
-    };
-
-    return { summary, overheadPerPc };
+      feeNyelem,
+    });
   }, [
     selectedCountry,
     orderRows,

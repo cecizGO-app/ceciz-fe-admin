@@ -1,5 +1,5 @@
 import React from "react";
-import type { TaxStats } from "./types";
+import type { TaxStats } from "@/types/tax";
 
 interface TaxStatsCardsProps {
   stats: TaxStats;

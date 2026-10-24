@@ -1,4 +1,3 @@
-export * from "./types";
 export * from "./KursBanner";
 export * from "./DashboardStatsGrid";
 export * from "./RecentBatchesCard";

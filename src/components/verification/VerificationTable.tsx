@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TablePagination } from "./TablePagination";
-import type { PaymentItem } from "./types";
+import type { PaymentItem } from "@/types/verification";
 
 interface VerificationTableProps {
   items: PaymentItem[];

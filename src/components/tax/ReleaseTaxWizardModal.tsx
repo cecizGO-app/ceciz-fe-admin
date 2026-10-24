@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { type TaxInvoiceItem, formatReadableDateTime } from "./types";
+import { type TaxInvoiceItem, formatReadableDateTime } from "@/types/tax";
 
 interface ReleaseItemPreview {
   buyerName: string;

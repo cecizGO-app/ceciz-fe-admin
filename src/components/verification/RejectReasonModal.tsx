@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { PaymentItem } from "./types";
+import type { PaymentItem } from "@/types/verification";
 
 interface RejectReasonModalProps {
   open: boolean;

@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { CountryDistribution } from "./types";
+import type { CountryDistribution } from "@/types/dashboard";
 
 interface CountryDistributionCardProps {
   distributions: CountryDistribution[];

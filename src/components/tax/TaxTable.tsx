@@ -16,22 +16,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { TaxInvoiceItem } from "./types";
+import type {
+  TaxInvoiceItem,
+  TaxSortField,
+  TaxSortConfig,
+  SortOrder,
+} from "@/types/tax";
 
-export type TaxSortField =
-  | "buyer"
-  | "batch"
-  | "items"
-  | "amount"
-  | "deadline"
-  | "status";
+export type { TaxSortField, TaxSortConfig, SortOrder };
 
-export type SortOrder = "asc" | "desc";
-
-export interface TaxSortConfig {
-  field: TaxSortField;
-  order: SortOrder;
-}
 
 interface TaxTableProps {
   items: TaxInvoiceItem[];

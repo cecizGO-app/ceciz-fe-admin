@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { CountryFlag } from "@/components/icons/CountryFlag";
 import { BatchRowActions } from "./BatchRowActions";
-import type { BatchItem, BatchStatus } from "./types";
+import type { BatchItem, BatchStatus } from "@/types/batch";
 
 interface BatchTableProps {
   batches: BatchItem[];
