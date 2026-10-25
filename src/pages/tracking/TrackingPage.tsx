@@ -1,5 +1,5 @@
 import React from "react";
-import { Package } from "lucide-react";
+import { Package, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,8 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
     activeCount,
     doneCount,
     stats,
+    isSyncing,
+    refetch,
     resetPage,
     copyResi,
     handleSavePkg,
@@ -80,16 +82,32 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
           </p>
         </div>
 
-        {onNavigateToBatch && (
+        <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
           <Button
             type="button"
-            onClick={onNavigateToBatch}
-            className="h-11 px-4 gap-2 text-xs font-semibold self-start sm:self-auto shrink-0 shadow-xs cursor-pointer"
+            variant="outline"
+            onClick={refetch}
+            disabled={isSyncing}
+            className="h-11 px-3.5 gap-1.5 text-xs font-semibold rounded-[12px] border-[#FBCFE8] hover:bg-[#FDF2F8] hover:border-[#EC4899] shadow-xs cursor-pointer disabled:opacity-60"
+            title="Muat ulang data tracking dari backend"
           >
-            <Package className="w-4 h-4" />
-            <span>+ Buat Batch Baru</span>
+            <RefreshCw
+              className={`w-3.5 h-3.5 text-[#EC4899] ${isSyncing ? "animate-spin" : ""}`}
+            />
+            <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan"}</span>
           </Button>
-        )}
+
+          {onNavigateToBatch && (
+            <Button
+              type="button"
+              onClick={onNavigateToBatch}
+              className="h-11 px-4 gap-2 text-xs font-semibold shadow-xs cursor-pointer"
+            >
+              <Package className="w-4 h-4" />
+              <span>+ Buat Batch Baru</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* KPI Stats Cards */}

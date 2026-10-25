@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CheckCircle2, XCircle, Plus } from "lucide-react";
+import { CheckCircle2, XCircle, Plus, RefreshCw } from "lucide-react";
 import {
   VerificationStatsCards,
   VerificationFilterBar,
@@ -35,6 +35,8 @@ export const PaymentVerificationPage: React.FC = () => {
     paginatedItems,
     filteredItems,
     toastMessage,
+    isSyncing,
+    refetch,
     handleTabChange,
     handleToggleSelectRow,
     handleToggleSelectAll,
@@ -112,14 +114,29 @@ export const PaymentVerificationPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setAddManualModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Tambah Pembayaran</span>
-        </button>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={refetch}
+            disabled={isSyncing}
+            title="Muat ulang data dari server backend"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-[12px] bg-white border border-[#FBCFE8] hover:bg-[#FDF2F8] text-[#18181B] text-xs font-semibold shadow-xs hover:border-[#EC4899] transition-all cursor-pointer disabled:opacity-60"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 text-[#EC4899] ${isSyncing ? "animate-spin" : ""}`}
+            />
+            <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAddManualModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Tambah Pembayaran</span>
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import type { PaymentItem, PaymentMethod } from "@/types/verification";
 import { getReceiptImageUrl } from "@/mocks/receiptImages";
+import { uploadPaymentProofApi } from "@/services";
 
 interface AddManualPaymentModalProps {
   open: boolean;
@@ -43,6 +44,8 @@ export const AddManualPaymentModal: React.FC<AddManualPaymentModalProps> = ({
   const [status, setStatus] = useState<"PENDING" | "APPROVED">("PENDING");
   const [keterangan, setKeterangan] = useState("");
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const resetForm = () => {
@@ -50,6 +53,7 @@ export const AddManualPaymentModal: React.FC<AddManualPaymentModalProps> = ({
     setNominalStr("");
     setKeterangan("");
     setSelectedFileName(null);
+    setSelectedFile(null);
     setError(null);
   };
 
@@ -60,11 +64,13 @@ export const AddManualPaymentModal: React.FC<AddManualPaymentModalProps> = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFileName(e.target.files[0].name);
+      const file = e.target.files[0];
+      setSelectedFileName(file.name);
+      setSelectedFile(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!buyerName.trim()) {
       setError("Nama buyer wajib diisi.");
@@ -75,6 +81,18 @@ export const AddManualPaymentModal: React.FC<AddManualPaymentModalProps> = ({
       setError("Nominal pembayaran harus lebih dari 0.");
       return;
     }
+
+    setIsUploading(true);
+    let uploadedUrl = "";
+    if (selectedFile) {
+      try {
+        const uploadRes = await uploadPaymentProofApi(selectedFile);
+        uploadedUrl = uploadRes.url;
+      } catch (uploadErr) {
+        console.warn("Upload ke R2 gagal, menggunakan fallback gambar:", uploadErr);
+      }
+    }
+    setIsUploading(false);
 
     const uniqueId = `pay-manual-${Date.now().toString().slice(-6)}`;
     const ref = `MANUAL-${Date.now().toString().slice(-6)}`;
@@ -113,7 +131,8 @@ export const AddManualPaymentModal: React.FC<AddManualPaymentModalProps> = ({
       source: "Admin",
       status,
       keterangan: keterangan.trim() || "Pembayaran manual via admin",
-      proofImageUrl: getReceiptImageUrl(paymentMethod, nominal, buyerName, ref),
+      proofImageUrl:
+        uploadedUrl || getReceiptImageUrl(paymentMethod, nominal, buyerName, ref),
       proofDetail: {
         bankSender: `${paymentMethod} (Input Manual)`,
         senderName: buyerName.trim().toUpperCase(),
@@ -327,10 +346,11 @@ export const AddManualPaymentModal: React.FC<AddManualPaymentModalProps> = ({
             </Button>
             <Button
               type="submit"
-              className="h-9 px-4 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              disabled={isUploading}
+              className="h-9 px-4 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-60"
             >
               <Save className="w-3.5 h-3.5" />
-              <span>Simpan Pembayaran</span>
+              <span>{isUploading ? "Mengunggah..." : "Simpan Pembayaran"}</span>
             </Button>
           </div>
         </form>

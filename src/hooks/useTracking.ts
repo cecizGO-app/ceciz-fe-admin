@@ -1,6 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Pkg, TrackingTab } from "@/types/tracking";
 import { SEED_TRACKING_PACKAGES } from "@/mocks/mockTrackingData";
+import {
+  getAllTrackingApi,
+  updateTrackingApi,
+  mapBackendTrackingToPkg,
+  mapFrontendStageToBackend,
+} from "@/services/tracking.service";
 
 export const TRACKING_PAGE_SIZE = 8;
 export type { TrackingTab };
@@ -25,10 +31,56 @@ export function useTracking() {
   const [warehouses, setWarehouses] = useState<string[]>(BASE_WAREHOUSES);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Status sinkronisasi backend
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   const notify = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 2500);
+    setTimeout(() => setToastMessage(null), 3000);
   };
+
+  /**
+   * Fetch seluruh data tracking dari API backend
+   */
+  const loadTrackingData = useCallback(async (isInitial = false) => {
+    try {
+      if (isInitial) setIsLoading(true);
+      else setIsSyncing(true);
+      setFetchError(null);
+
+      const data = await getAllTrackingApi();
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((t, idx) => mapBackendTrackingToPkg(t, idx));
+        setRows(mapped);
+
+        // Ekstrak nama warehouse unik
+        const uniqueWhs = Array.from(
+          new Set(
+            [...BASE_WAREHOUSES, ...mapped.map((p) => p.warehouse)].filter(
+              Boolean,
+            ),
+          ),
+        );
+        setWarehouses(uniqueWhs);
+      }
+    } catch (err: unknown) {
+      console.warn("Backend tracking API unavailable, using fallback:", err);
+      setFetchError(
+        err instanceof Error
+          ? err.message
+          : "Belum dapat terhubung ke server tracking. Menggunakan data cadangan.",
+      );
+    } finally {
+      setIsLoading(false);
+      setIsSyncing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTrackingData(true);
+  }, [loadTrackingData]);
 
   const copyResi = async (resi: string) => {
     try {
@@ -41,7 +93,7 @@ export function useTracking() {
 
   const activeCount = useMemo(
     () => rows.filter((r) => r.stage !== "Done").length,
-    [rows]
+    [rows],
   );
   const doneCount = useMemo(() => rows.length - activeCount, [rows, activeCount]);
 
@@ -57,8 +109,8 @@ export function useTracking() {
         (stage === "Semua Status" || r.stage === stage) &&
         (!s ||
           [r.batch, r.buyer, r.handle, r.item, ...r.resi].some((x) =>
-            x.toLowerCase().includes(s)
-          ))
+            x.toLowerCase().includes(s),
+          )),
     );
   }, [rows, tab, searchQuery, country, warehouse, stage]);
 
@@ -67,20 +119,41 @@ export function useTracking() {
   const paginatedRows = useMemo(() => {
     return filteredRows.slice(
       (currentPage - 1) * TRACKING_PAGE_SIZE,
-      currentPage * TRACKING_PAGE_SIZE
+      currentPage * TRACKING_PAGE_SIZE,
     );
   }, [filteredRows, currentPage]);
 
   const resetPage = () => setPage(1);
 
-  const handleSavePkg = (updated: Pkg) => {
+  /**
+   * Simpan pembaruan status tracking (Optimistik + Kirim ke PATCH /api/v1/admin/tracking/:batchId)
+   */
+  const handleSavePkg = async (updated: Pkg) => {
+    // 1. Optimistic Update
     setRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
     setEditingPkg(null);
     notify(
       updated.stage === "Done"
         ? `Paket ${updated.batch} · ${updated.buyer} otomatis diarsipkan (Done)`
-        : `Tracking ${updated.batch} · ${updated.buyer} berhasil diperbarui`
+        : `Tracking ${updated.batch} · ${updated.buyer} berhasil diperbarui`,
     );
+
+    // 2. Kirim ke backend jika batchId tersedia
+    if (updated.batchId) {
+      try {
+        await updateTrackingApi(updated.batchId, {
+          trackingStatus: mapFrontendStageToBackend(updated.stage),
+          resiNumber: updated.resi,
+          whName: updated.warehouse,
+          boxNo: updated.box,
+          checkedOut: updated.co,
+          uploadedToAlbum: updated.album,
+          notes: updated.note,
+        });
+      } catch (err: unknown) {
+        console.warn("Backend update tracking failed (optimistic state kept):", err);
+      }
+    }
   };
 
   const handleAddWarehouse = (newWh: string) => {
@@ -118,7 +191,7 @@ export function useTracking() {
         dot: "bg-slate-500",
       },
     ],
-    [rows, activeCount, doneCount]
+    [rows, activeCount, doneCount],
   );
 
   return {
@@ -145,6 +218,10 @@ export function useTracking() {
     activeCount,
     doneCount,
     stats,
+    isLoading,
+    isSyncing,
+    fetchError,
+    refetch: () => loadTrackingData(false),
     resetPage,
     copyResi,
     handleSavePkg,

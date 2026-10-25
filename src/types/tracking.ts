@@ -130,7 +130,8 @@ export const STAGES = [
 export type Stage = (typeof STAGES)[number];
 
 export type Pkg = {
-  id: number;
+  id: number | string;
+  batchId?: string;
   batch: string;
   country: string;
   buyer: string;
