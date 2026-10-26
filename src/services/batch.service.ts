@@ -183,13 +183,22 @@ export async function getBatchesApi(params?: {
     },
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new Error(
-      json.message || "Gagal mengambil daftar batch dari backend",
-    );
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      (res.status === 500
+        ? "Server backend mengalami crash (500 Internal Server Error). Periksa log backend / database Neon."
+        : res.status === 401
+          ? "Sesi login tidak valid atau telah berakhir (401 Unauthorized)."
+          : res.status === 403
+            ? "Akses ditolak: Akun Anda tidak memiliki role OWNER atau STAFF (403 Forbidden)."
+            : `Gagal mengambil daftar batch dari backend (HTTP ${res.status})`);
+    throw new Error(errorMsg);
   }
-  return json.data || [];
+  return json?.data || [];
 }
 
 /**
@@ -205,11 +214,16 @@ export async function getBatchByIdApi(id: string): Promise<BackendBatch> {
     },
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new Error(json.message || "Gagal mengambil detail batch");
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal mengambil detail batch (HTTP ${res.status})`;
+    throw new Error(errorMsg);
   }
-  return json.data;
+  return json?.data;
 }
 
 /**
@@ -228,9 +242,9 @@ export async function createBatchApi(
     body: JSON.stringify(payload),
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
   if (!res.ok) {
-    if (json.errors && Array.isArray(json.errors)) {
+    if (json?.errors && Array.isArray(json.errors)) {
       const details = json.errors
         .map(
           (e: { field: string; message: string }) => `${e.field}: ${e.message}`,
@@ -238,9 +252,14 @@ export async function createBatchApi(
         .join(", ");
       throw new Error(`${json.message || "Validasi gagal"}: ${details}`);
     }
-    throw new Error(json.message || "Gagal membuat batch baru");
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal membuat batch baru (HTTP ${res.status})`;
+    throw new Error(errorMsg);
   }
-  return json.data;
+  return json?.data;
 }
 
 /**
@@ -260,11 +279,16 @@ export async function patchBatchApi(
     body: JSON.stringify(payload),
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new Error(json.message || "Gagal memperbarui status batch");
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal memperbarui status batch (HTTP ${res.status})`;
+    throw new Error(errorMsg);
   }
-  return json.data;
+  return json?.data;
 }
 
 /**
@@ -280,8 +304,13 @@ export async function deleteBatchApi(id: string): Promise<void> {
     },
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new Error(json.message || "Gagal menghapus batch");
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal menghapus batch (HTTP ${res.status})`;
+    throw new Error(errorMsg);
   }
 }

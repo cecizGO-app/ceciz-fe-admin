@@ -72,13 +72,16 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
           <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-1">
             <span className="text-[#71717A]">Operasional</span>
             <span>&gt;</span>
-            <span className="text-[#EC4899] font-medium">Tracking Logistik</span>
+            <span className="text-[#EC4899] font-medium">
+              Tracking Logistik
+            </span>
           </nav>
-          <h1 className="text-[26px] sm:text-[32px] font-bold text-[#18181B] tracking-tight">
+          <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
             Tracking Logistik &amp; Pengiriman
           </h1>
-          <p className="mt-1 max-w-[680px] text-xs sm:text-sm text-[#71717A]">
-            Perbarui status 7 tahap pengiriman barang, kelola nomor resi multi-seller, dan pantau checklist internal admin.
+          <p className="mt-1 max-w-[680px] text-xs sm:text-[14px] text-[#71717A] leading-relaxed">
+            Perbarui status 7 tahap pengiriman barang, kelola nomor resi
+            multi-seller, dan pantau checklist internal admin.
           </p>
         </div>
 
@@ -129,7 +132,7 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
                 "relative flex h-11 shrink-0 items-center gap-2 px-3 text-xs sm:text-sm transition-colors duration-150 cursor-pointer",
                 isActive
                   ? "text-primary font-bold"
-                  : "text-[#71717A] hover:text-[#18181B]"
+                  : "text-[#71717A] hover:text-[#18181B]",
               )}
             >
               <span>{t.label}</span>
@@ -138,7 +141,8 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
                   variant={isActive ? "default" : "secondary"}
                   className={cn(
                     "h-5 min-w-5 px-1.5 text-[10px] tabular-nums",
-                    !isActive && "bg-zinc-100 text-[#71717A] border-transparent"
+                    !isActive &&
+                      "bg-zinc-100 text-[#71717A] border-transparent",
                   )}
                 >
                   {t.count}

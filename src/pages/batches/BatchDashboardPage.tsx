@@ -106,7 +106,7 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
         <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-2xs">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-            <span>Tidak dapat terhubung ke server backend: {fetchError}</span>
+            <span>{fetchError}</span>
           </div>
           <Button
             type="button"

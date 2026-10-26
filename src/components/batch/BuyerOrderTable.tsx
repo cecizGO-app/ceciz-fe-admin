@@ -1,16 +1,16 @@
-import React from 'react'
-import { Plus, Trash2 } from 'lucide-react'
-import type { BuyerOption, OrderRow } from "@/types/batch";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import React from "react";
+import { Plus, Trash2 } from "lucide-react";
+import type { BuyerOption, OrderRow, CountryCode } from "@/types/batch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -18,44 +18,61 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 
 interface BuyerOrderTableProps {
-  orderRows: OrderRow[]
-  registeredBuyers: BuyerOption[]
-  currency: string
-  kursRate: number
-  overheadPerPc: number
-  isJapan?: boolean
-  onAddRow: () => void
-  onRemoveRow: (id: string) => void
-  onUpdateRow: (id: string, field: keyof OrderRow, value: any) => void
+  orderRows: OrderRow[];
+  registeredBuyers: BuyerOption[];
+  countryCode: CountryCode;
+  currency: string;
+  kursRate: number;
+  overheadPerPc: number;
+  feeNyelemBatch: number;
+  onAddRow: () => void;
+  onRemoveRow: (id: string) => void;
+  onUpdateRow: (id: string, field: keyof OrderRow, value: any) => void;
 }
 
 function formatIDR(val: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
     maximumFractionDigits: 0,
-  }).format(Math.round(val))
+  }).format(Math.round(val));
 }
 
 export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
   orderRows,
   registeredBuyers,
+  countryCode,
   currency,
   kursRate,
   overheadPerPc,
-  isJapan = false,
+  feeNyelemBatch,
   onAddRow,
   onRemoveRow,
   onUpdateRow,
 }) => {
+  const isJapan = countryCode === "JP";
+  const isKorea = countryCode === "KR";
+  const isIndonesia = countryCode === "INA";
+
   return (
     <Card className="gap-4">
       {/* Header & Add Button */}
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-0">
-        <CardTitle>Daftar Pesanan Buyer</CardTitle>
+        <div>
+          <CardTitle>Daftar Pesanan Buyer (1 Row = 1 Pcs = 1 Buyer)</CardTitle>
+          <p className="text-xs text-[#71717A] mt-0.5">
+            {isKorea
+              ? "Khusus KR: Masukkan harga won dalam format dibagi 10.000 (misal 2.000 won = 0.2)."
+              : isJapan
+                ? "Khusus JP: Harga jual ke buyer ditentukan manual oleh admin setelah total modal batch diketahui."
+                : isIndonesia
+                  ? "Khusus INA: Tanpa valas, harga asli dalam rupiah + fee GO 2k/pc."
+                  : "Harga asli dikonversi otomatis dengan rate kurs harian + pembagian overhead ongkir & fee."}
+          </p>
+        </div>
 
         <Button
           type="button"
@@ -64,7 +81,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
           className="h-10 sm:h-11 px-4 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#EC4899] hover:text-[#EC4899] text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer self-start sm:self-auto shadow-2xs"
         >
           <Plus className="w-4 h-4" />
-          <span>Tambah Baris Buyer</span>
+          <span>Tambah Baris Pesanan</span>
         </Button>
       </CardHeader>
 
@@ -72,9 +89,17 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
         {/* Mobile Card List (md:hidden) */}
         <div className="md:hidden space-y-3.5">
           {orderRows.map((row, idx) => {
-            const itemBaseIDR = (Number(row.qty) || 0) * (Number(row.hargaAsli) || 0) * kursRate
-            const itemOverheadIDR = (Number(row.qty) || 0) * overheadPerPc
-            const itemTotalIDR = itemBaseIDR + itemOverheadIDR
+            const rawHarga = Number(row.hargaAsli) || 0;
+            const basePriceIDR = isKorea
+              ? rawHarga * 10000 * kursRate
+              : isIndonesia
+                ? rawHarga
+                : rawHarga * kursRate;
+
+            const itemHargaBersih =
+              row.hargaBersih != null
+                ? row.hargaBersih
+                : Math.round(basePriceIDR + overheadPerPc);
 
             return (
               <div
@@ -88,6 +113,9 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                     </span>
                     <span className="text-xs font-bold text-[#18181B]">
                       Item #{idx + 1}
+                    </span>
+                    <span className="text-[10px] bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded font-semibold border">
+                      Pcs = 1 (Konstan)
                     </span>
                   </div>
 
@@ -111,7 +139,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                   </label>
                   <Select
                     value={row.buyerId}
-                    onValueChange={(val) => onUpdateRow(row.id, 'buyerId', val)}
+                    onValueChange={(val) => onUpdateRow(row.id, "buyerId", val)}
                   >
                     <SelectTrigger className="border-[#FCE7F3] hover:border-[#FBCFE8]">
                       <SelectValue placeholder="Pilih Buyer" />
@@ -129,46 +157,54 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                 {/* Item / Varian */}
                 <div>
                   <label className="block text-[11px] font-medium text-[#71717A] mb-1">
-                    Nama Item / Varian
+                    Detail Barang / Item
                   </label>
                   <Input
                     type="text"
                     value={row.itemName}
-                    placeholder="Nama barang..."
-                    onChange={(e) => onUpdateRow(row.id, 'itemName', e.target.value)}
+                    placeholder="Nama barang / varian..."
+                    onChange={(e) =>
+                      onUpdateRow(row.id, "itemName", e.target.value)
+                    }
                     className="border-[#FCE7F3] hover:border-[#FBCFE8]"
                   />
                 </div>
 
-                {/* Qty & Harga Asli Grid */}
+                {/* Harga Asli Valas */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-medium text-[#71717A] mb-1">
-                      Qty (pcs)
-                    </label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={row.qty}
-                      onChange={(e) => onUpdateRow(row.id, 'qty', Math.max(1, Number(e.target.value) || 1))}
-                      className="text-center font-semibold border-[#FCE7F3] hover:border-[#FBCFE8]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-medium text-[#71717A] mb-1">
-                      Harga Asli ({currency})
+                      Harga Asli {isKorea && "(Won/10k)"}
                     </label>
                     <div className="relative flex items-center">
                       <Input
                         type="number"
-                        value={row.hargaAsli}
-                        onChange={(e) => onUpdateRow(row.id, 'hargaAsli', Number(e.target.value) || 0)}
-                        className="pr-11 font-semibold border-[#FCE7F3] hover:border-[#FBCFE8]"
+                        step={isKorea ? "0.01" : "1"}
+                        value={row.hargaAsli || ""}
+                        onChange={(e) =>
+                          onUpdateRow(
+                            row.id,
+                            "hargaAsli",
+                            Number(e.target.value) || 0,
+                          )
+                        }
+                        className="pr-9 border-[#FCE7F3] hover:border-[#FBCFE8] font-semibold"
+                        placeholder="0"
                       />
                       <span className="absolute right-2.5 text-[11px] font-semibold text-[#A1A1AA] pointer-events-none">
                         {currency}
                       </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#71717A] mb-1">
+                      Fee Nyelem
+                    </label>
+                    <div className="h-11 px-3 rounded-[12px] bg-white border border-[#FCE7F3] flex items-center text-xs font-semibold text-[#71717A]">
+                      {isJapan
+                        ? "Total Batch"
+                        : `Rp ${(row.feeNyelem ?? feeNyelemBatch).toLocaleString("id-ID")}`}
                     </div>
                   </div>
                 </div>
@@ -177,7 +213,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                 {isJapan && (
                   <div>
                     <label className="block text-[11px] font-medium text-[#71717A] mb-1">
-                      Harga Jual ke Buyer (IDR)
+                      Harga Jual ke Buyer (IDR) &mdash; Manual Admin
                     </label>
                     <div className="relative flex items-center">
                       <span className="absolute left-3 text-[11px] font-semibold text-[#A1A1AA] pointer-events-none">
@@ -188,12 +224,12 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                         min="0"
                         step="1000"
                         placeholder="0"
-                        value={row.hargaJualPerBuyer || ''}
+                        value={row.hargaJualPerBuyer || ""}
                         onChange={(e) =>
                           onUpdateRow(
                             row.id,
-                            'hargaJualPerBuyer',
-                            Math.max(0, Number(e.target.value) || 0)
+                            "hargaJualPerBuyer",
+                            Math.max(0, Number(e.target.value) || 0),
                           )
                         }
                         className="pl-9 border-[#FCE7F3] hover:border-[#FBCFE8] font-semibold"
@@ -202,69 +238,108 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                   </div>
                 )}
 
-                {/* Computed Total IDR for this card */}
+                {/* Computed Total IDR / Tagihan for this card */}
                 <div className="p-3 rounded-[12px] bg-white border border-[#FCE7F3] flex items-center justify-between">
                   <span className="text-[11px] text-[#71717A] font-medium">
-                    {isJapan ? 'Tagihan Buyer:' : 'Total IDR (inc. fee):'}
+                    {isJapan
+                      ? "Tagihan Buyer (Manual):"
+                      : "Harga Bersih (Inc. Fee):"}
                   </span>
                   {isJapan ? (
                     row.hargaJualPerBuyer && row.hargaJualPerBuyer > 0 ? (
                       <span className="text-xs font-bold text-[#EC4899]">
-                        {formatIDR((Number(row.qty) || 0) * (Number(row.hargaJualPerBuyer) || 0))}
+                        {formatIDR(Number(row.hargaJualPerBuyer) || 0)}
                       </span>
                     ) : (
                       <span className="text-xs text-amber-600 font-medium">
-                        Belum diisi
+                        Belum diisi admin
                       </span>
                     )
                   ) : (
                     <span className="text-xs font-bold text-[#EC4899]">
-                      {formatIDR(itemTotalIDR)}
+                      {formatIDR(itemHargaBersih)}
                     </span>
                   )}
                 </div>
               </div>
-            )
+            );
           })}
         </div>
 
         {/* Desktop Table Data Grid (hidden on mobile, visible on md+) */}
         <div className="hidden md:block overflow-x-auto">
           <div className="rounded-[16px] border border-[#FCE7F3] overflow-hidden bg-white">
-            <Table className="min-w-[760px]">
+            <Table className="min-w-[840px]">
               <TableHeader>
                 <TableRow className="bg-[#FFF5FA] border-b border-[#FCE7F3] hover:bg-[#FFF5FA]">
-                  <TableHead className="w-12 text-center text-[11px] font-bold text-[#71717A] tracking-wider uppercase">NO</TableHead>
-                  <TableHead className="min-w-[200px] text-[11px] font-bold text-[#71717A] tracking-wider uppercase">NAMA BUYER (AKUN)</TableHead>
-                  <TableHead className="min-w-[180px] text-[11px] font-bold text-[#71717A] tracking-wider uppercase">ITEM / VARIAN</TableHead>
-                  <TableHead className="w-20 text-center text-[11px] font-bold text-[#71717A] tracking-wider uppercase">QTY</TableHead>
-                  <TableHead className="w-32 text-[11px] font-bold text-[#71717A] tracking-wider uppercase">HARGA ASLI</TableHead>
+                  <TableHead className="w-12 text-center text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                    NO
+                  </TableHead>
+                  <TableHead className="min-w-[190px] text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                    NAMA BUYER (AKUN)
+                  </TableHead>
+                  <TableHead className="min-w-[170px] text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                    DETAIL BARANG
+                  </TableHead>
+                  <TableHead className="w-20 text-center text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                    PCS
+                  </TableHead>
+                  <TableHead className="w-36 text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                    HARGA ASLI {isKorea && "(WON/10K)"}
+                  </TableHead>
+                  {!isJapan && (
+                    <TableHead className="w-28 text-center text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                      FEE NYELEM
+                    </TableHead>
+                  )}
                   {isJapan && (
-                    <TableHead className="w-44 text-[11px] font-bold text-[#71717A] tracking-wider uppercase">HARGA JUAL (IDR)</TableHead>
+                    <TableHead className="w-44 text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                      HARGA JUAL (IDR)
+                    </TableHead>
                   )}
                   <TableHead className="w-36 text-right text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
-                    {isJapan ? 'TAGIHAN BUYER' : 'TOTAL IDR'}
+                    {isJapan ? "TAGIHAN BUYER" : "HARGA BERSIH (IDR)"}
                   </TableHead>
-                  <TableHead className="w-14 text-center text-[11px] font-bold text-[#71717A] tracking-wider uppercase">AKSI</TableHead>
+                  <TableHead className="w-14 text-center text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
+                    AKSI
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {orderRows.map((row, idx) => {
-                  const itemBaseIDR = (Number(row.qty) || 0) * (Number(row.hargaAsli) || 0) * kursRate
-                  const itemOverheadIDR = (Number(row.qty) || 0) * overheadPerPc
-                  const itemTotalIDR = itemBaseIDR + itemOverheadIDR
+                  const rawHarga = Number(row.hargaAsli) || 0;
+                  const basePriceIDR = isKorea
+                    ? rawHarga * 10000 * kursRate
+                    : isIndonesia
+                      ? rawHarga
+                      : rawHarga * kursRate;
+
+                  const itemHargaBersih =
+                    row.hargaBersih != null
+                      ? row.hargaBersih
+                      : Math.round(basePriceIDR + overheadPerPc);
 
                   return (
-                    <TableRow key={row.id} className="hover:bg-[#FFF5FA]/30 transition-colors border-b border-[#FCE7F3]">
-                      <TableCell className="text-center font-medium text-[#71717A]">{idx + 1}</TableCell>
+                    <TableRow
+                      key={row.id}
+                      className="hover:bg-[#FFF5FA]/30 transition-colors border-b border-[#FCE7F3]"
+                    >
+                      <TableCell className="text-center font-medium text-[#71717A]">
+                        {idx + 1}
+                      </TableCell>
 
                       {/* Buyer Select */}
                       <TableCell>
                         <Select
                           value={row.buyerId}
-                          onValueChange={(val) => onUpdateRow(row.id, 'buyerId', val)}
+                          onValueChange={(val) =>
+                            onUpdateRow(row.id, "buyerId", val)
+                          }
                         >
-                          <SelectTrigger className="border-[#FCE7F3] hover:border-[#FBCFE8]">
+                          <SelectTrigger
+                            size="sm"
+                            className="border-[#FCE7F3] hover:border-[#FBCFE8]"
+                          >
                             <SelectValue placeholder="Pilih Buyer" />
                           </SelectTrigger>
                           <SelectContent>
@@ -280,39 +355,59 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                       {/* Item / Varian */}
                       <TableCell>
                         <Input
+                          size="sm"
                           type="text"
                           value={row.itemName}
                           placeholder="Nama barang..."
-                          onChange={(e) => onUpdateRow(row.id, 'itemName', e.target.value)}
+                          onChange={(e) =>
+                            onUpdateRow(row.id, "itemName", e.target.value)
+                          }
                           className="border-[#FCE7F3] hover:border-[#FBCFE8]"
                         />
                       </TableCell>
 
-                      {/* Qty */}
+                      {/* Pcs = Konstan 1 */}
                       <TableCell className="text-center">
-                        <Input
-                          type="number"
-                          min="1"
-                          value={row.qty}
-                          onChange={(e) => onUpdateRow(row.id, 'qty', Math.max(1, Number(e.target.value) || 1))}
-                          className="w-16 mx-auto text-center font-semibold border-[#FCE7F3] hover:border-[#FBCFE8]"
-                        />
+                        <span className="inline-block px-2.5 py-1 rounded-[6px] bg-zinc-100 border border-zinc-200 text-xs font-bold text-zinc-700">
+                          1 pc
+                        </span>
                       </TableCell>
 
                       {/* Harga Asli Valas */}
                       <TableCell>
                         <div className="relative flex items-center">
                           <Input
+                            size="sm"
                             type="number"
-                            value={row.hargaAsli}
-                            onChange={(e) => onUpdateRow(row.id, 'hargaAsli', Number(e.target.value) || 0)}
+                            step={isKorea ? "0.01" : "1"}
+                            value={row.hargaAsli || ""}
+                            onChange={(e) =>
+                              onUpdateRow(
+                                row.id,
+                                "hargaAsli",
+                                Number(e.target.value) || 0,
+                              )
+                            }
                             className="pr-11 font-semibold border-[#FCE7F3] hover:border-[#FBCFE8]"
+                            placeholder="0"
                           />
                           <span className="absolute right-3 text-[11px] font-semibold text-[#A1A1AA] pointer-events-none">
                             {currency}
                           </span>
                         </div>
                       </TableCell>
+
+                      {/* Fee Nyelem per Row (CH, TH, KR, INA) */}
+                      {!isJapan && (
+                        <TableCell className="text-center">
+                          <span className="text-xs font-semibold text-[#71717A] bg-[#FFF5FA] px-2 py-1 rounded border border-[#FBCFE8]">
+                            Rp{" "}
+                            {(row.feeNyelem ?? feeNyelemBatch).toLocaleString(
+                              "id-ID",
+                            )}
+                          </span>
+                        </TableCell>
+                      )}
 
                       {/* Khusus JP: Harga Jual Manual Input */}
                       {isJapan && (
@@ -322,16 +417,17 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                               Rp
                             </span>
                             <Input
+                              size="sm"
                               type="number"
                               min="0"
                               step="1000"
                               placeholder="0"
-                              value={row.hargaJualPerBuyer || ''}
+                              value={row.hargaJualPerBuyer || ""}
                               onChange={(e) =>
                                 onUpdateRow(
                                   row.id,
-                                  'hargaJualPerBuyer',
-                                  Math.max(0, Number(e.target.value) || 0)
+                                  "hargaJualPerBuyer",
+                                  Math.max(0, Number(e.target.value) || 0),
                                 )
                               }
                               className="pl-9 font-semibold border-[#FCE7F3] hover:border-[#FBCFE8]"
@@ -345,7 +441,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                         {isJapan ? (
                           row.hargaJualPerBuyer && row.hargaJualPerBuyer > 0 ? (
                             <span className="font-bold text-[13px] text-[#18181B]">
-                              {formatIDR((Number(row.qty) || 0) * (Number(row.hargaJualPerBuyer) || 0))}
+                              {formatIDR(Number(row.hargaJualPerBuyer) || 0)}
                             </span>
                           ) : (
                             <span className="text-xs text-amber-600 font-medium">
@@ -354,7 +450,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                           )
                         ) : (
                           <span className="font-bold text-[13px] text-[#18181B]">
-                            {formatIDR(itemTotalIDR)}
+                            {formatIDR(itemHargaBersih)}
                           </span>
                         )}
                       </TableCell>
@@ -374,7 +470,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                         </Button>
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
             </Table>
@@ -383,12 +479,13 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
 
         {!isJapan && (
           <p className="text-[12px] text-[#71717A] pt-1">
-            Total IDR per baris sudah termasuk pembagian ongkir &amp; fee batch secara proporsional per pcs.
+            Total IDR per baris sudah termasuk pembagian ongkir &amp; fee batch
+            secara proporsional per pcs.
           </p>
         )}
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default BuyerOrderTable
+export default BuyerOrderTable;

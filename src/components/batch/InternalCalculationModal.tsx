@@ -34,7 +34,9 @@ function formatRupiah(amount: number): string {
   }).format(amount);
 }
 
-function getInitialValues(initialLaba?: number | null): InternalCalculationValues {
+function getInitialValues(
+  initialLaba?: number | null,
+): InternalCalculationValues {
   if (initialLaba && initialLaba > 0) {
     return {
       totalHargaJual: initialLaba + 250000,
@@ -59,7 +61,9 @@ function getInitialValues(initialLaba?: number | null): InternalCalculationValue
   };
 }
 
-export const InternalCalculationModal: React.FC<InternalCalculationModalProps> = ({
+export const InternalCalculationModal: React.FC<
+  InternalCalculationModalProps
+> = ({
   open,
   onOpenChange,
   batchNumber,
@@ -71,7 +75,10 @@ export const InternalCalculationModal: React.FC<InternalCalculationModalProps> =
     getInitialValues(initialLaba),
   );
 
-  const handleChange = (field: keyof InternalCalculationValues, val: number) => {
+  const handleChange = (
+    field: keyof InternalCalculationValues,
+    val: number,
+  ) => {
     setValues((prev) => ({
       ...prev,
       [field]: val,
@@ -100,7 +107,8 @@ export const InternalCalculationModal: React.FC<InternalCalculationModalProps> =
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs text-[#71717A] mt-0.5">
-            Dihitung setelah barang tiba di Indonesia. Hanya terlihat oleh admin.
+            Dihitung setelah barang tiba di Indonesia. Hanya terlihat oleh
+            admin.
           </DialogDescription>
         </DialogHeader>
 
@@ -282,7 +290,7 @@ export const InternalCalculationModal: React.FC<InternalCalculationModalProps> =
 
           <div className="pt-2 border-t border-[#FCE7F3]/70 space-y-3">
             <div className="text-xs font-bold text-[#18181B] uppercase tracking-wider">
-              Kalkulasi Otomatis (Calculation Engine PRD §4 Rule #10)
+              Kalkulasi Otomatis
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

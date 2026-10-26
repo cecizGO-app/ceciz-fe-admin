@@ -37,12 +37,12 @@ function AppContent() {
   const [demoUser, setDemoUser] = useState<AuthUser | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Validate Google OAuth session: prevent BUYER role from accessing Admin Dashboard (PRD RBAC §1.9)
+  // Validate Google OAuth session: prevent BUYER role from accessing Admin Dashboard
   useEffect(() => {
     if (sessionUser && !isAllowedAdminRole(sessionUser.role)) {
       signOut().catch(() => {});
       setAuthError(
-        `Akses Ditolak: Akun Google "${sessionUser.email}" terdaftar dengan role ${sessionUser.role || "BUYER"}. Dashboard Admin hanya diperuntukkan bagi OWNER dan STAFF (PRD RBAC §1.9).`,
+        `Akses Ditolak: Akun Google "${sessionUser.email}" terdaftar dengan role ${sessionUser.role || "BUYER"}. Dashboard Admin hanya diperuntukkan bagi OWNER dan STAFF.`,
       );
       navigate("/login", { replace: true });
     }

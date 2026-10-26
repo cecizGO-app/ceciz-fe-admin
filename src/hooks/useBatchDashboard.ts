@@ -1,9 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import type {
-  BatchItem,
-  BatchStatus,
-  CountryFilter,
-} from "@/types/batch";
+import type { BatchItem, BatchStatus, CountryFilter } from "@/types/batch";
 import {
   getBatchesApi,
   patchBatchApi,
@@ -12,6 +8,7 @@ import {
   mapFrontendStatusToBackend,
   type BackendCountryCode,
 } from "@/services/batch.service";
+import { INITIAL_BATCHES } from "@/mocks/mockBatchData";
 
 function formatRupiah(amount: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -67,6 +64,8 @@ export function useBatchDashboard() {
       const msg =
         err instanceof Error ? err.message : "Gagal memuat daftar batch.";
       setFetchError(msg);
+      // Fallback ke data mock awal jika belum ada data agar dashboard tidak kosong total
+      setBatches((prev) => (prev.length === 0 ? INITIAL_BATCHES : prev));
     } finally {
       setIsLoading(false);
     }
