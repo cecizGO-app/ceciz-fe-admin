@@ -87,6 +87,18 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
         feeWh: Number(form.feeWarehouse) || 0,
         feeProxy: Number(form.feeProxy) || 0,
         proxyCoName: form.jasaProxy ? form.jasaProxy.trim() : undefined,
+        items: form.computedRows.map((r) => ({
+          buyerId: r.buyerId,
+          description: r.itemName || "Item",
+          hargaAsli: Number(r.hargaAsli) || 0,
+          pcs: 1, // Pcs konstan 1
+          feeNyelem: form.selectedCountry === "JP" ? 0 : form.feeNyelem,
+          hargaPerBuyer: r.hargaBersih || undefined,
+          hargaJualPerBuyer:
+            form.selectedCountry === "JP"
+              ? Number(r.hargaJualPerBuyer) || 0
+              : undefined,
+        })),
       };
 
       const newBatch = await createBatchApi(payload);
@@ -150,6 +162,11 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
       onChangeFeeNyelem={form.setFeeNyelem}
       feeGO={form.feeGO}
       onChangeFeeGO={form.setFeeGO}
+      hargaCOShopeeSeller={form.hargaCOShopeeSeller}
+      onChangeHargaCOShopeeSeller={form.setHargaCOShopeeSeller}
+      feeKeseluruhan={form.summary.feeKeseluruhan}
+      feeRekap={form.summary.feeRekap}
+      tierLabel={form.summary.tierLabel}
       catatan={form.catatan}
       onChangeCatatan={form.setCatatan}
     />
@@ -157,12 +174,13 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
 
   const orderTableSection = (
     <BuyerOrderTable
-      orderRows={form.orderRows}
+      orderRows={form.computedRows}
       registeredBuyers={REGISTERED_BUYERS}
+      countryCode={form.selectedCountry}
       currency={form.currentCountry.currency}
       kursRate={form.kursRate}
       overheadPerPc={form.overheadPerPc}
-      isJapan={form.selectedCountry === "JP"}
+      feeNyelemBatch={form.feeNyelem}
       onAddRow={form.handleAddRow}
       onRemoveRow={form.handleRemoveRow}
       onUpdateRow={form.handleUpdateRow}
@@ -199,10 +217,10 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
               Tambah Batch Baru
             </span>
           </nav>
-          <h1 className="text-[26px] sm:text-[32px] font-bold text-[#18181B] tracking-[-0.8px]">
+          <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
             Tambah Batch Baru
           </h1>
-          <p className="text-[14px] sm:text-[15px] text-[#71717A] mt-1">
+          <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
             Input pesanan group order dan kalkulasi harga real-time
           </p>
         </div>
@@ -309,7 +327,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
               onClick={handlePublish}
               className="h-11 px-5 sm:px-6 text-xs font-semibold gap-2 ml-auto"
             >
-              <span>Terbitkan & Simpan</span>
+              <span>Terbitkan &amp; Simpan</span>
             </Button>
           )}
         </div>

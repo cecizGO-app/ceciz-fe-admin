@@ -27,19 +27,20 @@ export function useBatchForm() {
   const [jasaProxy, setJasaProxy] = useState("Taobao Pay / Superbuy");
   const [feeProxy, setFeeProxy] = useState(10000);
   const [adminNyelem, setAdminNyelem] = useState("Admin 1 (Aurel)");
-  const [feeNyelem, setFeeNyelem] = useState(0);
+  const [feeNyelem, setFeeNyelem] = useState(2000); // Default Rp2.000 (per pc for CH/KR/TH/INA, total batch for JP)
   const [feeGO, setFeeGO] = useState(25000);
+  const [hargaCOShopeeSeller, setHargaCOShopeeSeller] = useState(0); // Khusus INA
   const [catatan, setCatatan] = useState(
     "Contoh: Estimasi sampai WH China 3 hari, exclude packing lokal INA...",
   );
 
-  // Dynamic Buyer Order Rows
+  // Dynamic Buyer Order Rows (Setiap baris konstan 1 pc)
   const [orderRows, setOrderRows] = useState<OrderRow[]>([
     {
       id: "1",
       buyerId: "b_01",
       itemName: "Chenle Set A",
-      qty: 2,
+      qty: 1,
       hargaAsli: 85,
     },
     {
@@ -70,15 +71,103 @@ export function useBatchForm() {
     if (target) {
       setKursRate(target.defaultRate);
     }
-    if (code === "JP") {
+    if (code === "KR") {
+      setWarehouseTujuan("WH Seoul");
+      setJasaProxy("Proxy Korea / Bunjang");
+      setShippingWHForeign(0.3); // 3.000 won / 10.000
+      setFeeWarehouse(15000);
+      setFeeProxy(10000);
+      setFeeNyelem(2000); // 2k/pc
+      setFeeGO(25000);
+      setHargaCOShopeeSeller(0);
+      setBatchName("WTS Batch Merch Korea (Weverse / Bunjang)");
+      setCatatan(
+        "Batch KR: Nominal harga won diinput dalam bentuk dibagi 10.000 (misal 2.000 won = 0.2).",
+      );
+      setOrderRows([
+        {
+          id: "kr_1",
+          buyerId: REGISTERED_BUYERS[0].id,
+          itemName: "PC Jaemin Weverse POB",
+          qty: 1,
+          hargaAsli: 0.2, // 2.000 won
+        },
+        {
+          id: "kr_2",
+          buyerId: REGISTERED_BUYERS[1].id,
+          itemName: "PC Jeno Lucky Draw",
+          qty: 1,
+          hargaAsli: 0.5, // 5.000 won
+        },
+      ]);
+    } else if (code === "TH") {
+      setWarehouseTujuan("WH Bangkok");
+      setJasaProxy("Proxy Thailand (Fast Cargo TH)");
+      setShippingWHForeign(50); // 50 baht
+      setFeeWarehouse(15000);
+      setFeeProxy(10000);
+      setFeeNyelem(2000); // 2k/pc
+      setFeeGO(25000);
+      setHargaCOShopeeSeller(0);
+      setBatchName("WTS Batch Merch Thailand (GMMTV)");
+      setCatatan("Batch TH: Rate baht flat, ongkir WH split per batch.");
+      setOrderRows([
+        {
+          id: "th_1",
+          buyerId: REGISTERED_BUYERS[0].id,
+          itemName: "Photocard GeminiFourth Ver A",
+          qty: 1,
+          hargaAsli: 45,
+        },
+        {
+          id: "th_2",
+          buyerId: REGISTERED_BUYERS[1].id,
+          itemName: "Postcard Set",
+          qty: 1,
+          hargaAsli: 30,
+        },
+      ]);
+    } else if (code === "CH") {
+      setWarehouseTujuan("WH Guangzhou");
+      setJasaProxy("Taobao Pay / Superbuy");
+      setShippingWHForeign(15); // 15 yuan
+      setFeeWarehouse(15000);
+      setFeeProxy(10000);
+      setFeeNyelem(2000); // 2k/pc
+      setFeeGO(25000);
+      setHargaCOShopeeSeller(0);
+      setBatchName("WTS Album Chenle Digipack Ver");
+      setCatatan(
+        "Batch CH: Estimasi sampai WH China 3 hari, exclude packing lokal INA.",
+      );
+      setOrderRows([
+        {
+          id: "ch_1",
+          buyerId: REGISTERED_BUYERS[0].id,
+          itemName: "Chenle Set A",
+          qty: 1,
+          hargaAsli: 85,
+        },
+        {
+          id: "ch_2",
+          buyerId: REGISTERED_BUYERS[1].id,
+          itemName: "Chenle Photobook",
+          qty: 1,
+          hargaAsli: 50,
+        },
+      ]);
+    } else if (code === "JP") {
       setWarehouseTujuan("WH Tokyo");
       setJasaProxy("Neokyo / FromJapan (Proxy JP)");
       setShippingWHForeign(500); // Shiploc 500 Yen
+      setFeeWarehouse(15000);
+      setFeeProxy(10000);
       setFeeNyelem(15000); // Nominal TOTAL batch khusus JP
       setFeeGO(25000);
+      setHargaCOShopeeSeller(0);
       setBatchName("WTS Batch Merch Official Japan (Mercari)");
       setCatatan(
-        "Batch JP: Exclude packing lokal INA, rate yen flat, shiploc split per batch.",
+        "Batch JP: Exclude packing lokal INA, rate yen flat, shiploc split per batch. Harga jual manual diisi admin.",
       );
       setOrderRows([
         {
@@ -100,12 +189,13 @@ export function useBatchForm() {
       ]);
     } else if (code === "INA") {
       setWarehouseTujuan("WH Jakarta");
-      setJasaProxy("Shopee Indonesia (Seller Lokal)");
+      setJasaProxy("Seller Shopee Official (Seller Lokal)");
       setShippingWHForeign(0);
       setFeeWarehouse(0);
       setFeeProxy(0);
-      setFeeNyelem(0);
+      setFeeNyelem(2000); // Fee adm nyelem
       setFeeGO(4000); // 2 pcs * 2.000 (default PRD B §7.4: 2k/pc)
+      setHargaCOShopeeSeller(15000); // Harga CO Shopee dari seller
       setBatchName("WTS Batch Ready INA (Split PC NCT Dream)");
       setCatatan("Batch INA: Pengiriman lokal via J&T/SiCepat.");
       setOrderRows([
@@ -136,8 +226,9 @@ export function useBatchForm() {
         id: newId,
         buyerId: REGISTERED_BUYERS[0].id,
         itemName: "",
-        qty: 1,
+        qty: 1, // Konstan 1 pc
         hargaAsli: 0,
+        feeNyelem: selectedCountry === "JP" ? 0 : 2000,
         hargaJualPerBuyer: selectedCountry === "JP" ? 0 : undefined,
       },
     ]);
@@ -155,7 +246,7 @@ export function useBatchForm() {
   };
 
   // Real-Time Calculations (PRD 5 Negara Engine & Khusus JP §7.3 via Pure Function)
-  const { summary, overheadPerPc } = useMemo(() => {
+  const { summary, overheadPerPc, computedRows } = useMemo(() => {
     return calculateBatchPreview({
       countryCode: selectedCountry,
       orderRows,
@@ -165,6 +256,7 @@ export function useBatchForm() {
       feeProxy,
       feeGO,
       feeNyelem,
+      hargaCOShopeeSeller,
     });
   }, [
     selectedCountry,
@@ -175,6 +267,7 @@ export function useBatchForm() {
     feeProxy,
     feeGO,
     feeNyelem,
+    hargaCOShopeeSeller,
   ]);
 
   return {
@@ -206,6 +299,8 @@ export function useBatchForm() {
     setFeeNyelem,
     feeGO,
     setFeeGO,
+    hargaCOShopeeSeller,
+    setHargaCOShopeeSeller,
     catatan,
     setCatatan,
     orderRows,
@@ -214,5 +309,6 @@ export function useBatchForm() {
     handleUpdateRow,
     summary,
     overheadPerPc,
+    computedRows,
   };
 }

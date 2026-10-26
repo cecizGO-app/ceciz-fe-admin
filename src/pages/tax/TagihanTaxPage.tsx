@@ -1,5 +1,6 @@
 import React from "react";
 import { Plus, CheckCircle2, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   TaxStatsCards,
   TaxFilterBar,
@@ -89,7 +90,7 @@ export const TagihanTaxPage: React.FC = () => {
           <div className="text-[11px] font-bold text-[#EC4899] tracking-wider uppercase mb-1">
             DASHBOARD &middot; TAGIHAN TAX
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#18181B] tracking-tight">
+          <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
             Tagihan Tax (Bea Cukai)
           </h1>
           <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
@@ -99,15 +100,15 @@ export const TagihanTaxPage: React.FC = () => {
         </div>
 
         {/* Action Button: Release Wizard Only */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
+        <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+          <Button
             type="button"
             onClick={() => setReleaseWizardOpen(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+            className="h-10 sm:h-11 px-4 sm:px-5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs sm:text-sm font-semibold shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Release Tagihan Tax Baru</span>
-          </button>
+          </Button>
         </div>
       </div>
 

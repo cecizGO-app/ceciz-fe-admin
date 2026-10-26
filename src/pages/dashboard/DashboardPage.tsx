@@ -27,7 +27,6 @@ import {
   DEFAULT_TEAM_ACTIVITIES,
 } from "@/mocks/mockDashboardData";
 
-
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onCreateBatch,
   onViewAllBatches,
@@ -61,7 +60,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       {/* Header Halaman Sesuai PRD §5 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-        <h1 className="text-[26px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
+        <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
           Dashboard
         </h1>
         <p className="text-xs text-[#71717A]">Diperbarui: 17:45 WIB</p>
