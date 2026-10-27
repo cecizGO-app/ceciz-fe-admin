@@ -29,6 +29,7 @@ interface BuyerOrderTableProps {
   overheadPerPc: number;
   feeNyelemBatch: number;
   onAddRow: () => void;
+  onSetRowCount?: (count: number) => void;
   onRemoveRow: (id: string) => void;
   onUpdateRow: (id: string, field: keyof OrderRow, value: any) => void;
 }
@@ -50,6 +51,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
   overheadPerPc,
   feeNyelemBatch,
   onAddRow,
+  onSetRowCount,
   onRemoveRow,
   onUpdateRow,
 }) => {
@@ -59,7 +61,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
 
   return (
     <Card className="gap-4">
-      {/* Header & Add Button */}
+      {/* Header & Row Controls */}
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-0">
         <div>
           <CardTitle>Daftar Pesanan Buyer (1 Row = 1 Pcs = 1 Buyer)</CardTitle>
@@ -74,15 +76,42 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onAddRow}
-          className="h-10 sm:h-11 px-4 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#EC4899] hover:text-[#EC4899] text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer self-start sm:self-auto shadow-2xs"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tambah Baris Pesanan</span>
-        </Button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          {/* Dropdown 1-50 Total PC */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-zinc-600 whitespace-nowrap">
+              Total PC:
+            </span>
+            <Select
+              value={String(orderRows.length)}
+              onValueChange={(val) => onSetRowCount?.(Number(val) || 1)}
+            >
+              <SelectTrigger
+                size="sm"
+                className="h-9 w-[96px] bg-white text-xs font-bold border-[#FBCFE8] text-[#EC4899] hover:bg-[#FFF5FA] focus:ring-pink-300 rounded-[12px] px-3 shadow-2xs [&>span]:whitespace-nowrap cursor-pointer transition-colors"
+              >
+                <SelectValue placeholder="Pilih" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {Array.from({ length: 50 }, (_, i) => i + 1).map((num) => (
+                  <SelectItem key={num} value={String(num)} className="text-xs font-semibold">
+                    {num} Pcs
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onAddRow}
+            className="h-9 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#EC4899] hover:text-[#EC4899] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Tambah Baris</span>
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4 p-0">

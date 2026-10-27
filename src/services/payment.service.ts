@@ -85,13 +85,21 @@ export interface GetPaymentsParams {
 }
 
 export interface CreateManualPaymentInput {
-  invoiceId: string;
-  buyerId: string;
+  invoiceId?: string;
+  batchId?: string;
+  batchCode?: string;
+  batch?: string;
+  buyerId?: string;
+  buyerName?: string;
+  buyer?: string;
   amount: number;
   paymentMethod: string;
   paymentDate?: string;
   paymentProofUrl?: string;
   notes?: string;
+  keterangan?: string;
+  status?: "PENDING" | "APPROVED";
+  verificationStatus?: "PENDING" | "APPROVED";
 }
 
 /**
@@ -292,6 +300,61 @@ export async function getPaymentsApi(
     data: Array.isArray(json?.data) ? json.data : [],
     meta: json?.meta,
   };
+}
+
+/**
+ * GET /api/v1/admin/payments/:id
+ * Mengambil detail bukti pembayaran lengkap berdasarkan ID
+ */
+export async function getPaymentByIdApi(id: string): Promise<BackendPayment> {
+  const res = await fetch(`${BASE_URL}/api/v1/admin/payments/${encodeURIComponent(id)}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(
+      json?.error?.message ||
+        json?.message ||
+        `Gagal memuat detail pembayaran ${id} dari server`,
+    );
+  }
+
+  return json?.data || json;
+}
+
+export interface PaymentBatchOption {
+  id: string;
+  code: string;
+  title: string;
+  countryCode: string;
+  batchNumber: number;
+}
+
+/**
+ * GET /api/v1/admin/payments/batch-options
+ * Mengambil daftar opsi batch yang memiliki invoice
+ */
+export async function getPaymentBatchOptionsApi(): Promise<PaymentBatchOption[]> {
+  const res = await fetch(`${BASE_URL}/api/v1/admin/payments/batch-options`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    return [];
+  }
+
+  return Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
 }
 
 /**

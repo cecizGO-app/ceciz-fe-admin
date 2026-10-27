@@ -161,6 +161,43 @@ export function mapBackendTrackingToPkg(
   };
 }
 
+export interface BackendTrackingStats {
+  totalPaketBerjalan: number;
+  tibaDiWarehouseId: number;
+  siapDiCoShopee: number;
+  paketSelesai: number;
+  activePackages?: number;
+  arrivedWhIna?: number;
+  readyToCheckout?: number;
+  archivedPackages?: number;
+}
+
+/**
+ * GET /api/v1/admin/tracking/stats
+ * Mengambil ringkasan metrik statistik tracking logistik
+ */
+export async function getTrackingStatsApi(): Promise<BackendTrackingStats> {
+  const res = await fetch(`${BASE_URL}/api/v1/admin/tracking/stats`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(
+      json?.error?.message ||
+        json?.message ||
+        "Gagal memuat statistik tracking logistik",
+    );
+  }
+
+  return json?.data || json;
+}
+
 /**
  * GET /api/v1/admin/tracking
  * Mengambil seluruh data tracking logistik dari backend

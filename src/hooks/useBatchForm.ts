@@ -20,7 +20,8 @@ export function useBatchForm() {
   }, [selectedCountry, batchNumber]);
 
   // Rates & Fees
-  const [kursRate, setKursRate] = useState(2250);
+  const [kursRate, setKursRate] = useState(2250); // Rate Buyer
+  const [rateSeller, setRateSeller] = useState(2200); // Rate Seller (kurs transfer ke seller/WH)
   const [shippingWHForeign, setShippingWHForeign] = useState(15);
   const [warehouseTujuan, setWarehouseTujuan] = useState("WH Guangzhou");
   const [feeWarehouse, setFeeWarehouse] = useState(15000);
@@ -70,6 +71,7 @@ export function useBatchForm() {
     const target = COUNTRIES.find((c) => c.code === code);
     if (target) {
       setKursRate(target.defaultRate);
+      setRateSeller(target.defaultRateSeller ?? target.defaultRate);
     }
     if (code === "KR") {
       setWarehouseTujuan("WH Seoul");
@@ -234,6 +236,33 @@ export function useBatchForm() {
     ]);
   };
 
+  // Bulk Set Row Count Handler (1-50 Total PC)
+  const handleSetRowCount = (count: number) => {
+    const targetCount = Math.max(1, Math.min(50, count));
+    setOrderRows((prev) => {
+      if (prev.length === targetCount) return prev;
+      if (prev.length > targetCount) {
+        return prev.slice(0, targetCount);
+      }
+      const diff = targetCount - prev.length;
+      const newRows: OrderRow[] = [];
+      const baseTimestamp = Date.now();
+      for (let i = 0; i < diff; i++) {
+        const buyerIdx = (prev.length + i) % REGISTERED_BUYERS.length;
+        newRows.push({
+          id: `${baseTimestamp}_${i}`,
+          buyerId: REGISTERED_BUYERS[buyerIdx]?.id || "b_01",
+          itemName: "",
+          qty: 1,
+          hargaAsli: 0,
+          feeNyelem: selectedCountry === "JP" ? 0 : 2000,
+          hargaJualPerBuyer: selectedCountry === "JP" ? 0 : undefined,
+        });
+      }
+      return [...prev, ...newRows];
+    });
+  };
+
   const handleRemoveRow = (id: string) => {
     if (orderRows.length <= 1) return;
     setOrderRows((prev) => prev.filter((r) => r.id !== id));
@@ -251,6 +280,7 @@ export function useBatchForm() {
       countryCode: selectedCountry,
       orderRows,
       kursRate,
+      rateSeller,
       shippingWHForeign,
       feeWarehouse,
       feeProxy,
@@ -262,6 +292,7 @@ export function useBatchForm() {
     selectedCountry,
     orderRows,
     kursRate,
+    rateSeller,
     shippingWHForeign,
     feeWarehouse,
     feeProxy,
@@ -283,6 +314,8 @@ export function useBatchForm() {
     setBatchDate,
     kursRate,
     setKursRate,
+    rateSeller,
+    setRateSeller,
     shippingWHForeign,
     setShippingWHForeign,
     warehouseTujuan,
@@ -305,6 +338,7 @@ export function useBatchForm() {
     setCatatan,
     orderRows,
     handleAddRow,
+    handleSetRowCount,
     handleRemoveRow,
     handleUpdateRow,
     summary,

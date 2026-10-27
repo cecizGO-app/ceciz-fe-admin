@@ -3,9 +3,12 @@ import type { Pkg, TrackingTab } from "@/types/tracking";
 import { SEED_TRACKING_PACKAGES } from "@/mocks/mockTrackingData";
 import {
   getAllTrackingApi,
+  getTrackingStatsApi,
+  getTrackingByBatchIdApi,
   updateTrackingApi,
   mapBackendTrackingToPkg,
   mapFrontendStageToBackend,
+  type BackendTrackingStats,
 } from "@/services/tracking.service";
 
 export const TRACKING_PAGE_SIZE = 8;
@@ -34,6 +37,7 @@ export function useTracking() {
   // Status sinkronisasi backend
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [serverStats, setServerStats] = useState<BackendTrackingStats | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const notify = (msg: string) => {
@@ -50,28 +54,41 @@ export function useTracking() {
       else setIsSyncing(true);
       setFetchError(null);
 
-      const data = await getAllTrackingApi();
-      if (Array.isArray(data) && data.length > 0) {
-        const mapped = data.map((t, idx) => mapBackendTrackingToPkg(t, idx));
-        setRows(mapped);
+      const statsPromise = getTrackingStatsApi()
+        .then((s) => setServerStats(s))
+        .catch((err) => {
+          console.warn("Backend tracking stats API unavailable:", err);
+        });
 
-        // Ekstrak nama warehouse unik
-        const uniqueWhs = Array.from(
-          new Set(
-            [...BASE_WAREHOUSES, ...mapped.map((p) => p.warehouse)].filter(
-              Boolean,
-            ),
-          ),
-        );
-        setWarehouses(uniqueWhs);
-      }
+      const listPromise = getAllTrackingApi()
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped = data.map((t, idx) => mapBackendTrackingToPkg(t, idx));
+            setRows(mapped);
+
+            // Ekstrak nama warehouse unik
+            const uniqueWhs = Array.from(
+              new Set(
+                [...BASE_WAREHOUSES, ...mapped.map((p) => p.warehouse)].filter(
+                  Boolean,
+                ),
+              ),
+            );
+            setWarehouses(uniqueWhs);
+          }
+        })
+        .catch((err) => {
+          console.warn("Backend tracking API unavailable, using fallback:", err);
+          setFetchError(
+            err instanceof Error
+              ? err.message
+              : "Belum dapat terhubung ke server tracking. Menggunakan data cadangan.",
+          );
+        });
+
+      await Promise.allSettled([statsPromise, listPromise]);
     } catch (err: unknown) {
-      console.warn("Backend tracking API unavailable, using fallback:", err);
-      setFetchError(
-        err instanceof Error
-          ? err.message
-          : "Belum dapat terhubung ke server tracking. Menggunakan data cadangan.",
-      );
+      console.error("Gagal memuat tracking data:", err);
     } finally {
       setIsLoading(false);
       setIsSyncing(false);
@@ -150,8 +167,30 @@ export function useTracking() {
           uploadedToAlbum: updated.album,
           notes: updated.note,
         });
+
+        getTrackingStatsApi()
+          .then((s) => setServerStats(s))
+          .catch(() => {});
       } catch (err: unknown) {
         console.warn("Backend update tracking failed (optimistic state kept):", err);
+      }
+    }
+  };
+
+  /**
+   * Buka drawer edit dan sinkronkan data detail dari backend jika tersedia
+   */
+  const handleEditPkg = async (pkg: Pkg | null) => {
+    setEditingPkg(pkg);
+    if (pkg && pkg.batchId && !pkg.batchId.startsWith("b-") && !pkg.batchId.startsWith("mock-")) {
+      try {
+        const detail = await getTrackingByBatchIdApi(pkg.batchId);
+        if (detail) {
+          const mapped = mapBackendTrackingToPkg(detail);
+          setEditingPkg(mapped);
+        }
+      } catch (err) {
+        console.warn("Backend get tracking by batchId failed, using local pkg:", err);
       }
     }
   };
@@ -164,34 +203,40 @@ export function useTracking() {
     () => [
       {
         label: "Total Paket Berjalan",
-        value: String(activeCount),
+        value: String(serverStats?.totalPaketBerjalan ?? activeCount),
         unit: "barang",
         note: "Sedang dalam proses pengiriman",
         dot: "bg-sky-500",
       },
       {
         label: "Tiba di Warehouse ID",
-        value: String(rows.filter((r) => r.stage === "Arrived WH INA").length),
+        value: String(
+          serverStats?.tibaDiWarehouseId ??
+            rows.filter((r) => r.stage === "Arrived WH INA").length,
+        ),
         unit: "barang",
         note: "Siap disortir admin",
         dot: "bg-emerald-500",
       },
       {
         label: "Siap di-CO Shopee",
-        value: String(rows.filter((r) => r.stage === "Bisa di CO").length),
+        value: String(
+          serverStats?.siapDiCoShopee ??
+            rows.filter((r) => r.stage === "Bisa di CO").length,
+        ),
         unit: "barang",
         note: "Status 'Bisa di CO'",
         dot: "bg-amber-500",
       },
       {
         label: "Paket Selesai (Arsip)",
-        value: String(doneCount),
+        value: String(serverStats?.paketSelesai ?? doneCount),
         unit: "barang",
         note: "Status 'Done' otomatis arsip",
         dot: "bg-slate-500",
       },
     ],
-    [rows, activeCount, doneCount],
+    [rows, activeCount, doneCount, serverStats],
   );
 
   return {
@@ -212,7 +257,8 @@ export function useTracking() {
     filteredRows,
     paginatedRows,
     editingPkg,
-    setEditingPkg,
+    setEditingPkg: handleEditPkg,
+    closeDrawer: () => setEditingPkg(null),
     warehouses,
     toastMessage,
     activeCount,
