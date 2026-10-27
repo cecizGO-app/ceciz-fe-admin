@@ -4,7 +4,8 @@ import { calculateFeeRekap } from "./fee-rekap";
 export interface BatchPreviewInput {
   countryCode: CountryCode;
   orderRows: OrderRow[];
-  kursRate: number;
+  kursRate: number; // Rate Buyer
+  rateSeller?: number; // Rate Seller (kurs transfer ke seller/WH)
   shippingWHForeign: number;
   feeWarehouse: number;
   feeProxy: number;
@@ -30,6 +31,7 @@ export function calculateBatchPreview(
     countryCode,
     orderRows,
     kursRate,
+    rateSeller,
     shippingWHForeign,
     feeWarehouse,
     feeProxy,
@@ -41,6 +43,7 @@ export function calculateBatchPreview(
   const isJapan = countryCode === "JP";
   const isKorea = countryCode === "KR";
   const isIndonesia = countryCode === "INA";
+  const effectiveRateSeller = rateSeller && rateSeller > 0 ? rateSeller : kursRate;
 
   // Pcs = konstan 1 per row (sesuai spek)
   const totalQty = orderRows.reduce((sum, r) => sum + (Number(r.qty) || 1), 0);
@@ -111,11 +114,11 @@ export function calculateBatchPreview(
     const feeNyelemPerPc = Number(feeNyelem) || 0;
     feeNyelemTotal = feeNyelemPerPc * totalQty;
 
-    // Subtotal TF Seller = ((Harga + shiploc) * rate + fee wh + fee co/tf)
+    // Subtotal TF Seller = ((Harga + shiploc) * rateSeller + fee wh + fee co/tf)
     subtotalTfSeller =
       (totalHargaAsliValas + (Number(shippingWHForeign) || 0)) *
         10000 *
-        kursRate +
+        effectiveRateSeller +
       feeWHProxyTotal;
 
     // Overhead per PC (termasuk ongkir, fee keseluruhan, dan fee nyelem)
@@ -130,8 +133,8 @@ export function calculateBatchPreview(
 
     // Selisih = Harga Total - Subtotal TF Seller
     selisihHarga = totalTagihanBuyer - subtotalTfSeller;
-    // Estimasi Laba Bersih = Selisih - fee nyelem - fee rekap = fee GO
-    estimasiLabaBersih = Number(feeGO) || 0;
+    // Estimasi Laba Bersih = Selisih - fee nyelem - fee rekap (termasuk margin kurs)
+    estimasiLabaBersih = selisihHarga - feeNyelemTotal - feeRekap;
   } else if (isJapan) {
     // JP: Konversi standar, fee nyelem nominal total batch
     konversiIDR = totalHargaAsliValas * kursRate;
@@ -140,9 +143,9 @@ export function calculateBatchPreview(
     feeKeseluruhan = feeWHProxyTotal + (Number(feeGO) || 0) + feeRekap;
     feeNyelemTotal = Number(feeNyelem) || 0; // Nominal total batch
 
-    // Subtotal TF Seller = ((Total Yen + shiploc) * rate + fee wh + fee co/tf)
+    // Subtotal TF Seller = ((Total Yen + shiploc) * rateSeller + fee wh + fee co/tf)
     subtotalTfSeller =
-      (totalHargaAsliValas + (Number(shippingWHForeign) || 0)) * kursRate +
+      (totalHargaAsliValas + (Number(shippingWHForeign) || 0)) * effectiveRateSeller +
       feeWHProxyTotal;
 
     const hargaBersihBatch =
@@ -158,7 +161,7 @@ export function calculateBatchPreview(
     } else {
       totalTagihanBuyer = hargaBersihBatch;
       selisihHarga = hargaBersihBatch - subtotalTfSeller;
-      estimasiLabaBersih = Number(feeGO) || 0;
+      estimasiLabaBersih = selisihHarga - feeNyelemTotal - feeRekap;
     }
   } else {
     // CH & TH: Konversi standar
@@ -169,9 +172,9 @@ export function calculateBatchPreview(
     const feeNyelemPerPc = Number(feeNyelem) || 0;
     feeNyelemTotal = feeNyelemPerPc * totalQty;
 
-    // Subtotal TF Seller = ((Harga + shiploc) * rate + fee wh + fee co/tf)
+    // Subtotal TF Seller = ((Harga + shiploc) * rateSeller + fee wh + fee co/tf)
     subtotalTfSeller =
-      (totalHargaAsliValas + (Number(shippingWHForeign) || 0)) * kursRate +
+      (totalHargaAsliValas + (Number(shippingWHForeign) || 0)) * effectiveRateSeller +
       feeWHProxyTotal;
 
     overheadPerPc =
@@ -183,7 +186,7 @@ export function calculateBatchPreview(
       konversiIDR + shippingLuarNegeriIDR + feeKeseluruhan + feeNyelemTotal;
 
     selisihHarga = totalTagihanBuyer - subtotalTfSeller;
-    estimasiLabaBersih = Number(feeGO) || 0;
+    estimasiLabaBersih = selisihHarga - feeNyelemTotal - feeRekap;
   }
 
   // Total Modal Batch
@@ -230,6 +233,8 @@ export function calculateBatchPreview(
     feeNyelemTotal,
     tierLabel,
     subtotalTfSeller,
+    rateSeller: effectiveRateSeller,
+    rateBuyer: kursRate,
     totalModalBatch,
     totalTagihanBuyer,
     selisihHarga,

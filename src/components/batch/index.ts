@@ -9,4 +9,5 @@ export * from "./BatchStepbar";
 export * from "./BatchInfoForm";
 export * from "./BuyerOrderTable";
 export * from "./BatchCalculationSummary";
+export * from "./BatchTextModal";
 export * from "./constants";

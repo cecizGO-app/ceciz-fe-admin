@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   AlertCircle,
   CheckCircle2,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
   BatchCalculationSummary,
   BuyerOrderTable,
   BatchStepbar,
+  BatchTextModal,
   COUNTRIES,
   REGISTERED_BUYERS,
   WIZARD_STEPS,
@@ -33,6 +35,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isTextModalOpen, setIsTextModalOpen] = useState(false);
 
   const form = useBatchForm();
 
@@ -84,6 +87,10 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
           form.selectedCountry === "INA"
             ? undefined
             : Number(form.kursRate) || undefined,
+        rateSeller:
+          form.selectedCountry === "INA"
+            ? undefined
+            : Number(form.rateSeller) || undefined,
         feeWh: Number(form.feeWarehouse) || 0,
         feeProxy: Number(form.feeProxy) || 0,
         proxyCoName: form.jasaProxy ? form.jasaProxy.trim() : undefined,
@@ -104,14 +111,11 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
       const newBatch = await createBatchApi(payload);
 
       setSuccessMessage(
-        `Batch ${newBatch.countryCode}-${String(newBatch.batchNumber).padStart(3, "0")} (${newBatch.title}) berhasil disimpan ke backend!`,
+        `Batch ${newBatch.countryCode}-${String(newBatch.batchNumber).padStart(3, "0")} (${newBatch.title}) berhasil disimpan ke backend! Format teks siap-share telah dibuat.`,
       );
 
-      setTimeout(() => {
-        if (onBackToList) {
-          onBackToList();
-        }
-      }, 1500);
+      // Auto-trigger Text Modal as requested by Ciul
+      setIsTextModalOpen(true);
     } catch (err: unknown) {
       console.error("Gagal menerbitkan batch:", err);
       const msg =
@@ -145,6 +149,8 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
       onChangeBatchDate={form.setBatchDate}
       kursRate={form.kursRate}
       onChangeKursRate={form.setKursRate}
+      rateSeller={form.rateSeller}
+      onChangeRateSeller={form.setRateSeller}
       shippingForeign={form.shippingWHForeign}
       onChangeShippingForeign={form.setShippingWHForeign}
       currentCurrency={form.currentCountry.currency}
@@ -182,6 +188,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
       overheadPerPc={form.overheadPerPc}
       feeNyelemBatch={form.feeNyelem}
       onAddRow={form.handleAddRow}
+      onSetRowCount={form.handleSetRowCount}
       onRemoveRow={form.handleRemoveRow}
       onUpdateRow={form.handleUpdateRow}
     />
@@ -225,7 +232,17 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
           </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsTextModalOpen(true)}
+            className="h-11 px-4 text-xs font-semibold gap-2 border-[#FBCFE8] text-[#EC4899] bg-[#FFF5FA] hover:bg-[#FCE7F3] cursor-pointer"
+          >
+            <Share2 className="w-4 h-4 text-[#EC4899]" />
+            <span>Format Teks Share</span>
+          </Button>
+
           <Button
             type="button"
             variant="outline"
@@ -341,6 +358,37 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
         </div>
         {orderTableSection}
       </div>
+
+      {/* Share Text Modal (Auto-triggers on save or manual click) */}
+      <BatchTextModal
+        isOpen={isTextModalOpen}
+        onClose={() => setIsTextModalOpen(false)}
+        batchCode={form.batchCode}
+        batchName={form.batchName}
+        countryName={form.currentCountry.name}
+        countryCode={form.selectedCountry}
+        currency={form.currentCountry.currency}
+        batchDate={form.batchDate}
+        warehouse={form.warehouseTujuan}
+        proxy={form.jasaProxy}
+        totalQty={form.summary.totalQty}
+        totalTagihan={form.summary.totalTagihanBuyer}
+        catatan={form.catatan}
+        items={form.computedRows.map((r) => {
+          const buyer = REGISTERED_BUYERS.find((b) => b.id === r.buyerId);
+          return {
+            buyerName: buyer?.name || r.buyerId,
+            buyerUsername: buyer?.username,
+            itemName: r.itemName,
+            qty: 1,
+            hargaBersih:
+              form.selectedCountry === "JP"
+                ? Number(r.hargaJualPerBuyer || r.hargaBersih || 0)
+                : Number(r.hargaBersih || 0),
+          };
+        })}
+        onBackToList={onBackToList}
+      />
     </div>
   );
 };

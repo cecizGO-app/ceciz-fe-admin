@@ -11,6 +11,10 @@ import {
 } from "@/components/verification";
 import { usePaymentVerification, PAGE_SIZE } from "@/hooks";
 import type { PaymentItem } from "@/types/verification";
+import {
+  getPaymentByIdApi,
+  mapBackendPaymentToFrontend,
+} from "@/services/payment.service";
 
 export const PaymentVerificationPage: React.FC = () => {
   const {
@@ -59,9 +63,20 @@ export const PaymentVerificationPage: React.FC = () => {
   const [bulkRejectItems, setBulkRejectItems] = useState<PaymentItem[]>([]);
   const [addManualModalOpen, setAddManualModalOpen] = useState(false);
 
-  const handleViewProof = (item: PaymentItem) => {
+  const handleViewProof = async (item: PaymentItem) => {
     setSelectedProofItem(item);
     setProofModalOpen(true);
+
+    if (item.id && !item.id.startsWith("mock-") && !item.id.startsWith("pay-manual-")) {
+      try {
+        const detail = await getPaymentByIdApi(item.id);
+        if (detail) {
+          setSelectedProofItem(mapBackendPaymentToFrontend(detail));
+        }
+      } catch (err) {
+        console.warn("Backend get payment by ID failed, using cached item:", err);
+      }
+    }
   };
 
   const handleOpenSingleReject = (item: PaymentItem) => {

@@ -3,11 +3,11 @@ import type { StepItem } from './BatchStepbar'
 
 // Country Configuration (CH, KR, JP, TH, INA)
 export const COUNTRIES: CountryOption[] = [
-  { code: 'CH', name: 'China', flag: '🇨🇳', currency: 'CNY', defaultRate: 2250 },
-  { code: 'KR', name: 'Korea', flag: '🇰🇷', currency: 'KRW', defaultRate: 11.8 },
-  { code: 'JP', name: 'Jepang', flag: '🇯🇵', currency: 'JPY', defaultRate: 108 },
-  { code: 'TH', name: 'Thailand', flag: '🇹🇭', currency: 'THB', defaultRate: 450 },
-  { code: 'INA', name: 'Indonesia', flag: '🇮🇩', currency: 'IDR', defaultRate: 1 },
+  { code: 'CH', name: 'China', flag: '🇨🇳', currency: 'CNY', defaultRate: 2250, defaultRateSeller: 2200 },
+  { code: 'KR', name: 'Korea', flag: '🇰🇷', currency: 'KRW', defaultRate: 11.8, defaultRateSeller: 11.4 },
+  { code: 'JP', name: 'Jepang', flag: '🇯🇵', currency: 'JPY', defaultRate: 108, defaultRateSeller: 104 },
+  { code: 'TH', name: 'Thailand', flag: '🇹🇭', currency: 'THB', defaultRate: 450, defaultRateSeller: 435 },
+  { code: 'INA', name: 'Indonesia', flag: '🇮🇩', currency: 'IDR', defaultRate: 1, defaultRateSeller: 1 },
 ]
 
 // Registered Buyers Mock

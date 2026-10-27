@@ -29,6 +29,7 @@ export interface BackendCreateBatchInput {
   feeRekap?: number;
   feeNyelem?: number;
   rateHarian?: number;
+  rateSeller?: number;
   feeWh?: number;
   feeProxy?: number;
   adminNyelemId?: string;
@@ -199,6 +200,43 @@ export async function getBatchesApi(params?: {
     throw new Error(errorMsg);
   }
   return json?.data || [];
+}
+
+/**
+ * GET /api/v1/admin/batches/stats
+ * Mengambil ringkasan statistik batch dari backend
+ */
+export async function getBatchStatsApi(): Promise<{
+  activeBatches: number;
+  totalPc: number;
+  waitingCalculation: number;
+  archivedBatches: number;
+}> {
+  const res = await fetch(`${BASE_URL}/api/v1/admin/batches/stats`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal mengambil statistik batch (HTTP ${res.status})`;
+    throw new Error(errorMsg);
+  }
+
+  const data = json?.data || {};
+  return {
+    activeBatches: Number(data.activeBatches ?? data.totalBatchAktif ?? 0),
+    totalPc: Number(data.activePcs ?? data.totalPcDiproses ?? 0),
+    waitingCalculation: Number(data.waitingCalculation ?? data.menungguKalkulasiLaba ?? 0),
+    archivedBatches: Number(data.archivedBatches ?? data.batchDiarsipkan ?? 0),
+  };
 }
 
 /**

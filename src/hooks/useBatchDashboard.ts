@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import type { BatchItem, BatchStatus, CountryFilter } from "@/types/batch";
 import {
   getBatchesApi,
+  getBatchStatsApi,
   patchBatchApi,
   deleteBatchApi,
   mapBackendBatchToFrontend,
@@ -18,6 +19,12 @@ function formatRupiah(amount: number): string {
 
 export function useBatchDashboard() {
   const [batches, setBatches] = useState<BatchItem[]>([]);
+  const [backendStats, setBackendStats] = useState<{
+    activeBatches: number;
+    totalPc: number;
+    waitingCalculation: number;
+    archivedBatches: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,13 +59,24 @@ export function useBatchDashboard() {
           ? mapFrontendStatusToBackend(statusFilter as BatchStatus)
           : undefined;
 
-      const data = await getBatchesApi({
-        countryCode: countryParam,
-        status: statusParam,
-      });
+      const [batchesRes, statsRes] = await Promise.allSettled([
+        getBatchesApi({
+          countryCode: countryParam,
+          status: statusParam,
+        }),
+        getBatchStatsApi(),
+      ]);
 
-      const mapped = data.map(mapBackendBatchToFrontend);
-      setBatches(mapped);
+      if (batchesRes.status === "fulfilled") {
+        const mapped = batchesRes.value.map(mapBackendBatchToFrontend);
+        setBatches(mapped);
+      } else {
+        throw batchesRes.reason;
+      }
+
+      if (statsRes.status === "fulfilled") {
+        setBackendStats(statsRes.value);
+      }
     } catch (err: unknown) {
       console.error("Gagal memuat batch:", err);
       const msg =
@@ -91,8 +109,12 @@ export function useBatchDashboard() {
     return batches.filter((b) => b.isHidden).length;
   }, [batches]);
 
-  // Summary Stats dinamis mengikuti status batch
+  // Summary Stats dinamis mengikuti status batch & backend stats
   const stats = useMemo(() => {
+    if (backendStats && countryFilter === "ALL" && statusFilter === "ALL") {
+      return backendStats;
+    }
+
     const activeCount = batches.filter(
       (b) => (b.status === "Open" || b.status === "Closed") && !b.isHidden,
     ).length;
@@ -105,12 +127,12 @@ export function useBatchDashboard() {
     const archived = batches.filter((b) => b.status === "Archived").length;
 
     return {
-      activeBatches: activeCount,
-      totalPc: activeTotalPc,
-      waitingCalculation: waitingLaba,
-      archivedBatches: archived,
+      activeBatches: backendStats?.activeBatches ?? activeCount,
+      totalPc: backendStats?.totalPc ?? activeTotalPc,
+      waitingCalculation: backendStats?.waitingCalculation ?? waitingLaba,
+      archivedBatches: backendStats?.archivedBatches ?? archived,
     };
-  }, [batches]);
+  }, [backendStats, batches, countryFilter, statusFilter]);
 
   // Handler toggle hide/unhide
   const handleToggleHide = (batchId: string) => {

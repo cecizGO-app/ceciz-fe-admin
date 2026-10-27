@@ -150,17 +150,19 @@ export const BatchCalculationSummary: React.FC<
               </div>
 
               <div className="flex justify-between items-center gap-2">
-                <span className="flex items-center gap-1.5">
-                  <span>Fee Rekap ({summary.tierLabel})</span>
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <span className="truncate">
+                    Fee Rekap ({summary.tierLabel.replace(/^Tier\s*/i, "")})
+                  </span>
                   <Badge
                     variant="secondary"
-                    className="gap-1 px-2 py-0.5 rounded-[6px] text-[11px] font-bold"
+                    className="gap-1 px-1.5 py-0.5 rounded-[6px] text-[10px] font-bold shrink-0"
                   >
-                    <Sparkle className="w-3.5 h-3.5" />
+                    <Sparkle className="w-3 h-3" />
                     <span>auto</span>
                   </Badge>
                 </span>
-                <span className="font-semibold text-[#18181B] shrink-0 tabular-nums">
+                <span className="font-semibold text-[#18181B] shrink-0 tabular-nums whitespace-nowrap">
                   {formatIDR(summary.feeRekap)}
                 </span>
               </div>
@@ -188,7 +190,9 @@ export const BatchCalculationSummary: React.FC<
               <span className="text-[10px] text-[#71717A]">
                 {summary.isIndonesia
                   ? "SUM Harga + Harga CO Shopee"
-                  : "((Harga + Shiploc) * Rate + Fee WH + Fee CO)"}
+                  : summary.rateSeller
+                    ? `Via Kurs Seller (Rp ${summary.rateSeller.toLocaleString("id-ID")})`
+                    : "Via Kurs Normal"}
               </span>
             </div>
             <span className="font-bold text-[#18181B] tabular-nums text-sm">
@@ -197,55 +201,53 @@ export const BatchCalculationSummary: React.FC<
           </div>
 
           {/* Total Tagihan Buyer Box (Harga Total) */}
-          <div className="p-3.5 rounded-[14px] bg-[#FFF5FA] border border-[#FBCFE8] flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold text-[#18181B] tracking-wider uppercase">
+          <div className="p-3.5 rounded-[14px] bg-[#FFF5FA] border border-[#FBCFE8] space-y-1">
+            <div className="flex items-center justify-between text-[#71717A]">
+              <span className="text-[11px] font-bold text-[#18181B] tracking-wider uppercase whitespace-nowrap">
                 {summary.isIndonesia
                   ? "TOTAL PENDAPATAN"
                   : "HARGA TOTAL (TAGIHAN)"}
-              </div>
-              <div className="text-[10px] text-[#71717A]">
+              </span>
+              <span className="text-[10px] text-zinc-500 font-medium whitespace-nowrap">
                 {summary.isJapan
                   ? summary.allJpHargaJualFilled
-                    ? "SUM Harga Jual Buyer (Admin)"
-                    : "Estimasi Total Bersih Batch"
-                  : summary.isIndonesia
-                    ? "SUM Harga + SUM Fee GO"
-                    : "Total Harga Bersih Semua Row"}
-              </div>
+                    ? "SUM Jual"
+                    : "Estimasi"
+                  : "Total Bersih"}
+              </span>
             </div>
-            <div className="text-[20px] font-black text-[#EC4899] tracking-tight tabular-nums">
+            <div className="text-[22px] font-black text-[#EC4899] tracking-tight tabular-nums">
               {formatIDR(summary.totalTagihanBuyer)}
             </div>
           </div>
 
           {/* Selisih: Harga Total - Subtotal TF Seller */}
-          <div className="flex justify-between items-center text-xs p-2.5 rounded-[10px] bg-zinc-50 border border-zinc-200/80">
-            <div>
-              <span className="font-semibold text-[#18181B] block">
-                Selisih (Laba Kotor Batch)
+          <div className="flex justify-between items-center text-xs p-2.5 rounded-[10px] bg-zinc-50 border border-zinc-200/80 gap-2">
+            <div className="min-w-0">
+              <span className="font-semibold text-[#18181B] block whitespace-nowrap">
+                Laba Kotor (Selisih)
               </span>
-              <span className="text-[10px] text-[#71717A]">
-                Harga Total &minus; Subtotal TF Seller
+              <span className="text-[10px] text-[#71717A] block whitespace-nowrap">
+                Tagihan &minus; Subtotal TF
               </span>
             </div>
-            <span className="font-bold text-zinc-900 tabular-nums text-sm">
+            <span className="font-bold text-zinc-900 tabular-nums text-sm whitespace-nowrap shrink-0">
               {formatIDR(summary.selisihHarga)}
             </span>
           </div>
 
           {/* Estimasi Laba Bersih GO */}
-          <div className="flex justify-between items-center text-xs pt-1">
-            <div>
-              <span className="text-[#71717A] font-medium block">
-                Estimasi Laba Bersih GO
+          <div className="flex justify-between items-center text-xs p-2.5 rounded-[10px] bg-emerald-50/60 border border-emerald-200/80 gap-2">
+            <div className="min-w-0">
+              <span className="font-semibold text-emerald-950 block whitespace-nowrap">
+                Laba Bersih GO
               </span>
-              <span className="text-[10px] text-[#71717A]">
-                Selisih &minus; Fee Rekap &minus; Fee Nyelem
+              <span className="text-[10px] text-emerald-700/80 block whitespace-nowrap">
+                Setelah fee rekap &amp; nyelem
               </span>
             </div>
             <span
-              className={`font-black text-sm tabular-nums ${summary.estimasiLabaBersih >= 0 ? "text-[#16A34A]" : "text-red-500"}`}
+              className={`font-black text-sm tabular-nums whitespace-nowrap shrink-0 ${summary.estimasiLabaBersih >= 0 ? "text-emerald-600" : "text-rose-600"}`}
             >
               {summary.estimasiLabaBersih >= 0 ? "+ " : ""}
               {formatIDR(summary.estimasiLabaBersih)}
@@ -259,7 +261,7 @@ export const BatchCalculationSummary: React.FC<
             type="button"
             disabled={isSubmitting}
             onClick={onPublish}
-            className="w-full h-11 rounded-[12px] text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md gap-2"
+            className="w-full h-11 rounded-[12px] text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md gap-2 bg-[#EC4899] hover:bg-[#db2777] text-white"
           >
             {isSubmitting ? (
               <>
@@ -267,12 +269,9 @@ export const BatchCalculationSummary: React.FC<
                 <span>Menyimpan Batch ke Backend...</span>
               </>
             ) : (
-              <span>Terbitkan &amp; Simpan Batch</span>
+              <span>Save &amp; Generate Text</span>
             )}
           </Button>
-          <p className="text-[11px] text-[#71717A] text-center mt-2 leading-relaxed">
-            Batch akan tersimpan di sistem dan backend Ceciz
-          </p>
         </div>
       </CardContent>
     </Card>

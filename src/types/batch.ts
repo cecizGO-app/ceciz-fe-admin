@@ -30,6 +30,7 @@ export interface CountryOption {
   flag: string;
   currency: string;
   defaultRate: number;
+  defaultRateSeller?: number;
 }
 
 export interface BuyerOption {
@@ -62,6 +63,8 @@ export interface CalculationSummary {
   feeNyelemTotal: number;
   tierLabel: string;
   subtotalTfSeller: number; // ((Harga + shiploc) * rate + fee wh + fee co/tf)
+  rateSeller?: number;
+  rateBuyer?: number;
   totalModalBatch: number;
   totalTagihanBuyer: number; // Harga total (pemasukan buyer)
   selisihHarga: number; // Harga total - subtotal tf seller
