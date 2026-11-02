@@ -2,10 +2,8 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import type { CalculationSummary } from "@/types/batch";
 
-import { Sparkle } from "@/components/icons/Sparkle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 interface BatchCalculationSummaryProps {
@@ -150,17 +148,8 @@ export const BatchCalculationSummary: React.FC<
               </div>
 
               <div className="flex justify-between items-center gap-2">
-                <span className="flex items-center gap-1.5 min-w-0">
-                  <span className="truncate">
-                    Fee Rekap ({summary.tierLabel.replace(/^Tier\s*/i, "")})
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className="gap-1 px-1.5 py-0.5 rounded-[6px] text-[10px] font-bold shrink-0"
-                  >
-                    <Sparkle className="w-3 h-3" />
-                    <span>auto</span>
-                  </Badge>
+                <span className="truncate">
+                  Fee Rekap ({summary.tierLabel.replace(/^Tier\s*/i, "")})
                 </span>
                 <span className="font-semibold text-[#18181B] shrink-0 tabular-nums whitespace-nowrap">
                   {formatIDR(summary.feeRekap)}

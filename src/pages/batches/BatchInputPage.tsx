@@ -217,7 +217,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
               onClick={onBackToList}
               className="hover:text-[#EC4899] cursor-pointer transition-colors"
             >
-              Batch
+              Batch &amp; Harga
             </span>
             <span>&gt;</span>
             <span className="text-[#EC4899] font-medium">

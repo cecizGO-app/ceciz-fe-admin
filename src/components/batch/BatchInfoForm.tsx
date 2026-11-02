@@ -1,5 +1,4 @@
 import React from "react";
-import { Calendar } from "lucide-react";
 import type { CountryCode, CountryOption } from "@/types/batch";
 
 import { CountryFlag } from "@/components/icons/CountryFlag";
@@ -198,16 +197,13 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
                   Tanggal Batch
                 </Label>
               </div>
-              <div className="relative">
-                <Input
-                  id="batch-date"
-                  type="date"
-                  value={batchDate}
-                  onChange={(e) => onChangeBatchDate(e.target.value)}
-                  className="h-10 pr-9 text-xs"
-                />
-                <Calendar className="w-4 h-4 text-[#71717A] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <Input
+                id="batch-date"
+                type="date"
+                value={batchDate}
+                onChange={(e) => onChangeBatchDate(e.target.value)}
+                className="h-10 text-xs cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
             </div>
           </div>
 

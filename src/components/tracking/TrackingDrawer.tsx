@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Check, X, Plus } from "lucide-react";
+import { Check, X, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,6 +149,69 @@ export const TrackingDrawer: React.FC<TrackingDrawerProps> = ({
                 );
               })}
             </ol>
+          </section>
+
+          {/* Rincian Buyer & Item di Batch Ini */}
+          <section className="mt-4 rounded-[16px] border border-[#FBCFE8] bg-white p-4 shadow-2xs">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-1.5">
+                <Users className="size-4 text-[#EC4899]" />
+                <h3 className="text-xs font-bold text-[#18181B]">
+                  Rincian Buyer di Batch Ini
+                </h3>
+              </div>
+              <span className="text-[10px] font-semibold text-[#EC4899] bg-[#FFF5FA] border border-[#FBCFE8] px-2 py-0.5 rounded-full">
+                {pkg.buyersList && pkg.buyersList.length > 0
+                  ? `${pkg.buyersList.length} Buyer`
+                  : "1 Buyer"}
+              </span>
+            </div>
+
+            <div className="flex flex-col divide-y divide-zinc-100 max-h-48 overflow-y-auto pr-1">
+              {pkg.buyersList && pkg.buyersList.length > 0 ? (
+                pkg.buyersList.map((buyer, bIdx) => (
+                  <div key={buyer.id || bIdx} className="py-2 first:pt-0 last:pb-0 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-[#18181B] truncate">
+                          {buyer.name}
+                        </span>
+                        <span className="text-[11px] text-[#71717A]">
+                          {buyer.username}
+                        </span>
+                      </div>
+                      {buyer.itemDescription && (
+                        <p className="text-[11px] text-[#71717A] truncate mt-0.5" title={buyer.itemDescription}>
+                          {buyer.itemDescription}
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-[11px] font-bold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-[6px]">
+                      {buyer.pcs} pc
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="py-2 flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-[#18181B] truncate">
+                        {pkg.buyer}
+                      </span>
+                      <span className="text-[11px] text-[#71717A]">
+                        {pkg.handle}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#71717A] truncate mt-0.5">
+                      {pkg.item}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[11px] font-bold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-[6px]">
+                    1 pc
+                  </span>
+                </div>
+              )}
+            </div>
           </section>
 
           <div className="mt-5 flex flex-col gap-4">

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-import { Navbar } from './Navbar'
-import { Sidebar } from './Sidebar'
+import React, { useState } from "react";
+import { Navbar } from "./Navbar";
+import { Sidebar } from "./Sidebar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -11,24 +11,26 @@ interface AdminLayoutProps {
   userInitial?: string;
   onChangeRole?: (role: "owner" | "staff") => void;
   onLogout?: () => void;
+  badges?: Record<string, number>;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   children,
-  activeMenu = 'batch',
+  activeMenu = "batch",
   onNavigate,
-  userRole = 'owner',
+  userRole = "owner",
   userName,
   userInitial,
   onChangeRole,
   onLogout,
+  badges,
 }) => {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleMenuClick = (menu: string) => {
-    onNavigate?.(menu)
-    setMobileSidebarOpen(false)
-  }
+    onNavigate?.(menu);
+    setMobileSidebarOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#FDF2F8] text-[#18181B] font-sans antialiased selection:bg-[#FCE7F3] selection:text-[#EC4899]">
@@ -50,6 +52,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             activeMenu={activeMenu}
             onNavigate={onNavigate}
             userRole={userRole}
+            badges={badges}
           />
         </div>
 
@@ -68,6 +71,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 activeMenu={activeMenu}
                 onNavigate={handleMenuClick}
                 userRole={userRole}
+                badges={badges}
               />
             </div>
           </div>
@@ -79,7 +83,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </main>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminLayout
+export default AdminLayout;

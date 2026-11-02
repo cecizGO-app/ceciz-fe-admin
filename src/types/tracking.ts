@@ -129,6 +129,14 @@ export const STAGES = [
 
 export type Stage = (typeof STAGES)[number];
 
+export interface TrackingBuyerItem {
+  id: string;
+  name: string;
+  username: string;
+  pcs: number;
+  itemDescription?: string;
+}
+
 export type Pkg = {
   id: number | string;
   batchId?: string;
@@ -145,6 +153,8 @@ export type Pkg = {
   album: boolean;
   updated: string;
   note: string;
+  buyersList?: TrackingBuyerItem[];
+  totalBuyers?: number;
 };
 
 export type TrackingTab = "active" | "done" | "all";

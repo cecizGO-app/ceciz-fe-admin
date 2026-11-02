@@ -18,9 +18,9 @@ export const DEFAULT_RATES: ExchangeRates = {
 export const DEFAULT_METRIC_STATS: DashboardMetricStats = {
   activeBatches: 7,
   activeBatchesDiff: "+2 dari kemarin",
-  pendingVerifications: 12,
-  pendingVerificationsDiff: "+5 hari ini",
-  overduePenaltyBuyers: 2,
+  pendingVerifications: 0,
+  pendingVerificationsDiff: "+0 hari ini",
+  overduePenaltyBuyers: 0,
   activeTrackingPackages: 31,
   arrivedWarehousePackages: 5,
   pendingTaxAmount: "Rp 4.250.000",

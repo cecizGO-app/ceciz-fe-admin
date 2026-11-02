@@ -19,6 +19,7 @@ interface SidebarProps {
   activeMenu?: string;
   onNavigate?: (menu: string) => void;
   userRole?: "owner" | "staff";
+  badges?: Record<string, number>;
 }
 
 interface MenuItem {
@@ -59,7 +60,6 @@ const MENU_SECTIONS: MenuSection[] = [
         id: "verifikasi",
         label: "Verifikasi Pembayaran",
         icon: ClipboardCheck,
-        badge: 12,
       },
       {
         id: "tracking",
@@ -126,6 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeMenu = "batch",
   onNavigate,
   userRole = "owner",
+  badges,
 }) => {
   // Filter bagian menu yang boleh diakses berdasarkan role
   const visibleSections = MENU_SECTIONS.filter((section) =>
@@ -156,6 +157,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {section.items.map((item) => {
                 const IconComponent = item.icon;
                 const isActive = activeMenu === item.id;
+                const badgeCount = badges?.[item.id] ?? item.badge;
+                const showBadge =
+                  typeof badgeCount === "number"
+                    ? badgeCount > 0
+                    : Boolean(badgeCount);
 
                 return (
                   <button
@@ -187,10 +193,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <span className="truncate">{item.label}</span>
                     </div>
 
-                    {/* Optional Badge (e.g. Verifikasi Pembayaran count) */}
-                    {item.badge !== undefined && (
+                    {/* Optional Badge: hanya muncul jika ada notif baru > 0 */}
+                    {showBadge && (
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#FCE7F3] text-[#DC2626] shrink-0">
-                        {item.badge}
+                        {badgeCount}
                       </span>
                     )}
                   </button>

@@ -1,4 +1,4 @@
-import type { Pkg, Stage } from "@/types/tracking";
+import type { Pkg, Stage, TrackingBuyerItem } from "@/types/tracking";
 
 const BASE_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
@@ -8,10 +8,13 @@ export interface BackendTrackingBatchItem {
   id: string;
   description: string;
   pcs: number;
+  buyerId?: string;
+  buyerName?: string | null;
   buyer?: {
     id: string;
     name: string;
     idLine?: string | null;
+    contact?: string | null;
   } | null;
 }
 
@@ -112,6 +115,56 @@ export function mapFrontendStageToBackend(stage: Stage | string): string {
   }
 }
 
+const KNOWN_BUYERS_MAP: Record<string, { name: string; username: string }> = {
+  b_01: { name: "Nadia Putri", username: "@b_01" },
+  b_02: { name: "Raka Mahendra", username: "@b_02" },
+  b_03: { name: "Alya Rahman", username: "@b_03" },
+  b_04: { name: "Dimas Anggara", username: "@b_04" },
+  b_05: { name: "Siti Rahma", username: "@b_05" },
+  "b-01": { name: "Nadia Putri", username: "@b_01" },
+  "b-02": { name: "Raka Mahendra", username: "@b_02" },
+  "b-03": { name: "Alya Rahman", username: "@b_03" },
+  "b-04": { name: "Dimas Anggara", username: "@b_04" },
+  "b-05": { name: "Siti Rahma", username: "@b_05" },
+};
+
+function resolveBuyerNameAndUsername(
+  rawId?: string,
+  rawName?: string | null,
+  rawIdLine?: string | null,
+): { name: string; username: string } {
+  const lowerId = (rawId || "").toLowerCase().trim();
+  const lowerName = (rawName || "").toLowerCase().trim();
+
+  // 1. Cek dari ID known mapping (b_01, b_02, etc.)
+  if (KNOWN_BUYERS_MAP[lowerId]) {
+    return KNOWN_BUYERS_MAP[lowerId];
+  }
+  if (KNOWN_BUYERS_MAP[lowerName]) {
+    return KNOWN_BUYERS_MAP[lowerName];
+  }
+
+  // 2. Resolve nama asli
+  let name = rawName?.trim() || "";
+  if (!name || /^b[-_]0\d$/i.test(name)) {
+    name = rawId || "Buyer";
+  }
+
+  // 3. Resolve username/handle
+  let username = "";
+  if (lowerId && /^b[-_]0\d$/i.test(lowerId)) {
+    username = `@${lowerId.replace("-", "_")}`;
+  } else if (rawIdLine && !rawIdLine.includes("@buyer.ceciz")) {
+    username = rawIdLine.startsWith("@") ? rawIdLine : `@${rawIdLine}`;
+  } else if (name && name !== "Buyer") {
+    username = `@${name.toLowerCase().replace(/\s+/g, "")}`;
+  } else {
+    username = lowerId ? `@${lowerId}` : "@buyer";
+  }
+
+  return { name, username };
+}
+
 /**
  * Konversi BackendTracking ke format Pkg untuk tabel logistik
  */
@@ -134,12 +187,69 @@ export function mapBackendTrackingToPkg(
     : `${trk.countryCode}-BATCH`;
 
   const items = trk.batch?.items || [];
-  const firstBuyer = items[0]?.buyer;
-  const buyerName = firstBuyer?.name || "Seluruh Buyer";
-  const handle = firstBuyer?.idLine ? `@${firstBuyer.idLine}` : "@buyer";
+
+  // Group unique buyers from batch items
+  const buyersMap = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      username: string;
+      pcs: number;
+      itemDescriptions: string[];
+    }
+  >();
+
+  for (const it of items) {
+    const rawId = it.buyerId || it.buyer?.id || "";
+    const rawName = it.buyer?.name || it.buyerName || rawId;
+    const rawLine = it.buyer?.idLine;
+
+    const { name, username } = resolveBuyerNameAndUsername(rawId, rawName, rawLine);
+    const key = rawId || name || "unknown";
+
+    if (!buyersMap.has(key)) {
+      buyersMap.set(key, {
+        id: rawId,
+        name,
+        username,
+        pcs: Number(it.pcs) || 1,
+        itemDescriptions: it.description ? [it.description] : [],
+      });
+    } else {
+      const existing = buyersMap.get(key)!;
+      existing.pcs += Number(it.pcs) || 1;
+      if (it.description && !existing.itemDescriptions.includes(it.description)) {
+        existing.itemDescriptions.push(it.description);
+      }
+    }
+  }
+
+  const buyersList: TrackingBuyerItem[] = Array.from(buyersMap.values()).map(
+    (b) => ({
+      id: b.id,
+      name: b.name,
+      username: b.username,
+      pcs: b.pcs,
+      itemDescription: b.itemDescriptions.join(", ") || undefined,
+    }),
+  );
+
+  let buyerName = "Seluruh Buyer";
+  let handle = "@batch";
+
+  if (buyersList.length === 1) {
+    buyerName = buyersList[0].name;
+    handle = buyersList[0].username;
+  } else if (buyersList.length > 1) {
+    const remaining = buyersList.length - 1;
+    buyerName = `${buyersList[0].name} (+${remaining} buyer)`;
+    handle = `${buyersList[0].username} • ${buyersList.length} Buyer`;
+  }
+
   const totalPcs = items.reduce((sum, it) => sum + (it.pcs || 1), 0);
   const itemDesc = items[0]?.description
-    ? `${items[0].description} (${totalPcs} pcs)`
+    ? `${items[0].description}${items.length > 1 ? ` (+${items.length - 1} item)` : ""} (${totalPcs} pcs)`
     : trk.description || `Merchandise (${totalPcs || 1} pcs)`;
 
   return {
@@ -158,6 +268,8 @@ export function mapBackendTrackingToPkg(
     album: Boolean(trk.uploadedToAlbum),
     updated,
     note: trk.notes || "",
+    buyersList,
+    totalBuyers: buyersList.length,
   };
 }
 

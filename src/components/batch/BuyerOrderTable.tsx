@@ -64,7 +64,7 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
       {/* Header & Row Controls */}
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-0">
         <div>
-          <CardTitle>Daftar Pesanan Buyer (1 Row = 1 Pcs = 1 Buyer)</CardTitle>
+          <CardTitle>Daftar Pesanan Buyer</CardTitle>
           <p className="text-xs text-[#71717A] mt-0.5">
             {isKorea
               ? "Khusus KR: Masukkan harga won dalam format dibagi 10.000 (misal 2.000 won = 0.2)."

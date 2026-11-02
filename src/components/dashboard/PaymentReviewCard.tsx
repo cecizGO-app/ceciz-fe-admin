@@ -59,7 +59,7 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
         {/* 3 Metric Mini Cards */}
         <div className="grid grid-cols-3 gap-2">
           {/* Pending */}
-          <div className="p-2 rounded-xl bg-amber-50/70 border border-amber-200/60 text-center">
+          <div className="p-2.5 rounded-2xl bg-amber-50/70 border border-amber-200/60 text-center">
             <span className="block text-base sm:text-lg font-bold text-amber-600 leading-tight">
               {stats.pending}
             </span>
@@ -69,7 +69,7 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
           </div>
 
           {/* Approved */}
-          <div className="p-2 rounded-xl bg-emerald-50/70 border border-emerald-200/60 text-center">
+          <div className="p-2.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 text-center">
             <span className="block text-base sm:text-lg font-bold text-emerald-600 leading-tight">
               {stats.approved}
             </span>
@@ -79,7 +79,7 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
           </div>
 
           {/* Rejected */}
-          <div className="p-2 rounded-xl bg-rose-50/70 border border-rose-200/60 text-center">
+          <div className="p-2.5 rounded-2xl bg-rose-50/70 border border-rose-200/60 text-center">
             <span className="block text-base sm:text-lg font-bold text-rose-600 leading-tight">
               {stats.rejected}
             </span>
@@ -93,7 +93,7 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
         <button
           type="button"
           onClick={onNavigateVerifikasi}
-          className="w-full h-8 px-3 rounded-xl border border-[#FBCFE8]/70 bg-[#FFF5FA]/60 hover:bg-[#FFF0F7] text-[#EC4899] font-semibold text-xs flex items-center justify-between transition-colors cursor-pointer group"
+          className="w-full h-8 px-3 rounded-full border border-[#FBCFE8]/70 bg-[#FFF5FA]/60 hover:bg-[#FFF0F7] text-[#EC4899] font-semibold text-xs flex items-center justify-between transition-colors cursor-pointer group"
         >
           <div className="flex items-center gap-1.5">
             <ClipboardCheck className="w-3.5 h-3.5 text-[#EC4899]" />
@@ -105,3 +105,6 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
     </Card>
   );
 };
+
+export default PaymentReviewCard;
+

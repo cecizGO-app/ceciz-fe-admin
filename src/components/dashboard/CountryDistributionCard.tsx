@@ -55,3 +55,6 @@ export const CountryDistributionCard: React.FC<CountryDistributionCardProps> = (
     </Card>
   );
 };
+
+export default CountryDistributionCard;
+

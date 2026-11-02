@@ -14,6 +14,8 @@ import { BatchInputPage } from "./pages/batches/BatchInputPage";
 import { TrackingPage } from "./pages/tracking/TrackingPage";
 import { PaymentVerificationPage } from "./pages/verification/PaymentVerificationPage";
 import { TagihanTaxPage } from "./pages/tax/TagihanTaxPage";
+import { PoAlbumPage } from "./pages/po-album/PoAlbumPage";
+import { CashflowPage } from "./pages/cashflow/CashflowPage";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import {
   useSession,
@@ -22,6 +24,7 @@ import {
   isAllowedAdminRole,
   type AuthUser,
 } from "./lib/auth-client";
+import { useNotificationStore } from "./stores/useNotificationStore";
 import { Loader2 } from "lucide-react";
 
 function AppContent() {
@@ -36,6 +39,9 @@ function AppContent() {
   );
   const [demoUser, setDemoUser] = useState<AuthUser | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  const badges = useNotificationStore((state) => state.badges);
+  const clearBadge = useNotificationStore((state) => state.clearBadge);
 
   // Validate Google OAuth session: prevent BUYER role from accessing Admin Dashboard
   useEffect(() => {
@@ -96,6 +102,8 @@ function AppContent() {
     if (p.startsWith("/verification")) return "verifikasi";
     if (p.startsWith("/tracking")) return "tracking";
     if (p.startsWith("/tax")) return "tax";
+    if (p.startsWith("/po-album")) return "po-album";
+    if (p.startsWith("/cashflow")) return "cashflow";
     return "dashboard";
   };
 
@@ -103,8 +111,13 @@ function AppContent() {
     if (menu === "dashboard") navigate("/dashboard");
     if (menu === "batch") navigate("/batches");
     if (menu === "tracking") navigate("/tracking");
-    if (menu === "verifikasi") navigate("/verification");
+    if (menu === "verifikasi") {
+      clearBadge("verifikasi");
+      navigate("/verification");
+    }
     if (menu === "tax") navigate("/tax");
+    if (menu === "po-album") navigate("/po-album");
+    if (menu === "cashflow") navigate("/cashflow");
   };
 
   const displayName =
@@ -172,6 +185,7 @@ function AppContent() {
                 userInitial={displayInitial}
                 onChangeRole={setRoleOverride}
                 onLogout={handleLogout}
+                badges={badges}
               >
                 <Routes>
                   <Route
@@ -181,6 +195,7 @@ function AppContent() {
                         onCreateBatch={() => navigate("/batches/new")}
                         onViewAllBatches={() => navigate("/batches")}
                         onNavigate={handleNavigate}
+                        pendingVerificationCount={badges.verifikasi ?? 0}
                       />
                     }
                   />
@@ -224,6 +239,8 @@ function AppContent() {
                     }
                   />
                   <Route path="/tax" element={<TagihanTaxPage />} />
+                  <Route path="/po-album" element={<PoAlbumPage />} />
+                  <Route path="/cashflow" element={<CashflowPage />} />
                   <Route
                     path="/"
                     element={<Navigate to="/dashboard" replace />}
@@ -249,5 +266,4 @@ export function App() {
     </BrowserRouter>
   );
 }
-
 export default App;

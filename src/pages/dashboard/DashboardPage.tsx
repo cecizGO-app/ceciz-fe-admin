@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, RefreshCw } from "lucide-react";
 import {
   KursBanner,
   DashboardStatsGrid,
@@ -11,30 +11,46 @@ import {
   UpdateKursModal,
 } from "@/components/dashboard";
 import type { ExchangeRates } from "@/types/dashboard";
+import { useDashboard } from "@/hooks";
+import { DEFAULT_TEAM_ACTIVITIES } from "@/mocks/mockDashboardData";
+import { cn } from "@/lib/utils";
 
 interface DashboardPageProps {
   onCreateBatch?: () => void;
   onViewAllBatches?: () => void;
   onNavigate?: (menu: string) => void;
+  pendingVerificationCount?: number;
 }
-
-import {
-  DEFAULT_RATES,
-  DEFAULT_METRIC_STATS,
-  DEFAULT_RECENT_BATCHES,
-  DEFAULT_COUNTRY_DISTRIBUTIONS,
-  DEFAULT_PAYMENT_STATS,
-  DEFAULT_TEAM_ACTIVITIES,
-} from "@/mocks/mockDashboardData";
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onCreateBatch,
   onViewAllBatches,
   onNavigate,
+  pendingVerificationCount: propPendingCount,
 }) => {
-  const [rates, setRates] = useState<ExchangeRates>(DEFAULT_RATES);
+  const {
+    metricStats,
+    recentBatches,
+    countryDistributions,
+    paymentStats,
+    rates,
+    totalBatchesMonth,
+    periodLabel,
+    isSyncing,
+    isLiveBackend,
+    lastUpdated,
+    refetch,
+    updateRates,
+  } = useDashboard();
+
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Notifikasi badge hanya muncul jika ada aksi/bukti baru yang belum dicek (> 0)
+  const pendingVerificationBadge =
+    propPendingCount !== undefined
+      ? propPendingCount
+      : (metricStats.pendingVerifications ?? 0);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -44,8 +60,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const handleSaveRates = (newRates: ExchangeRates) => {
-    setRates(newRates);
+    updateRates(newRates);
     showToast("Kurs harian berhasil diperbarui!");
+  };
+
+  const handleManualSync = async () => {
+    await refetch();
+    showToast(
+      isLiveBackend
+        ? "Dashboard berhasil disinkronkan dengan backend!"
+        : "Data dashboard diperbarui.",
+    );
   };
 
   return (
@@ -59,11 +84,31 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       )}
 
       {/* Header Halaman Sesuai PRD §5 */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
         <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
           Dashboard
         </h1>
-        <p className="text-xs text-[#71717A]">Diperbarui: 17:45 WIB</p>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <p className="text-xs text-[#71717A]">Diperbarui: {lastUpdated}</p>
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            title="Sinkronkan data dengan backend Vercel"
+            className="h-8 px-2.5 rounded-[10px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#71717A] hover:text-[#EC4899] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-60"
+          >
+            <RefreshCw
+              className={cn(
+                "w-3.5 h-3.5 text-[#EC4899]",
+                isSyncing && "animate-spin",
+              )}
+            />
+            <span className="text-[11px]">
+              {isSyncing ? "Sinkron..." : "Sinkronkan"}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Widget: Kurs Hari Ini (Rate Harian — 1 klik update sesuai PRD §5) */}
@@ -74,33 +119,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       {/* Widget: Statistik Hari Ini (PRD §5: total batch aktif, bayar pending, denda, dll) */}
       <DashboardStatsGrid
-        stats={DEFAULT_METRIC_STATS}
+        stats={metricStats}
         onNavigateBatch={onViewAllBatches}
         onNavigateVerifikasi={() => onNavigate?.("verifikasi")}
         onNavigateTracking={() => onNavigate?.("tracking")}
         onNavigateTax={() => onNavigate?.("tax")}
       />
 
-      {/* Main Grid: Kolom Kiri & Kanan Sejajar Alami Tanpa Space Kosong */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4.5">
+      {/* Main Grid: Posisi Asli Tetap Sama (Kolom Kiri 7 Kolom & Kolom Kanan 5 Kolom) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4.5 items-start">
         {/* Kolom Kiri (7 Kolom) */}
-        <div className="lg:col-span-7 space-y-4.5">
+        <div className="lg:col-span-7 space-y-4.5 flex flex-col">
           <RecentBatchesCard
-            batches={DEFAULT_RECENT_BATCHES}
-            totalBatchesMonth={24}
+            batches={recentBatches}
+            totalBatchesMonth={totalBatchesMonth}
             onViewAllBatches={onViewAllBatches}
           />
 
           <CountryDistributionCard
-            distributions={DEFAULT_COUNTRY_DISTRIBUTIONS}
-            periodLabel="September · 24 batch"
+            distributions={countryDistributions}
+            periodLabel={periodLabel}
           />
         </div>
 
         {/* Kolom Kanan (5 Kolom) */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-4.5 flex flex-col">
           <QuickActionsCard
-            pendingVerificationCount={DEFAULT_METRIC_STATS.pendingVerifications}
+            pendingVerificationCount={pendingVerificationBadge}
             onCreateBatch={onCreateBatch}
             onNavigateVerifikasi={() => onNavigate?.("verifikasi")}
             onNavigateTracking={() => onNavigate?.("tracking")}
@@ -113,7 +158,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           />
 
           <PaymentReviewCard
-            stats={DEFAULT_PAYMENT_STATS}
+            stats={paymentStats}
             onNavigateVerifikasi={() => onNavigate?.("verifikasi")}
           />
 

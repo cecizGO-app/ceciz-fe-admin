@@ -352,3 +352,76 @@ export async function deleteBatchApi(id: string): Promise<void> {
     throw new Error(errorMsg);
   }
 }
+
+
+export interface BackendFormOptions {
+  settings?: {
+    dailyRate?: Record<string, number>;
+    defaultFeeNyelem?: number;
+    feeRekapTiers?: Array<{ min_pcs: number; max_pcs: number; fee: number; label: string }>;
+    deadlineBatchHours?: number;
+  };
+  nextBatchNumbers?: Record<string, number>;
+  buyers?: Array<{ id: string; name: string; email?: string }>;
+  admins?: Array<{ id: string; name: string; email?: string; role?: string }>;
+}
+
+/**
+ * GET /api/v1/admin/batches/form-options
+ * Mengambil opsi form batch (buyers, admins, nextBatchNumbers, settings dailyRate)
+ */
+export async function getBatchFormOptionsApi(): Promise<BackendFormOptions> {
+  const res = await fetch(`${BASE_URL}/api/v1/admin/batches/form-options`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal memuat opsi form batch (HTTP ${res.status})`;
+    throw new Error(errorMsg);
+  }
+  return json?.data || json;
+}
+
+/**
+ * GET /api/v1/admin/batches/next-number?countryCode=...
+ * Mengambil nomor batch sekuensial berikutnya untuk negara tertentu dari database backend
+ */
+export async function getNextBatchNumberApi(
+  countryCode: BackendCountryCode,
+): Promise<{
+  countryCode: BackendCountryCode;
+  nextBatchNumber: number;
+  formattedCode: string;
+}> {
+  const url = new URL(`${BASE_URL}/api/v1/admin/batches/next-number`);
+  url.searchParams.set("countryCode", countryCode);
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal mengambil nomor batch berikutnya (HTTP ${res.status})`;
+    throw new Error(errorMsg);
+  }
+  return json?.data;
+}
+
