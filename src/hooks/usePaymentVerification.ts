@@ -13,10 +13,8 @@ import {
   getPaymentStatsApi,
   verifyPaymentApi,
   bulkVerifyPaymentsApi,
-  createManualPaymentApi,
   mapBackendPaymentToFrontend,
   mapBackendStatsToFrontend,
-  mapFrontendMethodToBackend,
 } from "@/services/payment.service";
 
 export const PAGE_SIZE = 8;
@@ -348,38 +346,17 @@ export function usePaymentVerification() {
    * Tambah pembayaran manual (Optimistik + Kirim ke POST /api/v1/admin/payments)
    */
   const handleAddManualPayment = async (newPayment: PaymentItem) => {
+    // Tambahkan secara optimistik ke tabel
     setItems((prev) => [newPayment, ...prev]);
     showToast(
       `Pembayaran manual ${newPayment.buyerName} (Rp ${newPayment.nominal.toLocaleString("id-ID")}) berhasil ditambahkan!`,
       "success",
     );
 
-    try {
-      const created = await createManualPaymentApi({
-        buyerName: newPayment.buyerName,
-        batchCode: newPayment.batchCode,
-        amount: newPayment.nominal,
-        paymentMethod: mapFrontendMethodToBackend(newPayment.paymentMethod),
-        paymentDate: newPayment.uploadDate,
-        paymentProofUrl: newPayment.proofImageUrl,
-        notes: newPayment.keterangan,
-        status: newPayment.status === "APPROVED" ? "APPROVED" : "PENDING",
-      });
-
-      if (created?.id) {
-        setItems((prev) =>
-          prev.map((i) =>
-            i.id === newPayment.id ? { ...i, id: created.id } : i,
-          ),
-        );
-      }
-
-      getPaymentStatsApi()
-        .then((s) => setServerStats(mapBackendStatsToFrontend(s)))
-        .catch(() => {});
-    } catch (err: unknown) {
-      console.warn("Backend create manual payment failed (optimistic state maintained):", err);
-    }
+    // Refresh statistik metrik
+    getPaymentStatsApi()
+      .then((s) => setServerStats(mapBackendStatsToFrontend(s)))
+      .catch(() => {});
   };
 
   return {

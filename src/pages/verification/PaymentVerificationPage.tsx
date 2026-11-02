@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckCircle2, XCircle, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
   getPaymentByIdApi,
   mapBackendPaymentToFrontend,
 } from "@/services/payment.service";
+import { useNotificationStore } from "@/stores/useNotificationStore";
 
 export const PaymentVerificationPage: React.FC = () => {
   const {
@@ -51,6 +52,11 @@ export const PaymentVerificationPage: React.FC = () => {
     handleConfirmReject,
     handleAddManualPayment,
   } = usePaymentVerification();
+
+  // Bersihkan notifikasi saat halaman verifikasi dibuka/dicek
+  useEffect(() => {
+    useNotificationStore.getState().clearBadge("verifikasi");
+  }, []);
 
   // Modals state
   const [selectedProofItem, setSelectedProofItem] =
@@ -118,9 +124,13 @@ export const PaymentVerificationPage: React.FC = () => {
       {/* Header with Tambah Pembayaran Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="text-[11px] font-bold text-[#EC4899] tracking-wider uppercase mb-1">
-            DASHBOARD &middot; VERIFIKASI PEMBAYARAN
-          </div>
+          <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-1">
+            <span className="text-[#71717A]">Operasional</span>
+            <span>&gt;</span>
+            <span className="text-[#EC4899] font-medium">
+              Verifikasi Pembayaran
+            </span>
+          </nav>
           <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
             Verifikasi Pembayaran
           </h1>

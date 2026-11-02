@@ -26,13 +26,13 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
         onClick={onNavigateBatch}
         className="rounded-[20px] p-5 bg-white border border-[#FBCFE8]/50 shadow-[0_4px_20px_rgba(236,72,153,0.04)] hover:border-[#FBCFE8] hover:shadow-[0_8px_24px_rgba(236,72,153,0.08)] transition-all cursor-pointer group"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[#71717A]">
+        <div className="flex items-center justify-between gap-1.5 min-w-0">
+          <span className="text-xs font-semibold text-[#71717A] whitespace-nowrap">
             Batch Aktif
           </span>
           <Badge
             variant="success"
-            className="gap-1 font-semibold text-[11px] h-6 px-2"
+            className="gap-1 font-semibold text-[11px] h-6 px-2 shrink-0 whitespace-nowrap"
           >
             <TrendingUp className="w-3 h-3 text-[#16A34A]" />
             {stats.activeBatchesDiff}
@@ -56,13 +56,13 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
         onClick={onNavigateVerifikasi}
         className="rounded-[20px] p-5 bg-white border border-[#FBCFE8]/50 shadow-[0_4px_20px_rgba(236,72,153,0.04)] hover:border-[#FBCFE8] hover:shadow-[0_8px_24px_rgba(236,72,153,0.08)] transition-all cursor-pointer group"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[#71717A]">
+        <div className="flex items-center justify-between gap-1.5 min-w-0">
+          <span className="text-xs font-semibold text-[#71717A] whitespace-nowrap">
             Menunggu Verifikasi
           </span>
           <Badge
             variant="warning"
-            className="gap-1 font-semibold text-[11px] h-6 px-2"
+            className="gap-1 font-semibold text-[11px] h-6 px-2 shrink-0 whitespace-nowrap"
           >
             <TrendingUp className="w-3 h-3 text-[#D97706]" />
             {stats.pendingVerificationsDiff}
@@ -87,11 +87,11 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
         onClick={onNavigateTracking}
         className="rounded-[20px] p-5 bg-white border border-[#FBCFE8]/50 shadow-[0_4px_20px_rgba(236,72,153,0.04)] hover:border-[#FBCFE8] hover:shadow-[0_8px_24px_rgba(236,72,153,0.08)] transition-all cursor-pointer group"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[#71717A]">
+        <div className="flex items-center justify-between gap-1.5 min-w-0">
+          <span className="text-xs font-semibold text-[#71717A] whitespace-nowrap">
             Tracking Berjalan
           </span>
-          <Truck className="w-4 h-4 text-[#71717A]" />
+          <Truck className="w-4 h-4 text-[#71717A] shrink-0" />
         </div>
         <div className="mt-3 flex items-baseline">
           <span className="text-3xl font-bold text-[#18181B]">
@@ -111,11 +111,11 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
         onClick={onNavigateTax}
         className="rounded-[20px] p-5 bg-white border border-[#FBCFE8]/50 shadow-[0_4px_20px_rgba(236,72,153,0.04)] hover:border-[#FBCFE8] hover:shadow-[0_8px_24px_rgba(236,72,153,0.08)] transition-all cursor-pointer group"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[#71717A]">
+        <div className="flex items-center justify-between gap-1.5 min-w-0">
+          <span className="text-xs font-semibold text-[#71717A] whitespace-nowrap">
             Tagihan Tax Pending
           </span>
-          <span className="text-[11px] text-[#71717A]">
+          <span className="text-[11px] text-[#71717A] shrink-0 whitespace-nowrap">
             s/d {stats.taxPeriodCutoff}
           </span>
         </div>

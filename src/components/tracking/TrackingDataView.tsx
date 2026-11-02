@@ -77,12 +77,23 @@ export const TrackingDataView: React.FC<TrackingDataViewProps> = ({
                 className="border-b border-[#FBCFE8]/30 last:border-b-0 hover:bg-[#FFF5FA]/40 transition-colors"
               >
                 <TableCell className="pl-6 pr-3 py-4 align-middle">
-                  <p className="font-mono text-xs font-bold text-[#18181B]">
-                    {p.batch}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-mono text-xs font-bold text-[#18181B]">
+                      {p.batch}
+                    </p>
+                    {p.totalBuyers && p.totalBuyers > 1 ? (
+                      <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-[#FFF5FA] border border-[#FBCFE8] text-[#EC4899]">
+                        {p.totalBuyers} Buyer
+                      </span>
+                    ) : null}
+                  </div>
                   <p
                     className="mt-0.5 truncate text-xs font-semibold text-[#18181B]"
-                    title={`${p.buyer} ${p.handle}`}
+                    title={
+                      p.buyersList && p.buyersList.length > 0
+                        ? p.buyersList.map((b) => `${b.name} (${b.username})`).join(", ")
+                        : `${p.buyer} ${p.handle}`
+                    }
                   >
                     {p.buyer}
                   </p>
@@ -157,11 +168,18 @@ export const TrackingDataView: React.FC<TrackingDataViewProps> = ({
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-mono text-sm font-bold text-[#18181B]">
-                  {p.batch}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm font-bold text-[#18181B]">
+                    {p.batch}
+                  </p>
+                  {p.totalBuyers && p.totalBuyers > 1 ? (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFF5FA] border border-[#FBCFE8] text-[#EC4899]">
+                      {p.totalBuyers} Buyer
+                    </span>
+                  ) : null}
+                </div>
                 <p className="mt-0.5 text-xs text-[#71717A]">
-                  {p.buyer} {p.handle}
+                  <span className="font-semibold text-[#18181B]">{p.buyer}</span> · {p.handle}
                 </p>
               </div>
               <StageBadge s={p.stage} />

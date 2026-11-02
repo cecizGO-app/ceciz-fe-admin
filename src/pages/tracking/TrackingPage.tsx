@@ -73,7 +73,7 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
             <span className="text-[#71717A]">Operasional</span>
             <span>&gt;</span>
             <span className="text-[#EC4899] font-medium">
-              Tracking Logistik
+              Tracking
             </span>
           </nav>
           <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">

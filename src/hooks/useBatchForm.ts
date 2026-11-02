@@ -1,4 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import {
+  getNextBatchNumberApi,
+  getBatchFormOptionsApi,
+} from "@/services/batch.service";
 import type { CountryCode, OrderRow } from "@/types/batch";
 import { calculateBatchPreview } from "@/lib/calculations/batch-preview";
 import { COUNTRIES, REGISTERED_BUYERS } from "@/components/batch/constants";
@@ -18,6 +22,46 @@ export function useBatchForm() {
   const batchCode = useMemo(() => {
     return `${selectedCountry}-${String(batchNumber || 1).padStart(3, "0")}`;
   }, [selectedCountry, batchNumber]);
+
+  // Otomatis mengambil Nomor Batch Berikutnya (Next Batch Number) dari Backend Vercel
+  useEffect(() => {
+    let isCurrent = true;
+    getNextBatchNumberApi(selectedCountry)
+      .then((res) => {
+        if (isCurrent && res?.nextBatchNumber) {
+          setBatchNumber(res.nextBatchNumber);
+        }
+      })
+      .catch((err) => {
+        console.warn(`Gagal mengambil next batch number untuk ${selectedCountry}:`, err);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedCountry]);
+
+  // Ambil opsi form (kurs harian dari settings) saat pertama kali dimuat
+  useEffect(() => {
+    getBatchFormOptionsApi()
+      .then((opts) => {
+        if (opts?.settings?.dailyRate) {
+          const dr = opts.settings.dailyRate;
+          if (selectedCountry === "CH" && dr.yuan) {
+            setKursRate(Number(dr.yuan));
+          } else if (selectedCountry === "KR" && dr.won) {
+            setKursRate(Number(dr.won));
+          } else if (selectedCountry === "TH" && dr.baht) {
+            setKursRate(Number(dr.baht));
+          } else if (selectedCountry === "JP" && dr.yen) {
+            setKursRate(Number(dr.yen));
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn("Gagal memuat settings kurs dari backend:", err);
+      });
+  }, []);
 
   // Rates & Fees
   const [kursRate, setKursRate] = useState(2250); // Rate Buyer

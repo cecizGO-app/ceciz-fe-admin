@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface QuickActionsCardProps {
-  pendingVerificationCount: number;
+  pendingVerificationCount?: number;
   onCreateBatch?: () => void;
   onNavigateVerifikasi?: () => void;
   onNavigateTracking?: () => void;
@@ -42,7 +42,7 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
         <Button
           type="button"
           onClick={onCreateBatch}
-          className="w-full h-9 sm:h-9.5 bg-gradient-to-r from-[#EC4899] to-[#DB2777] hover:from-[#DB2777] hover:to-[#BE185D] text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer text-xs"
+          className="w-full h-9.5 bg-gradient-to-r from-[#EC4899] to-[#DB2777] hover:from-[#DB2777] hover:to-[#BE185D] text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer text-xs"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Tambah Batch Baru</span>
@@ -63,12 +63,14 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0 ml-2">
-              <Badge
-                variant="destructive"
-                className="px-1.5 py-0 h-4.5 text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-200"
-              >
-                {pendingVerificationCount}
-              </Badge>
+              {pendingVerificationCount !== undefined && pendingVerificationCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="px-1.5 py-0 h-4.5 text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-200"
+                >
+                  {pendingVerificationCount}
+                </Badge>
+              )}
               <ChevronRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:translate-x-0.5 transition-transform" />
             </div>
           </button>

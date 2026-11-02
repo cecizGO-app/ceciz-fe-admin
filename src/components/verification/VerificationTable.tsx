@@ -155,15 +155,15 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({
                       </span>
                     </TableCell>
 
-                    <TableCell className="py-3.5">
-                      <div className="font-bold text-xs text-[#18181B]">
+                    <TableCell className="py-3.5 whitespace-nowrap">
+                      <div className="font-bold text-xs text-[#18181B] whitespace-nowrap">
                         Rp {formatRupiah(item.nominal)}
                       </div>
-                      {item.denda && item.denda > 0 && (
-                        <div className="inline-block mt-0.5 px-1.5 py-0.2 text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded">
+                      {item.denda && item.denda > 0 ? (
+                        <div className="inline-block mt-0.5 px-1.5 py-0.2 text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded whitespace-nowrap">
                           + Denda Rp {formatRupiah(item.denda)}
                         </div>
-                      )}
+                      ) : null}
                     </TableCell>
 
                     <TableCell className="py-3.5">

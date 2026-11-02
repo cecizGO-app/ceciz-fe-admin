@@ -12,11 +12,11 @@ export const COUNTRIES: CountryOption[] = [
 
 // Registered Buyers Mock
 export const REGISTERED_BUYERS: BuyerOption[] = [
-  { id: 'b_01', name: 'Nadia Putri', username: '@nadia' },
-  { id: 'b_02', name: 'Raka Mahendra', username: '@raka' },
-  { id: 'b_03', name: 'Alya Rahman', username: '@alya' },
-  { id: 'b_04', name: 'Dimas Anggara', username: '@dimas' },
-  { id: 'b_05', name: 'Siti Rahma', username: '@siti' },
+  { id: 'b_01', name: 'Nadia Putri', username: '@b_01' },
+  { id: 'b_02', name: 'Raka Mahendra', username: '@b_02' },
+  { id: 'b_03', name: 'Alya Rahman', username: '@b_03' },
+  { id: 'b_04', name: 'Dimas Anggara', username: '@b_04' },
+  { id: 'b_05', name: 'Siti Rahma', username: '@b_05' },
 ]
 
 // Step definitions for Wizard
