@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
 import {
   LayoutGrid,
   Calculator,
@@ -160,13 +161,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : Boolean(badgeCount);
 
                 return (
-                  <button
+                  <Button
                     key={item.id}
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => onNavigate?.(item.id)}
-                    className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-[12px] text-xs transition-all cursor-pointer group ${
+                    className={`relative w-full flex items-center justify-between px-3.5 py-2.5 h-auto rounded-[12px] text-xs transition-all cursor-pointer group ${
                       isActive
-                        ? "bg-[#FFF5FA] text-[#18181B] font-semibold shadow-2xs"
+                        ? "bg-[#FFF5FA] text-[#18181B] font-semibold shadow-2xs hover:bg-[#FFF5FA] hover:text-[#18181B]"
                         : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B] font-medium"
                     }`}
                   >
@@ -195,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {badgeCount}
                       </span>
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

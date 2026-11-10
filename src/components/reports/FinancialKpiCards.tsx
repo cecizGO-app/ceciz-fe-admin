@@ -1,5 +1,11 @@
 import React from "react";
-import { ArrowDownLeft, ArrowUpRight, CircleDollarSign, Activity } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CircleDollarSign,
+  Activity,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { formatRupiah } from "./formatters";
 import type { FinancialKpiMetrics } from "@/types/reports";
 
@@ -7,7 +13,9 @@ interface FinancialKpiCardsProps {
   stats: FinancialKpiMetrics;
 }
 
-export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({ stats }) => {
+export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({
+  stats,
+}) => {
   const cards = [
     {
       id: "revenue",
@@ -15,7 +23,10 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({ stats }) =
       value: stats.revenue,
       icon: ArrowDownLeft,
       iconBg: "bg-sky-50 text-sky-600 border border-sky-100",
-      helper: stats.revenueTrend !== undefined ? `${stats.revenueTrend > 0 ? "+" : ""}${stats.revenueTrend}% vs bln lalu` : undefined,
+      helper:
+        stats.revenueTrend !== undefined
+          ? `${stats.revenueTrend > 0 ? "+" : ""}${stats.revenueTrend}% vs bln lalu`
+          : undefined,
     },
     {
       id: "cost",
@@ -23,7 +34,10 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({ stats }) =
       value: stats.cost,
       icon: ArrowUpRight,
       iconBg: "bg-rose-50 text-rose-600 border border-rose-100",
-      helper: stats.costTrend !== undefined ? `+${stats.costTrend}% vs bln lalu` : undefined,
+      helper:
+        stats.costTrend !== undefined
+          ? `+${stats.costTrend}% vs bln lalu`
+          : undefined,
     },
     {
       id: "gross-profit",
@@ -31,7 +45,10 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({ stats }) =
       value: stats.grossProfit,
       icon: CircleDollarSign,
       iconBg: "bg-amber-50 text-amber-600 border border-amber-100",
-      helper: stats.grossProfitTrend !== undefined ? `+${stats.grossProfitTrend}% estimasi` : undefined,
+      helper:
+        stats.grossProfitTrend !== undefined
+          ? `+${stats.grossProfitTrend}% estimasi`
+          : undefined,
     },
     {
       id: "net-profit",
@@ -39,7 +56,10 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({ stats }) =
       value: stats.netProfit,
       icon: Activity,
       iconBg: "bg-emerald-50 text-emerald-600 border border-emerald-100",
-      helper: stats.netProfitTrend !== undefined ? `+${stats.netProfitTrend}% margin sehat` : undefined,
+      helper:
+        stats.netProfitTrend !== undefined
+          ? `+${stats.netProfitTrend}% margin sehat`
+          : undefined,
     },
   ];
 
@@ -48,9 +68,10 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({ stats }) =
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <div
+          <Card
             key={card.id}
-            className="rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-4.5 flex flex-col justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
+            size="sm"
+            className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-4.5 flex flex-col justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-[#71717A]">
@@ -73,7 +94,7 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({ stats }) =
                 </p>
               )}
             </div>
-          </div>
+          </Card>
         );
       })}
     </div>

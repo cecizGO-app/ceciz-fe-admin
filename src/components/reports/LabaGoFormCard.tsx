@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatRupiah } from "./formatters";
-import type { BatchOptionForProfit, ProfitPeriodFormData } from "@/types/reports";
+import type {
+  BatchOptionForProfit,
+  ProfitPeriodFormData,
+} from "@/types/reports";
 
 interface LabaGoFormCardProps {
   formData: ProfitPeriodFormData;
@@ -33,12 +37,12 @@ export const LabaGoFormCard: React.FC<LabaGoFormCardProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const selectedBatches = availableBatches.filter((b) =>
-    formData.selectedBatchIds.includes(b.id)
+    formData.selectedBatchIds.includes(b.id),
   );
 
   const totalSelectedLaba = selectedBatches.reduce(
     (sum, b) => sum + (b.labaAmount || 0),
-    0
+    0,
   );
 
   const handleToggleBatch = (batchId: string) => {
@@ -54,7 +58,9 @@ export const LabaGoFormCard: React.FC<LabaGoFormCardProps> = ({
 
   const handleRemoveBatch = (batchId: string) => {
     onChange({
-      selectedBatchIds: formData.selectedBatchIds.filter((id) => id !== batchId),
+      selectedBatchIds: formData.selectedBatchIds.filter(
+        (id) => id !== batchId,
+      ),
     });
   };
 
@@ -121,19 +127,20 @@ export const LabaGoFormCard: React.FC<LabaGoFormCardProps> = ({
 
           <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <DropdownMenuTrigger asChild>
-              <button
+              <Button
                 type="button"
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs hover:border-[#EC4899] transition-all cursor-pointer shadow-2xs group"
+                variant="outline"
+                className="w-full flex items-center justify-between px-3.5 h-11 rounded-[12px] border-[#FBCFE8] bg-white text-xs hover:border-[#EC4899] transition-all shadow-2xs group font-normal"
               >
                 <span className="font-medium text-[#18181B]">
                   {selectedBatches.length > 0
                     ? `${selectedBatches.length} batch dipilih · ${formatRupiah(
-                        totalSelectedLaba
+                        totalSelectedLaba,
                       )}`
                     : "Pilih batch yang sudah selesai..."}
                 </span>
                 <ChevronDown className="w-4 h-4 text-[#71717A] group-hover:text-[#EC4899] transition-transform" />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
@@ -206,14 +213,16 @@ export const LabaGoFormCard: React.FC<LabaGoFormCardProps> = ({
                   <span className="text-[#71717A] text-[11px]">
                     · {formatRupiah(batch.labaAmount)}
                   </span>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={() => handleRemoveBatch(batch.id)}
-                    className="p-0.5 ml-1 rounded-full text-[#71717A] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    className="size-4 p-0 ml-1 rounded-full text-[#71717A] hover:text-rose-600 hover:bg-rose-50"
                     title={`Hapus ${batch.batchNumber}`}
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -342,4 +351,3 @@ export const LabaGoFormCard: React.FC<LabaGoFormCardProps> = ({
     </Card>
   );
 };
-

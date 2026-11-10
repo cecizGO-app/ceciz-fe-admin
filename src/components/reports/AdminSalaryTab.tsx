@@ -74,7 +74,8 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
   ]);
 
   // Modal State: Detail
-  const [selectedDetail, setSelectedDetail] = useState<AdminFeePeriodRecord | null>(null);
+  const [selectedDetail, setSelectedDetail] =
+    useState<AdminFeePeriodRecord | null>(null);
 
   // Filtered Periods
   const filteredPeriods = useMemo(() => {
@@ -115,7 +116,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
   const formTotalFee = useMemo(() => {
     return batchRows.reduce(
       (sum, r) => sum + (Number(r.feeNyelem) || 0) + (Number(r.feeRekap) || 0),
-      0
+      0,
     );
   }, [batchRows]);
 
@@ -136,10 +137,10 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
   const handleUpdateBatchRow = (
     id: string,
     field: keyof AdminFeeBatchRow,
-    value: string | number
+    value: string | number,
   ) => {
     setBatchRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
     );
   };
 
@@ -151,11 +152,11 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
 
     const totalFeeNyelem = batchRows.reduce(
       (sum, r) => sum + (Number(r.feeNyelem) || 0),
-      0
+      0,
     );
     const totalFeeRekap = batchRows.reduce(
       (sum, r) => sum + (Number(r.feeRekap) || 0),
-      0
+      0,
     );
 
     onAddPeriod({
@@ -177,7 +178,9 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
     setFormStartDate("");
     setFormEndDate("");
     setFormNotes("");
-    setBatchRows([{ id: "row-1", batchNumber: "CH-022", feeNyelem: 8000, feeRekap: 15000 }]);
+    setBatchRows([
+      { id: "row-1", batchNumber: "CH-022", feeNyelem: 8000, feeRekap: 15000 },
+    ]);
     setIsAddModalOpen(false);
   };
 
@@ -199,7 +202,10 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
         <div className="flex items-center gap-2">
           <div className="w-full sm:w-36">
             <Select value={adminFilter} onValueChange={setAdminFilter}>
-              <SelectTrigger size="sm" className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70">
+              <SelectTrigger
+                size="sm"
+                className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70"
+              >
                 <SelectValue placeholder="Admin" />
               </SelectTrigger>
               <SelectContent>
@@ -213,7 +219,10 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
 
           <div className="w-full sm:w-40">
             <Select value={periodFilter} onValueChange={setPeriodFilter}>
-              <SelectTrigger size="sm" className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70">
+              <SelectTrigger
+                size="sm"
+                className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70"
+              >
                 <SelectValue placeholder="Period" />
               </SelectTrigger>
               <SelectContent>
@@ -230,7 +239,10 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
       {/* 3 Metric Cards Sesuai Screenshot */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Card 1: Total fee periode terpilih */}
-        <div className="rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all">
+        <Card
+          size="sm"
+          className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
+        >
           <div>
             <span className="text-xs font-medium text-[#71717A] block">
               Total fee periode terpilih
@@ -242,10 +254,13 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
           <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
             <FileText className="w-4 h-4" />
           </div>
-        </div>
+        </Card>
 
         {/* Card 2: Periode admin */}
-        <div className="rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all">
+        <Card
+          size="sm"
+          className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
+        >
           <div>
             <span className="text-xs font-medium text-[#71717A] block">
               Periode admin
@@ -257,10 +272,13 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
           <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
             <FileSpreadsheet className="w-4 h-4" />
           </div>
-        </div>
+        </Card>
 
         {/* Card 3: Batch dalam periode */}
-        <div className="rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all">
+        <Card
+          size="sm"
+          className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
+        >
           <div>
             <span className="text-xs font-medium text-[#71717A] block">
               Batch dalam periode
@@ -272,7 +290,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
           <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
             <Layers className="w-4 h-4" />
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Main Card: Fee Admin per Periode */}
@@ -307,7 +325,10 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
 
           <div className="w-full sm:w-36">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger size="sm" className="h-9 text-xs rounded-[10px] border-[#FBCFE8]/70 bg-white">
+              <SelectTrigger
+                size="sm"
+                className="h-9 text-xs rounded-[10px] border-[#FBCFE8]/70 bg-white"
+              >
                 <SelectValue placeholder="Semua" />
               </SelectTrigger>
               <SelectContent>
@@ -400,22 +421,26 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                           <Eye className="w-3 h-3 mr-1" />
                           Detail
                         </Button>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-xs"
                           onClick={() => setSelectedDetail(item)}
-                          className="p-1.5 rounded-md text-[#71717A] hover:text-[#EC4899] hover:bg-[#FFF5FA] transition-colors cursor-pointer"
+                          className="size-7 rounded-md text-[#71717A] hover:text-[#EC4899] hover:bg-[#FFF5FA]"
                           title="Edit periode"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-xs"
                           onClick={() => onDeletePeriod(item.id)}
-                          className="p-1.5 rounded-md text-[#71717A] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          className="size-7 rounded-md text-[#71717A] hover:text-rose-600 hover:bg-rose-50"
                           title="Hapus periode"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -540,13 +565,19 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                       type="text"
                       value={row.batchNumber}
                       onChange={(e) =>
-                        handleUpdateBatchRow(row.id, "batchNumber", e.target.value)
+                        handleUpdateBatchRow(
+                          row.id,
+                          "batchNumber",
+                          e.target.value,
+                        )
                       }
                       placeholder="No Batch"
                       className="w-24 h-8 text-xs rounded-[8px] bg-white border-[#FBCFE8]/60"
                     />
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-[#71717A]">Nyelem:</span>
+                      <span className="text-[10px] text-[#71717A]">
+                        Nyelem:
+                      </span>
                       <Input
                         type="number"
                         min={0}
@@ -555,7 +586,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                           handleUpdateBatchRow(
                             row.id,
                             "feeNyelem",
-                            Number(e.target.value) || 0
+                            Number(e.target.value) || 0,
                           )
                         }
                         placeholder="Nyelem"
@@ -572,7 +603,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                           handleUpdateBatchRow(
                             row.id,
                             "feeRekap",
-                            Number(e.target.value) || 0
+                            Number(e.target.value) || 0,
                           )
                         }
                         placeholder="Rekap"
@@ -580,14 +611,16 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                       />
                     </div>
 
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => handleRemoveBatchRow(row.id)}
-                      className="p-1 text-[#71717A] hover:text-rose-600 ml-auto cursor-pointer"
+                      className="size-6 p-0 text-[#71717A] hover:text-rose-600 hover:bg-rose-50 ml-auto"
                       title="Hapus row"
                     >
                       <X className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -637,8 +670,8 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                 Detail Fee: {selectedDetail.adminName}
               </DialogTitle>
               <DialogDescription className="text-xs text-[#71717A]">
-                Periode {selectedDetail.periodName} ({selectedDetail.startDate} s/d{" "}
-                {selectedDetail.endDate})
+                Periode {selectedDetail.periodName} ({selectedDetail.startDate}{" "}
+                s/d {selectedDetail.endDate})
               </DialogDescription>
             </DialogHeader>
 

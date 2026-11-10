@@ -4,3 +4,4 @@ export * from "./tracking.service";
 export * from "./dashboard.service";
 export * from "./reports.service";
 export * from "./settings.service";
+export * from "./roles.service";

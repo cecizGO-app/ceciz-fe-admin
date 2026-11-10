@@ -1,11 +1,6 @@
 import React from "react";
 import { Trash2 } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableHeader,
@@ -15,6 +10,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatRupiah } from "./formatters";
 import type { ProfitPeriodHistoryItem } from "@/types/reports";
 
@@ -78,7 +74,8 @@ export const LabaGoHistoryTable: React.FC<LabaGoHistoryTableProps> = ({
                   colSpan={onDelete ? 8 : 7}
                   className="h-28 text-center text-xs text-[#71717A]"
                 >
-                  Belum ada data periode laba yang disimpan. Silakan simpan periode di atas.
+                  Belum ada data periode laba yang disimpan. Silakan simpan
+                  periode di atas.
                 </TableCell>
               </TableRow>
             ) : (
@@ -120,14 +117,16 @@ export const LabaGoHistoryTable: React.FC<LabaGoHistoryTableProps> = ({
                   </TableCell>
                   {onDelete && (
                     <TableCell className="text-center pr-6">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={() => onDelete(row.id)}
-                        className="p-1 rounded-md text-[#71717A] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        className="size-7 rounded-md text-[#71717A] hover:text-rose-600 hover:bg-rose-50"
                         title="Hapus riwayat periode"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </TableCell>
                   )}
                 </TableRow>
@@ -139,4 +138,3 @@ export const LabaGoHistoryTable: React.FC<LabaGoHistoryTableProps> = ({
     </Card>
   );
 };
-

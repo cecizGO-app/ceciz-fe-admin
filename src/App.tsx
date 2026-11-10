@@ -18,6 +18,7 @@ import { PoAlbumPage } from "./pages/po-album/PoAlbumPage";
 import { CashflowPage } from "./pages/cashflow/CashflowPage";
 import { FinancialReportsPage } from "./pages/reports/FinancialReportsPage";
 import { SettingsPage } from "./pages/settings/SettingsPage";
+import { RolesPermissionsPage } from "./pages/roles/RolesPermissionsPage";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import {
   useSession,
@@ -108,6 +109,7 @@ function AppContent() {
     if (p.startsWith("/cashflow")) return "cashflow";
     if (p.startsWith("/reports")) return "reports";
     if (p.startsWith("/settings")) return "settings";
+    if (p.startsWith("/roles-permissions")) return "roles-permissions";
     return "dashboard";
   };
 
@@ -131,6 +133,7 @@ function AppContent() {
       navigate("/reports");
     }
     if (menu === "settings") navigate("/settings");
+    if (menu === "roles-permissions") navigate("/roles-permissions");
   };
 
   const displayName =
@@ -256,6 +259,10 @@ function AppContent() {
                   <Route path="/cashflow" element={<CashflowPage />} />
                   <Route path="/reports" element={<FinancialReportsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route
+                    path="/roles-permissions"
+                    element={<RolesPermissionsPage />}
+                  />
                   <Route
                     path="/"
                     element={<Navigate to="/dashboard" replace />}
