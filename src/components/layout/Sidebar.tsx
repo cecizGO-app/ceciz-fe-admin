@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
 import {
   LayoutGrid,
   Calculator,
@@ -8,8 +9,6 @@ import {
   Package,
   ArrowLeftRight,
   BarChart3,
-  CircleDollarSign,
-  FileSpreadsheet,
   Settings,
   ShieldCheck,
   ShieldAlert,
@@ -88,19 +87,9 @@ const MENU_SECTIONS: MenuSection[] = [
     roles: ["owner"], // Khusus Owner — PRD RBAC §1.9 (Staff dilarang keras akses data laba & gaji)
     items: [
       {
-        id: "laba-go",
-        label: "Laba GO",
+        id: "reports",
+        label: "Laporan Keuangan",
         icon: BarChart3,
-      },
-      {
-        id: "gaji-admin",
-        label: "Gaji Admin",
-        icon: CircleDollarSign,
-      },
-      {
-        id: "rekap-pembayaran",
-        label: "Rekap Pembayaran",
-        icon: FileSpreadsheet,
       },
     ],
   },
@@ -156,7 +145,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-1">
               {section.items.map((item) => {
                 const IconComponent = item.icon;
-                const isActive = activeMenu === item.id;
+                const isActive =
+                  activeMenu === item.id ||
+                  (item.id === "reports" &&
+                    [
+                      "reports",
+                      "laba-go",
+                      "gaji-admin",
+                      "rekap-pembayaran",
+                    ].includes(activeMenu));
                 const badgeCount = badges?.[item.id] ?? item.badge;
                 const showBadge =
                   typeof badgeCount === "number"
@@ -164,13 +161,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : Boolean(badgeCount);
 
                 return (
-                  <button
+                  <Button
                     key={item.id}
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => onNavigate?.(item.id)}
-                    className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-[12px] text-xs transition-all cursor-pointer group ${
+                    className={`relative w-full flex items-center justify-between px-3.5 py-2.5 h-auto rounded-[12px] text-xs transition-all cursor-pointer group ${
                       isActive
-                        ? "bg-[#FFF5FA] text-[#18181B] font-semibold shadow-2xs"
+                        ? "bg-[#FFF5FA] text-[#18181B] font-semibold shadow-2xs hover:bg-[#FFF5FA] hover:text-[#18181B]"
                         : "text-[#71717A] hover:bg-[#FFF5FA]/70 hover:text-[#18181B] font-medium"
                     }`}
                   >
@@ -199,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {badgeCount}
                       </span>
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
