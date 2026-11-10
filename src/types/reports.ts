@@ -83,8 +83,10 @@ export interface AdminSalaryRecord {
 export interface AdminFeeBatchRow {
   id: string;
   batchNumber: string;
+  countryCode?: CountryCode | string;
   feeNyelem: number;
   feeRekap: number;
+  notes?: string;
 }
 
 export interface AdminFeePeriodRecord {
@@ -120,4 +122,3 @@ export interface PaymentSummaryRecord {
   paymentMethod: string;
   paidAt?: string;
 }
-

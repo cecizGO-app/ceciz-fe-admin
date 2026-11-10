@@ -8,6 +8,7 @@ export const MOCK_NOTIFICATIONS: AdminNotification[] = [
     isRead: false,
     createdAt: "5m ago",
     category: "buyer",
+    targetPath: "/batches",
   },
   {
     id: "notif-2",
@@ -16,6 +17,7 @@ export const MOCK_NOTIFICATIONS: AdminNotification[] = [
     isRead: false,
     createdAt: "20m ago",
     category: "payment",
+    targetPath: "/verification",
   },
   {
     id: "notif-3",
@@ -24,6 +26,7 @@ export const MOCK_NOTIFICATIONS: AdminNotification[] = [
     isRead: false,
     createdAt: "1h ago",
     category: "tracking",
+    targetPath: "/tracking",
   },
   {
     id: "notif-4",
@@ -32,6 +35,6 @@ export const MOCK_NOTIFICATIONS: AdminNotification[] = [
     isRead: false,
     createdAt: "2h ago",
     category: "tax",
+    targetPath: "/tax",
   },
 ];
-

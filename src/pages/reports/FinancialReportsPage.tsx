@@ -59,26 +59,28 @@ export const FinancialReportsPage: React.FC = () => {
   });
 
   // History state for Laba GO
-  const [history, setHistory] = useState(() => reportsService.getProfitHistory());
+  const [history, setHistory] = useState(() =>
+    reportsService.getProfitHistory(),
+  );
 
   // State for Gaji Admin fee periods
   const [adminFeePeriods, setAdminFeePeriods] = useState(() =>
-    reportsService.getAdminFeePeriods()
+    reportsService.getAdminFeePeriods(),
   );
 
   // Master data
   const availableBatches = useMemo(
     () => reportsService.getAvailableBatches(),
-    []
+    [],
   );
   const kpis = useMemo(() => reportsService.getKpis(), []);
   const monthlyTrends = useMemo(
     () => reportsService.getMonthlyProfitTrends(),
-    []
+    [],
   );
   const paymentMethodsSummary = useMemo(
     () => reportsService.getPaymentMethodSummaries(),
-    []
+    [],
   );
 
   // Live calculation preview for Laba GO
@@ -109,7 +111,9 @@ export const FinancialReportsPage: React.FC = () => {
       const savedItem = reportsService.saveProfitPeriod(formData, summary);
       setHistory(reportsService.getProfitHistory());
       setIsSaving(false);
-      showToast(`Periode "${savedItem.periodName}" berhasil disimpan ke riwayat!`);
+      showToast(
+        `Periode "${savedItem.periodName}" berhasil disimpan ke riwayat!`,
+      );
     }, 400);
   };
 
@@ -123,6 +127,15 @@ export const FinancialReportsPage: React.FC = () => {
     const newItem = reportsService.addAdminFeePeriod(data);
     setAdminFeePeriods(reportsService.getAdminFeePeriods());
     showToast(`Periode fee untuk "${newItem.adminName}" berhasil ditambahkan!`);
+  };
+
+  const handleUpdateAdminPeriod = (
+    id: string,
+    data: Partial<AdminFeePeriodRecord>,
+  ) => {
+    reportsService.updateAdminFeePeriod(id, data);
+    setAdminFeePeriods(reportsService.getAdminFeePeriods());
+    showToast(`Periode fee "${data.periodName || id}" berhasil diperbarui!`);
   };
 
   const handleDeleteAdminPeriod = (id: string) => {
@@ -195,7 +208,11 @@ export const FinancialReportsPage: React.FC = () => {
       </div>
 
       {/* Tabs Level 2 Sesuai Opsi 1 */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="space-y-4"
+      >
         <div className="flex items-center justify-between flex-wrap gap-3">
           <TabsList className="bg-[#FFF5FA]/60 p-1 rounded-[14px] border border-[#FBCFE8]/80 shadow-2xs h-auto">
             <TabsTrigger
@@ -268,6 +285,7 @@ export const FinancialReportsPage: React.FC = () => {
           <AdminSalaryTab
             periods={adminFeePeriods}
             onAddPeriod={handleAddAdminPeriod}
+            onUpdatePeriod={handleUpdateAdminPeriod}
             onDeletePeriod={handleDeleteAdminPeriod}
           />
         </TabsContent>

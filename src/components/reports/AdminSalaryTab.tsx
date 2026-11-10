@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import {
-  Search,
   Plus,
+  Search,
   FileText,
   FileSpreadsheet,
   Layers,
@@ -10,9 +10,19 @@ import {
   Trash2,
   Calendar,
   Save,
-  X,
+  Check,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import {
   Table,
   TableHeader,
@@ -21,16 +31,6 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -39,18 +39,97 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { formatRupiah } from "./formatters";
 import type { AdminFeePeriodRecord, AdminFeeBatchRow } from "@/types/reports";
 
 interface AdminSalaryTabProps {
   periods: AdminFeePeriodRecord[];
   onAddPeriod: (data: Omit<AdminFeePeriodRecord, "id">) => void;
+  onUpdatePeriod?: (id: string, data: Partial<AdminFeePeriodRecord>) => void;
   onDeletePeriod: (id: string) => void;
 }
+
+interface ArrivedBatchOption {
+  batchNumber: string;
+  countryCode: string;
+  statusText: string;
+  defaultFeeNyelem: number;
+  defaultFeeRekap: number;
+  defaultNotes?: string;
+  totalFeeFormatted: string;
+}
+
+// Opsi batch yang sudah Arrived INA sesuai referensi gambar
+const AVAILABLE_ARRIVED_BATCHES: ArrivedBatchOption[] = [
+  {
+    batchNumber: "KR-017",
+    countryCode: "KR",
+    statusText: "Arrive Indonesia · Rp 20.000",
+    defaultFeeNyelem: 5000,
+    defaultFeeRekap: 15000,
+    defaultNotes: "Rekap album",
+    totalFeeFormatted: "Rp 20.000",
+  },
+  {
+    batchNumber: "CH-022",
+    countryCode: "CN",
+    statusText: "Done · Rp 25.000",
+    defaultFeeNyelem: 10000,
+    defaultFeeRekap: 15000,
+    defaultNotes: "PC batch China",
+    totalFeeFormatted: "Rp 25.000",
+  },
+  {
+    batchNumber: "JP-012",
+    countryCode: "JP",
+    statusText: "Arrive Admin · Rp 27.000",
+    defaultFeeNyelem: 12000,
+    defaultFeeRekap: 15000,
+    defaultNotes: "Fee JP",
+    totalFeeFormatted: "Rp 27.000",
+  },
+  {
+    batchNumber: "JP-014",
+    countryCode: "JP",
+    statusText: "Arrive Indonesia · Rp 32.000",
+    defaultFeeNyelem: 15000,
+    defaultFeeRekap: 17000,
+    defaultNotes: "Fee JP Album",
+    totalFeeFormatted: "Rp 32.000",
+  },
+  {
+    batchNumber: "TH-009",
+    countryCode: "TH",
+    statusText: "Arrive Indonesia · Rp 18.000",
+    defaultFeeNyelem: 8000,
+    defaultFeeRekap: 10000,
+    defaultNotes: "Fee TH PC",
+    totalFeeFormatted: "Rp 18.000",
+  },
+];
+
+// Helper Badge Negara (Sesuai Referensi Gambar 1: KR KR, CN CH, dll)
+const getCountryBadge = (batchNumber: string, countryCode?: string) => {
+  const code = (countryCode || batchNumber.slice(0, 2)).toUpperCase();
+  if (code.startsWith("KR")) return { flag: "KR", label: "KR KR" };
+  if (code.startsWith("CH") || code.startsWith("CN"))
+    return { flag: "CN", label: "CN CH" };
+  if (code.startsWith("JP")) return { flag: "JP", label: "JP JP" };
+  if (code.startsWith("TH")) return { flag: "TH", label: "TH TH" };
+  if (code.startsWith("IN") || code.startsWith("ID"))
+    return { flag: "ID", label: "ID INA" };
+  return { flag: code, label: `${code} ${code}` };
+};
 
 export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
   periods,
   onAddPeriod,
+  onUpdatePeriod,
   onDeletePeriod,
 }) => {
   // Top Filter State
@@ -62,16 +141,17 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
   const [innerSearchQuery, setInnerSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  // Modal State: Tambah Periode
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // Modal State: Tambah / Edit Periode
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
+
   const [formPeriodName, setFormPeriodName] = useState("");
   const [formAdminName, setFormAdminName] = useState("");
   const [formStartDate, setFormStartDate] = useState("");
   const [formEndDate, setFormEndDate] = useState("");
   const [formNotes, setFormNotes] = useState("");
-  const [batchRows, setBatchRows] = useState<AdminFeeBatchRow[]>([
-    { id: "row-1", batchNumber: "CH-022", feeNyelem: 8000, feeRekap: 15000 },
-  ]);
+  const [batchRows, setBatchRows] = useState<AdminFeeBatchRow[]>([]);
+  const [isBatchPickerOpen, setIsBatchPickerOpen] = useState(false);
 
   // Modal State: Detail
   const [selectedDetail, setSelectedDetail] =
@@ -112,7 +192,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
     return filteredPeriods.reduce((sum, p) => sum + p.batchCount, 0);
   }, [filteredPeriods]);
 
-  // Modal dynamic total
+  // Modal dynamic total fee
   const formTotalFee = useMemo(() => {
     return batchRows.reduce(
       (sum, r) => sum + (Number(r.feeNyelem) || 0) + (Number(r.feeRekap) || 0),
@@ -120,14 +200,24 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
     );
   }, [batchRows]);
 
-  const handleAddBatchRow = () => {
+  const handleSelectBatchFromArrived = (batch: ArrivedBatchOption) => {
+    const exists = batchRows.some((r) => r.batchNumber === batch.batchNumber);
+    if (exists) {
+      setIsBatchPickerOpen(false);
+      return;
+    }
+
     const newRow: AdminFeeBatchRow = {
-      id: `row-${Date.now()}`,
-      batchNumber: `KR-01${batchRows.length + 7}`,
-      feeNyelem: 7000,
-      feeRekap: 15000,
+      id: `row-${Date.now()}-${batch.batchNumber}`,
+      batchNumber: batch.batchNumber,
+      countryCode: batch.countryCode,
+      feeNyelem: batch.defaultFeeNyelem,
+      feeRekap: batch.defaultFeeRekap,
+      notes: batch.defaultNotes || "",
     };
+
     setBatchRows((prev) => [...prev, newRow]);
+    setIsBatchPickerOpen(false);
   };
 
   const handleRemoveBatchRow = (id: string) => {
@@ -142,6 +232,51 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
     setBatchRows((prev) =>
       prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
     );
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingPeriodId(null);
+    setFormPeriodName("");
+    setFormAdminName("");
+    setFormStartDate("");
+    setFormEndDate("");
+    setFormNotes("");
+    setBatchRows([]);
+    setIsFormModalOpen(true);
+  };
+
+  const handleOpenEditModal = (item: AdminFeePeriodRecord) => {
+    setEditingPeriodId(item.id);
+    setFormPeriodName(item.periodName);
+    setFormAdminName(item.adminName);
+    setFormStartDate(item.startDate);
+    setFormEndDate(item.endDate);
+    setFormNotes(item.notes || "");
+
+    // Jika item memiliki batch detail, gunakan batch tersebut, atau fallback ke batch demo
+    if (item.batches && item.batches.length > 0) {
+      setBatchRows(item.batches.map((b) => ({ ...b })));
+    } else {
+      setBatchRows([
+        {
+          id: "b1",
+          batchNumber: "KR-017",
+          countryCode: "KR",
+          feeNyelem: 5000,
+          feeRekap: 15000,
+          notes: "Rekap album",
+        },
+        {
+          id: "b2",
+          batchNumber: "CH-022",
+          countryCode: "CN",
+          feeNyelem: 10000,
+          feeRekap: 15000,
+          notes: "PC batch China",
+        },
+      ]);
+    }
+    setIsFormModalOpen(true);
   };
 
   const handleSaveModal = () => {
@@ -159,7 +294,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
       0,
     );
 
-    onAddPeriod({
+    const periodPayload = {
       periodName: formPeriodName,
       adminName: formAdminName,
       startDate: formStartDate || "2026-09-01",
@@ -169,44 +304,38 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
       feeNyelem: totalFeeNyelem,
       feeRekap: totalFeeRekap,
       totalFee: totalFeeNyelem + totalFeeRekap,
-      notes: formNotes || "Fee admin periode baru",
-    });
+      notes: formNotes || "Fee admin periode September",
+    };
 
-    // Reset form
-    setFormPeriodName("");
-    setFormAdminName("");
-    setFormStartDate("");
-    setFormEndDate("");
-    setFormNotes("");
-    setBatchRows([
-      { id: "row-1", batchNumber: "CH-022", feeNyelem: 8000, feeRekap: 15000 },
-    ]);
-    setIsAddModalOpen(false);
+    if (editingPeriodId && onUpdatePeriod) {
+      onUpdatePeriod(editingPeriodId, periodPayload);
+    } else {
+      onAddPeriod(periodPayload);
+    }
+
+    setIsFormModalOpen(false);
   };
 
   return (
     <div className="space-y-4">
-      {/* Search & Filter Bar: Search admin, Admin Dropdown, Period Dropdown */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-white p-2.5 rounded-[16px] border border-[#FBCFE8]/60 shadow-2xs">
-        <div className="relative flex-1">
+      {/* Search & Filter Bar: Search admin, Admin Dropdown, Period Dropdown (Sesuai Referensi Gambar) */}
+      <div className="bg-white p-2.5 sm:p-3 rounded-[18px] border border-[#FBCFE8]/60 shadow-2xs flex flex-col sm:flex-row items-center gap-2.5">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1AA] pointer-events-none" />
           <Input
             type="text"
             value={searchAdminQuery}
             onChange={(e) => setSearchAdminQuery(e.target.value)}
             placeholder="Search admin..."
-            className="pl-9 h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899] bg-[#FFF5FA]/20"
+            className="pl-9 h-10 text-xs rounded-[12px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white placeholder-[#71717A]"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="w-full sm:w-36">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="w-full sm:w-44">
             <Select value={adminFilter} onValueChange={setAdminFilter}>
-              <SelectTrigger
-                size="sm"
-                className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70"
-              >
-                <SelectValue placeholder="Admin" />
+              <SelectTrigger className="h-10 text-xs rounded-[12px] border-[#FBCFE8]/80 bg-white">
+                <SelectValue placeholder="Semua Admin" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Semua Admin</SelectItem>
@@ -217,13 +346,10 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
             </Select>
           </div>
 
-          <div className="w-full sm:w-40">
+          <div className="w-full sm:w-44">
             <Select value={periodFilter} onValueChange={setPeriodFilter}>
-              <SelectTrigger
-                size="sm"
-                className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70"
-              >
-                <SelectValue placeholder="Period" />
+              <SelectTrigger className="h-10 text-xs rounded-[12px] border-[#FBCFE8]/80 bg-white">
+                <SelectValue placeholder="Semua Periode" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Semua Periode</SelectItem>
@@ -236,59 +362,50 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
         </div>
       </div>
 
-      {/* 3 Metric Cards Sesuai Screenshot */}
+      {/* 3 Metric Cards Rapi & Compact (Horizontal Layout) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Card 1: Total fee periode terpilih */}
-        <Card
-          size="sm"
-          className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
-        >
-          <div>
-            <span className="text-xs font-medium text-[#71717A] block">
+        <Card className="rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 !flex-row items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all gap-0">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-[#71717A]">
               Total fee periode terpilih
             </span>
-            <p className="text-[22px] font-bold text-[#18181B] tracking-tight mt-1.5">
+            <p className="text-[20px] sm:text-[22px] font-bold text-[#18181B] tracking-tight mt-1">
               {formatRupiah(totalFeeSelected)}
             </p>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
-            <FileText className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-[10px] bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
+            <FileText className="w-4.5 h-4.5" />
           </div>
         </Card>
 
         {/* Card 2: Periode admin */}
-        <Card
-          size="sm"
-          className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
-        >
-          <div>
-            <span className="text-xs font-medium text-[#71717A] block">
+        <Card className="rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 !flex-row items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all gap-0">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-[#71717A]">
               Periode admin
             </span>
-            <p className="text-[22px] font-bold text-[#18181B] tracking-tight mt-1.5">
+            <p className="text-[20px] sm:text-[22px] font-bold text-[#18181B] tracking-tight mt-1">
               {totalPeriodsCount}
             </p>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-            <FileSpreadsheet className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-[10px] bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+            <FileSpreadsheet className="w-4.5 h-4.5" />
           </div>
         </Card>
 
         {/* Card 3: Batch dalam periode */}
-        <Card
-          size="sm"
-          className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 flex items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
-        >
-          <div>
-            <span className="text-xs font-medium text-[#71717A] block">
+        <Card className="rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-5 !flex-row items-center justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all gap-0">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-[#71717A]">
               Batch dalam periode
             </span>
-            <p className="text-[22px] font-bold text-[#18181B] tracking-tight mt-1.5">
+            <p className="text-[20px] sm:text-[22px] font-bold text-[#18181B] tracking-tight mt-1">
               {totalBatchesCount}
             </p>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-            <Layers className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-[10px] bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+            <Layers className="w-4.5 h-4.5" />
           </div>
         </Card>
       </div>
@@ -302,7 +419,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
 
           <Button
             type="button"
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={handleOpenAddModal}
             size="sm"
             className="h-9 px-4 rounded-[10px] bg-[#EC4899] hover:bg-[#DB2777] text-white font-semibold text-xs shadow-xs cursor-pointer self-start sm:self-auto"
           >
@@ -325,10 +442,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
 
           <div className="w-full sm:w-36">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                size="sm"
-                className="h-9 text-xs rounded-[10px] border-[#FBCFE8]/70 bg-white"
-              >
+              <SelectTrigger className="h-9 text-xs rounded-[10px] border-[#FBCFE8]/70 bg-white">
                 <SelectValue placeholder="Semua" />
               </SelectTrigger>
               <SelectContent>
@@ -379,7 +493,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                     colSpan={8}
                     className="h-28 text-center text-xs text-[#71717A]"
                   >
-                    Tidak ada data periode admin yang sesuai filter.
+                    Tidak ada periode fee admin yang cocok dengan filter.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -397,17 +511,17 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                     <TableCell className="text-xs font-semibold text-center text-[#71717A]">
                       {item.batchCount}
                     </TableCell>
-                    <TableCell className="text-xs font-medium text-[#71717A] text-right">
+                    <TableCell className="text-xs text-right font-medium text-[#18181B]">
                       {formatRupiah(item.feeNyelem)}
                     </TableCell>
-                    <TableCell className="text-xs font-medium text-[#71717A] text-right">
+                    <TableCell className="text-xs text-right font-medium text-[#18181B]">
                       {formatRupiah(item.feeRekap)}
                     </TableCell>
-                    <TableCell className="text-xs font-bold text-[#18181B] text-right">
+                    <TableCell className="text-xs text-right font-bold text-[#EC4899]">
                       {formatRupiah(item.totalFee)}
                     </TableCell>
-                    <TableCell className="text-xs text-[#71717A]">
-                      {item.notes}
+                    <TableCell className="text-xs text-[#71717A] max-w-[200px] truncate">
+                      {item.notes || "-"}
                     </TableCell>
                     <TableCell className="text-center pr-6">
                       <div className="flex items-center justify-center gap-1.5">
@@ -425,7 +539,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                           type="button"
                           variant="ghost"
                           size="icon-xs"
-                          onClick={() => setSelectedDetail(item)}
+                          onClick={() => handleOpenEditModal(item)}
                           className="size-7 rounded-md text-[#71717A] hover:text-[#EC4899] hover:bg-[#FFF5FA]"
                           title="Edit periode"
                         >
@@ -451,20 +565,20 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* MODAL: Tambah Fee Periode (Sesuai Image 2) */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[560px] p-6 rounded-[20px] border-[#FBCFE8]">
+      {/* MODAL: Tambah & Edit Fee Periode (Sesuai Referensi Gambar 1 & 2) */}
+      <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
+        <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto p-6 rounded-[22px] border border-[#FBCFE8]/80 shadow-2xl bg-white">
           <DialogHeader className="pb-3 border-b border-[#FBCFE8]/40">
-            <DialogTitle className="text-[18px] font-bold text-[#18181B]">
-              Tambah Fee Periode
+            <DialogTitle className="text-[18px] font-bold text-[#18181B] tracking-tight">
+              {editingPeriodId ? "Edit Fee Periode" : "Tambah Fee Periode"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#71717A]">
+            <DialogDescription className="text-xs text-[#71717A] mt-0.5">
               Fee nyelem dan rekap dalam periode admin
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2 text-xs">
-            {/* Row 1: Nama Periode & Admin */}
+          <div className="space-y-3.5 py-2 text-xs">
+            {/* Row 1: Nama Periode & Admin (Sesuai Referensi Gambar 1) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block">
@@ -474,8 +588,8 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                   type="text"
                   value={formPeriodName}
                   onChange={(e) => setFormPeriodName(e.target.value)}
-                  placeholder="Contoh: September 2026"
-                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
+                  placeholder="September 2026"
+                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white text-[#18181B]"
                 />
               </div>
 
@@ -487,16 +601,16 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                   type="text"
                   value={formAdminName}
                   onChange={(e) => setFormAdminName(e.target.value)}
-                  placeholder="Contoh: Ira / Nadia"
-                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
+                  placeholder="Ira"
+                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white text-[#18181B]"
                 />
               </div>
             </div>
 
-            {/* Row 2: Dari Tanggal & Sampai Tanggal */}
+            {/* Row 2: Dari Tanggal & Sampai Tanggal (Sesuai Referensi Gambar 1) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block flex items-center gap-1">
+                <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[#EC4899]" />
                   Dari tanggal
                 </Label>
@@ -504,12 +618,12 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                   type="date"
                   value={formStartDate}
                   onChange={(e) => setFormStartDate(e.target.value)}
-                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
+                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white text-[#18181B]"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block flex items-center gap-1">
+                <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[#EC4899]" />
                   Sampai tanggal
                 </Label>
@@ -517,12 +631,12 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                   type="date"
                   value={formEndDate}
                   onChange={(e) => setFormEndDate(e.target.value)}
-                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
+                  className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white text-[#18181B]"
                 />
               </div>
             </div>
 
-            {/* Row 3: Keterangan Periode */}
+            {/* Row 3: Keterangan Periode (Sesuai Referensi Gambar 1) */}
             <div>
               <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block">
                 Keterangan Periode
@@ -531,107 +645,202 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                 type="text"
                 value={formNotes}
                 onChange={(e) => setFormNotes(e.target.value)}
-                placeholder="Catatan periode (misal: Fee JP dan CH)"
-                className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
+                placeholder="Fee admin periode September"
+                className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white text-[#18181B]"
               />
             </div>
 
-            {/* Section: Batch dalam Periode */}
-            <div className="pt-2 border-t border-[#FBCFE8]/30">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-xs font-bold text-[#18181B]">
+            {/* Section: Batch dalam Periode (Sesuai Referensi Gambar 1) */}
+            <div className="pt-3 border-t border-[#FBCFE8]/40 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-[#18181B]">
                   Batch dalam Periode
                 </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={handleAddBatchRow}
-                  className="h-8 px-3 rounded-[8px] text-xs font-semibold border-[#FBCFE8] hover:bg-[#FFF5FA] hover:text-[#EC4899]"
+
+                {/* Popover Dropdown: Tambah Row dari Batch */}
+                <Popover
+                  open={isBatchPickerOpen}
+                  onOpenChange={setIsBatchPickerOpen}
                 >
-                  <Plus className="w-3 h-3 mr-1" />
-                  Tambah Row dari Batch
-                </Button>
-              </div>
-
-              {/* Dynamic Rows */}
-              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                {batchRows.map((row) => (
-                  <div
-                    key={row.id}
-                    className="flex items-center gap-2 p-2 rounded-[10px] bg-[#FFF5FA]/40 border border-[#FBCFE8]/50"
-                  >
-                    <Input
-                      type="text"
-                      value={row.batchNumber}
-                      onChange={(e) =>
-                        handleUpdateBatchRow(
-                          row.id,
-                          "batchNumber",
-                          e.target.value,
-                        )
-                      }
-                      placeholder="No Batch"
-                      className="w-24 h-8 text-xs rounded-[8px] bg-white border-[#FBCFE8]/60"
-                    />
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-[#71717A]">
-                        Nyelem:
-                      </span>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={row.feeNyelem || ""}
-                        onChange={(e) =>
-                          handleUpdateBatchRow(
-                            row.id,
-                            "feeNyelem",
-                            Number(e.target.value) || 0,
-                          )
-                        }
-                        placeholder="Nyelem"
-                        className="w-20 h-8 text-xs rounded-[8px] bg-white border-[#FBCFE8]/60"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-[#71717A]">Rekap:</span>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={row.feeRekap || ""}
-                        onChange={(e) =>
-                          handleUpdateBatchRow(
-                            row.id,
-                            "feeRekap",
-                            Number(e.target.value) || 0,
-                          )
-                        }
-                        placeholder="Rekap"
-                        className="w-20 h-8 text-xs rounded-[8px] bg-white border-[#FBCFE8]/60"
-                      />
-                    </div>
-
+                  <PopoverTrigger asChild>
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => handleRemoveBatchRow(row.id)}
-                      className="size-6 p-0 text-[#71717A] hover:text-rose-600 hover:bg-rose-50 ml-auto"
-                      title="Hapus row"
+                      variant="outline"
+                      size="sm"
+                      className="h-8.5 px-3 rounded-[10px] border-[#E4E4E7] bg-white text-xs font-semibold text-[#18181B] hover:bg-[#FFF5FA] hover:text-[#EC4899] hover:border-[#FBCFE8] transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <Plus className="w-3.5 h-3.5 text-[#18181B]" />
+                      Tambah Row dari Batch
                     </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  </PopoverTrigger>
 
-            {/* Total Fee Footer */}
-            <div className="pt-2 text-sm font-bold text-[#18181B] flex items-center justify-between">
-              <span>Total Fee:</span>
-              <span className="text-[#EC4899] text-[16px]">
-                {formatRupiah(formTotalFee)}
-              </span>
+                  <PopoverContent
+                    align="end"
+                    sideOffset={6}
+                    className="w-[280px] p-2 rounded-[16px] border border-[#FBCFE8]/70 bg-white shadow-xl z-[70]"
+                  >
+                    <div className="text-xs font-bold text-[#18181B] px-2.5 py-1.5 border-b border-zinc-100 mb-1">
+                      Batch sudah Arrived INA
+                    </div>
+                    <div className="space-y-1 max-h-52 overflow-y-auto">
+                      {AVAILABLE_ARRIVED_BATCHES.map((batch) => {
+                        const isAlreadyAdded = batchRows.some(
+                          (r) => r.batchNumber === batch.batchNumber,
+                        );
+
+                        return (
+                          <div
+                            key={batch.batchNumber}
+                            onClick={() =>
+                              !isAlreadyAdded &&
+                              handleSelectBatchFromArrived(batch)
+                            }
+                            className={`flex items-center justify-between p-2 rounded-[10px] transition-colors cursor-pointer select-none ${
+                              isAlreadyAdded
+                                ? "bg-zinc-50 opacity-50 cursor-not-allowed"
+                                : "hover:bg-[#FFF5FA]"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-[#18181B]">
+                                {batch.batchNumber}
+                              </span>
+                              <span className="text-xs text-[#71717A]">
+                                {batch.statusText}
+                              </span>
+                            </div>
+                            {isAlreadyAdded && (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Dynamic Batch Cards List (Sesuai Layout Gambar 1) */}
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                {batchRows.length === 0 ? (
+                  <div className="p-4 rounded-[12px] bg-[#FFF5FA]/40 border border-dashed border-[#FBCFE8] text-center text-xs text-[#71717A]">
+                    Belum ada batch dipilih. Klik{" "}
+                    <span className="font-semibold text-[#EC4899]">
+                      "+ Tambah Row dari Batch"
+                    </span>{" "}
+                    di atas untuk memilih batch yang sudah tiba di Indonesia.
+                  </div>
+                ) : (
+                  batchRows.map((row) => {
+                    const countryBadge = getCountryBadge(
+                      row.batchNumber,
+                      row.countryCode,
+                    );
+
+                    return (
+                      <div
+                        key={row.id}
+                        className="p-3.5 rounded-[16px] bg-white border border-[#FBCFE8]/60 shadow-2xs space-y-2.5"
+                      >
+                        {/* Line 1: Batch Code + Badge + Fee Nyelem Input + Fee Rekap Input */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-[#18181B]">
+                              {row.batchNumber}
+                            </span>
+                            <span className="text-[10px] font-semibold text-[#71717A] bg-zinc-50 border border-zinc-200/80 px-2 py-0.5 rounded-full">
+                              {countryBadge.label}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col">
+                              <Label className="text-[11px] font-medium text-[#71717A] mb-1">
+                                Fee Nyelem (Rp)
+                              </Label>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={row.feeNyelem || ""}
+                                onChange={(e) =>
+                                  handleUpdateBatchRow(
+                                    row.id,
+                                    "feeNyelem",
+                                    Number(e.target.value) || 0,
+                                  )
+                                }
+                                placeholder="0"
+                                className="h-9 w-28 sm:w-36 text-xs bg-white rounded-[10px] border-[#FBCFE8]/80 text-[#18181B] focus-visible:border-[#EC4899]"
+                              />
+                            </div>
+
+                            <div className="flex flex-col">
+                              <Label className="text-[11px] font-medium text-[#71717A] mb-1">
+                                Fee Rekap (Rp)
+                              </Label>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={row.feeRekap || ""}
+                                onChange={(e) =>
+                                  handleUpdateBatchRow(
+                                    row.id,
+                                    "feeRekap",
+                                    Number(e.target.value) || 0,
+                                  )
+                                }
+                                placeholder="0"
+                                className="h-9 w-28 sm:w-36 text-xs bg-white rounded-[10px] border-[#FBCFE8]/80 text-[#18181B] focus-visible:border-[#EC4899]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Line 2: Keterangan Input + Trash Button */}
+                        <div className="flex items-end justify-between gap-3 pt-1">
+                          <div className="flex flex-col flex-1 max-w-sm">
+                            <Label className="text-[11px] font-medium text-[#71717A] mb-1">
+                              Keterangan
+                            </Label>
+                            <Input
+                              type="text"
+                              value={row.notes || ""}
+                              onChange={(e) =>
+                                handleUpdateBatchRow(
+                                  row.id,
+                                  "notes",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Rekap album / PC batch..."
+                              className="h-9 text-xs bg-white rounded-[10px] border-[#FBCFE8]/80 text-[#18181B] focus-visible:border-[#EC4899]"
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() => handleRemoveBatchRow(row.id)}
+                            className="size-8 rounded-md text-[#71717A] hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Hapus batch"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Total Fee Footer Line (Sesuai Referensi Gambar 1) */}
+              <div className="pt-2 text-sm font-bold text-[#18181B] flex items-center justify-between">
+                <span>Total Fee:</span>
+                <span className="text-[#EC4899] text-[17px] font-bold">
+                  {formatRupiah(formTotalFee)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -640,8 +849,8 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setIsAddModalOpen(false)}
-              className="h-9 px-4 rounded-[10px] text-xs font-semibold border-[#FBCFE8]"
+              onClick={() => setIsFormModalOpen(false)}
+              className="h-9 px-4 rounded-[10px] text-xs font-semibold border-zinc-200 text-[#18181B] hover:bg-zinc-50"
             >
               Batal
             </Button>
@@ -724,3 +933,5 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
     </div>
   );
 };
+
+export default AdminSalaryTab;

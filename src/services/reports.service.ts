@@ -68,6 +68,16 @@ class ReportsService {
     return newItem;
   }
 
+  updateAdminFeePeriod(
+    id: string,
+    patch: Partial<AdminFeePeriodRecord>,
+  ): AdminFeePeriodRecord | undefined {
+    this.adminFeePeriods = this.adminFeePeriods.map((item) =>
+      item.id === id ? { ...item, ...patch } : item,
+    );
+    return this.adminFeePeriods.find((item) => item.id === id);
+  }
+
   deleteAdminFeePeriod(id: string): void {
     this.adminFeePeriods = this.adminFeePeriods.filter(
       (item) => item.id !== id,

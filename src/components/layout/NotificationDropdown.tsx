@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 import { Bell, Check, X } from "lucide-react";
 import {
   Popover,
@@ -11,8 +12,9 @@ import { MOCK_NOTIFICATIONS } from "@/mocks/mockNotificationsData";
 import type { AdminNotification } from "@/types/notifications";
 
 export const NotificationDropdown: React.FC = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<AdminNotification[]>(
-    () => [...MOCK_NOTIFICATIONS]
+    () => [...MOCK_NOTIFICATIONS],
   );
   const [open, setOpen] = useState(false);
 
@@ -22,10 +24,17 @@ export const NotificationDropdown: React.FC = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
-  const handleToggleRead = (id: string) => {
+  const handleNotificationClick = (item: AdminNotification) => {
+    // 1. Tandai sudah dibaca
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: !n.isRead } : n))
+      prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
     );
+    // 2. Tutup popover dropdown
+    setOpen(false);
+    // 3. Langsung arahkan ke halaman action tujuan
+    if (item.targetPath) {
+      navigate(item.targetPath);
+    }
   };
 
   return (
@@ -52,7 +61,7 @@ export const NotificationDropdown: React.FC = () => {
         sideOffset={8}
         className="w-[330px] sm:w-[360px] p-4 rounded-[18px] border-[#FBCFE8]/60 bg-white shadow-xl"
       >
-        {/* Header (Matching Reference Image) */}
+        {/* Header (Matching Reference Image 2) */}
         <div className="flex items-start justify-between pb-3">
           <div>
             <h3 className="text-[17px] font-bold text-[#18181B] tracking-tight">
@@ -93,7 +102,7 @@ export const NotificationDropdown: React.FC = () => {
           </Button>
         </div>
 
-        {/* Notifications List */}
+        {/* Notifications List (Klik untuk langsung ke Action Page) */}
         <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-0.5">
           {notifications.length === 0 ? (
             <div className="text-center py-8 text-xs text-[#71717A]">
@@ -103,7 +112,7 @@ export const NotificationDropdown: React.FC = () => {
             notifications.map((item) => (
               <div
                 key={item.id}
-                onClick={() => handleToggleRead(item.id)}
+                onClick={() => handleNotificationClick(item)}
                 className={`p-3 rounded-[12px] transition-all cursor-pointer select-none ${
                   !item.isRead
                     ? "bg-[#F0F7FF] border border-[#E0F0FE] hover:bg-[#E5F2FF]"
@@ -113,7 +122,7 @@ export const NotificationDropdown: React.FC = () => {
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
-                    handleToggleRead(item.id);
+                    handleNotificationClick(item);
                   }
                 }}
               >
@@ -142,4 +151,3 @@ export const NotificationDropdown: React.FC = () => {
 };
 
 export default NotificationDropdown;
-

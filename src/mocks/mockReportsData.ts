@@ -211,8 +211,22 @@ export const MOCK_ADMIN_FEE_PERIODS: AdminFeePeriodRecord[] = [
     endDate: "2026-09-30",
     batchCount: 2,
     batches: [
-      { id: "b1", batchNumber: "CH-022", feeNyelem: 8000, feeRekap: 15000 },
-      { id: "b2", batchNumber: "KR-017", feeNyelem: 7000, feeRekap: 15000 },
+      {
+        id: "b1",
+        batchNumber: "KR-017",
+        countryCode: "KR",
+        feeNyelem: 5000,
+        feeRekap: 15000,
+        notes: "Rekap album",
+      },
+      {
+        id: "b2",
+        batchNumber: "CH-022",
+        countryCode: "CN",
+        feeNyelem: 10000,
+        feeRekap: 15000,
+        notes: "PC batch China",
+      },
     ],
     feeNyelem: 15000,
     feeRekap: 30000,
@@ -227,7 +241,14 @@ export const MOCK_ADMIN_FEE_PERIODS: AdminFeePeriodRecord[] = [
     endDate: "2026-09-30",
     batchCount: 1,
     batches: [
-      { id: "b3", batchNumber: "JP-003", feeNyelem: 12000, feeRekap: 15000 },
+      {
+        id: "b3",
+        batchNumber: "JP-003",
+        countryCode: "JP",
+        feeNyelem: 12000,
+        feeRekap: 15000,
+        notes: "Fee JP dan CH",
+      },
     ],
     feeNyelem: 12000,
     feeRekap: 15000,
@@ -242,7 +263,14 @@ export const MOCK_ADMIN_FEE_PERIODS: AdminFeePeriodRecord[] = [
     endDate: "2026-08-31",
     batchCount: 1,
     batches: [
-      { id: "b4", batchNumber: "INA-004", feeNyelem: 8000, feeRekap: 15000 },
+      {
+        id: "b4",
+        batchNumber: "INA-004",
+        countryCode: "INA",
+        feeNyelem: 8000,
+        feeRekap: 15000,
+        notes: "Periode sebelumnya",
+      },
     ],
     feeNyelem: 8000,
     feeRekap: 15000,
@@ -285,5 +313,3 @@ export const MOCK_PAYMENT_METHODS_SUMMARY: PaymentMethodSummary[] = [
     lastPaymentTime: "16 Sep, 20:44",
   },
 ];
-
-
