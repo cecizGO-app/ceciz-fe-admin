@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { TablePagination } from "@/components/verification/TablePagination";
 import type {
   PoAlbumOrder,
   PaymentMethodType,
@@ -50,7 +51,7 @@ function PayBadge({ done, wait }: { done: boolean; wait: "pending" | "fp" }) {
   if (done) {
     return (
       <span className="inline-flex h-5 items-center gap-1 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-2 text-[11px] text-emerald-700 font-semibold">
-        <Check className="w-3 h-3 stroke-[3]" /> Lunas
+        <Check className="w-3 h-3 stroke-[3]" /> Paid
       </span>
     );
   }
@@ -60,7 +61,7 @@ function PayBadge({ done, wait }: { done: boolean; wait: "pending" | "fp" }) {
     </span>
   ) : (
     <span className="inline-flex h-5 items-center whitespace-nowrap rounded-full border border-slate-200 bg-slate-100 px-2 text-[11px] text-slate-600 font-semibold">
-      Menunggu
+      Waiting FP
     </span>
   );
 }
@@ -103,7 +104,7 @@ export const PoAlbumTable: React.FC<PoAlbumTableProps> = ({
   onPageChange,
 }) => {
   return (
-    <div className="rounded-panel bg-surface border border-border/60 shadow-xs overflow-hidden">
+    <div className="rounded-[14px] border border-[#FCE7F3] overflow-hidden bg-white">
       {/* Desktop Table View */}
       <div className="hidden xl:block overflow-x-auto">
         <Table className="w-full table-fixed">
@@ -117,7 +118,7 @@ export const PoAlbumTable: React.FC<PoAlbumTableProps> = ({
             <col className="w-[8%]" />
           </colgroup>
           <TableHeader>
-            <TableRow className="border-b border-divider bg-subpanel/80 hover:bg-subpanel">
+            <TableRow className="border-b border-[#FCE7F3] bg-[#FFF5FA]/60 hover:bg-[#FFF5FA]/60">
               <TableHead className="py-3.5 pl-5 pr-4 text-left text-[11px] uppercase tracking-wider text-ink-2 font-bold whitespace-nowrap">
                 Batch & Buyer
               </TableHead>
@@ -291,50 +292,15 @@ export const PoAlbumTable: React.FC<PoAlbumTableProps> = ({
       )}
 
       {/* Pagination Footer */}
-      <div className="flex flex-col gap-3 border-t border-divider px-5 py-4 sm:flex-row sm:items-center sm:justify-between bg-surface">
-        <p className="text-xs text-ink-2 font-medium">
-          {totalFiltered === 0
-            ? "Tidak ada data"
-            : `Menampilkan ${(currentPage - 1) * pageSize + 1}–${Math.min(
-                currentPage * pageSize,
-                totalFiltered
-              )} dari ${totalFiltered} pesanan album`}
-        </p>
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="h-9 px-3 rounded-[10px] text-xs font-semibold text-ink"
-          >
-            Sebelumnya
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-            <button
-              type="button"
-              key={n}
-              onClick={() => onPageChange(n)}
-              className={`w-9 h-9 rounded-[10px] text-xs font-bold tabular-nums transition-all cursor-pointer ${
-                n === currentPage
-                  ? "bg-primary text-white shadow-xs"
-                  : "text-ink-2 hover:bg-subpanel hover:text-primary"
-              }`}
-            >
-              {n}
-            </button>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="h-9 px-3 rounded-[10px] text-xs font-semibold text-ink"
-          >
-            Selanjutnya
-          </Button>
-        </div>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        startIndex={totalFiltered === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+        endIndex={Math.min(currentPage * pageSize, totalFiltered)}
+        totalCount={totalFiltered}
+        itemLabel="pesanan album"
+        onPageChange={onPageChange}
+      />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Plus, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   PoAlbumStatsCards,
   PoAlbumFilterBar,
@@ -172,41 +173,42 @@ export const PoAlbumPage: React.FC = () => {
         />
       )}
 
-      {/* Filter and Search Bar with Select Components */}
-      <PoAlbumFilterBar
-        searchQuery={q}
-        onSearchChange={(val) => {
-          setQ(val);
-          resetPage();
-        }}
-        payStatusFilter={pay}
-        onPayStatusFilterChange={(val) => {
-          setPay(val);
-          resetPage();
-        }}
-        coStatusFilter={co}
-        onCoStatusFilterChange={(val) => {
-          setCo(val);
-          resetPage();
-        }}
-        countryFilter={country}
-        onCountryFilterChange={(val) => {
-          setCountry(val);
-          resetPage();
-        }}
-        coStatusList={CO_LIST}
-      />
+      {/* Unified Main Content Card: Filter Bar + Table + Pagination */}
+      <Card className="p-5 sm:p-6 rounded-[24px] border border-[#FBCFE8]/50 bg-white shadow-2xs space-y-5">
+        <PoAlbumFilterBar
+          searchQuery={q}
+          onSearchChange={(val) => {
+            setQ(val);
+            resetPage();
+          }}
+          payStatusFilter={pay}
+          onPayStatusFilterChange={(val) => {
+            setPay(val);
+            resetPage();
+          }}
+          coStatusFilter={co}
+          onCoStatusFilterChange={(val) => {
+            setCo(val);
+            resetPage();
+          }}
+          countryFilter={country}
+          onCountryFilterChange={(val) => {
+            setCountry(val);
+            resetPage();
+          }}
+          coStatusList={CO_LIST}
+        />
 
-      {/* Table Section with Pagination */}
-      <PoAlbumTable
-        orders={paginatedOrders}
-        onEdit={(item) => setEditItem(item)}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalFiltered={filtered.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={(p) => setPage(p)}
-      />
+        <PoAlbumTable
+          orders={paginatedOrders}
+          onEdit={(item) => setEditItem(item)}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalFiltered={filtered.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={(p) => setPage(p)}
+        />
+      </Card>
 
       {/* Edit & Pelunasan Drawer (Slide-out) */}
       {editItem && (

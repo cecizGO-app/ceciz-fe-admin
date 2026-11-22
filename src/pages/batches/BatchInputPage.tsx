@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router";
 import {
   Bookmark,
   ArrowRight,
@@ -15,12 +16,13 @@ import {
   BatchStepbar,
   BatchTextModal,
   COUNTRIES,
-  REGISTERED_BUYERS,
   WIZARD_STEPS,
 } from "@/components/batch";
 import { useBatchForm } from "@/hooks";
 import {
   createBatchApi,
+  getBatchByIdApi,
+  patchBatchApi,
   type BackendCreateBatchInput,
 } from "@/services/batch.service";
 
@@ -31,6 +33,9 @@ interface BatchInputPageProps {
 export const BatchInputPage: React.FC<BatchInputPageProps> = ({
   onBackToList,
 }) => {
+  const { batchId } = useParams<{ batchId?: string }>();
+  const isEditMode = Boolean(batchId);
+
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -38,6 +43,52 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
 
   const form = useBatchForm();
+
+  // Muat data batch existing jika dalam mode Edit (/batches/:batchId/edit)
+  useEffect(() => {
+    if (!batchId) return;
+    let active = true;
+    getBatchByIdApi(batchId)
+      .then((existing) => {
+        if (active && existing) {
+          form.loadFromBackendBatch(existing);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          setErrorMessage(
+            err instanceof Error ? err.message : "Gagal memuat data batch untuk diedit.",
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [batchId]);
+
+  const [draftAvailable, setDraftAvailable] = useState(
+    () => !isEditMode && form.hasSavedDraft,
+  );
+
+  const handleSaveDraft = () => {
+    const ok = form.saveDraftToLocal();
+    if (ok) {
+      setDraftAvailable(true);
+      setSuccessMessage(`Draft batch ${form.batchCode} berhasil disimpan di browser.`);
+    }
+  };
+
+  const handleRestoreDraft = () => {
+    if (form.restoreDraftFromLocal()) {
+      setDraftAvailable(false);
+      setSuccessMessage("Draft batch tersimpan berhasil dimuat kembali.");
+    }
+  };
+
+  const handleDiscardDraft = () => {
+    form.clearDraftFromLocal();
+    setDraftAvailable(false);
+  };
 
   const handlePublish = async () => {
     setErrorMessage(null);
@@ -93,25 +144,37 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
             : Number(form.rateSeller) || undefined,
         feeWh: Number(form.feeWarehouse) || 0,
         feeProxy: Number(form.feeProxy) || 0,
+        adminNyelemId: form.admins.some((a) => a.id === form.adminNyelem)
+          ? form.adminNyelem
+          : undefined,
         proxyCoName: form.jasaProxy ? form.jasaProxy.trim() : undefined,
-        items: form.computedRows.map((r) => ({
-          buyerId: r.buyerId,
-          description: r.itemName || "Item",
-          hargaAsli: Number(r.hargaAsli) || 0,
-          pcs: 1, // Pcs konstan 1
-          feeNyelem: form.selectedCountry === "JP" ? 0 : form.feeNyelem,
-          hargaPerBuyer: r.hargaBersih || undefined,
-          hargaJualPerBuyer:
-            form.selectedCountry === "JP"
-              ? Number(r.hargaJualPerBuyer) || 0
-              : undefined,
-        })),
+        items: form.computedRows.map((r) => {
+          const matchedBuyer = form.buyers.find((b) => b.id === r.buyerId);
+          return {
+            buyerId: r.buyerId,
+            buyerName: matchedBuyer?.name || undefined,
+            description: r.itemName || "Item",
+            hargaAsli: Number(r.hargaAsli) || 0,
+            pcs: 1, // Pcs konstan 1
+            feeNyelem: form.selectedCountry === "JP" ? 0 : form.feeNyelem,
+            hargaPerBuyer: r.hargaBersih || undefined,
+            hargaJualPerBuyer:
+              form.selectedCountry === "JP"
+                ? Number(r.hargaJualPerBuyer) || 0
+                : undefined,
+          };
+        }),
       };
 
-      const newBatch = await createBatchApi(payload);
+      const savedBatch =
+        isEditMode && batchId
+          ? await patchBatchApi(batchId, payload)
+          : await createBatchApi(payload);
 
       setSuccessMessage(
-        `Batch ${newBatch.countryCode}-${String(newBatch.batchNumber).padStart(3, "0")} (${newBatch.title}) berhasil disimpan ke backend! Format teks siap-share telah dibuat.`,
+        isEditMode
+          ? `Perubahan batch ${savedBatch.countryCode}-${String(savedBatch.batchNumber).padStart(3, "0")} (${savedBatch.title}) berhasil diperbarui di backend!`
+          : `Batch ${savedBatch.countryCode}-${String(savedBatch.batchNumber).padStart(3, "0")} (${savedBatch.title}) berhasil disimpan ke backend! Format teks siap-share telah dibuat.`,
       );
 
       // Auto-trigger Text Modal as requested by Ciul
@@ -164,6 +227,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
       onChangeFeeProxy={form.setFeeProxy}
       adminNyelem={form.adminNyelem}
       onChangeAdminNyelem={form.setAdminNyelem}
+      adminOptions={form.admins}
       feeNyelem={form.feeNyelem}
       onChangeFeeNyelem={form.setFeeNyelem}
       feeGO={form.feeGO}
@@ -181,7 +245,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
   const orderTableSection = (
     <BuyerOrderTable
       orderRows={form.computedRows}
-      registeredBuyers={REGISTERED_BUYERS}
+      registeredBuyers={form.buyers}
       countryCode={form.selectedCountry}
       currency={form.currentCountry.currency}
       kursRate={form.kursRate}
@@ -221,11 +285,11 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
             </span>
             <span>&gt;</span>
             <span className="text-[#EC4899] font-medium">
-              Tambah Batch Baru
+              {isEditMode ? `Edit Batch ${form.batchCode}` : "Tambah Batch Baru"}
             </span>
           </nav>
           <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
-            Tambah Batch Baru
+            {isEditMode ? `Edit Batch ${form.batchCode}` : "Tambah Batch Baru"}
           </h1>
           <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
             Input pesanan group order dan kalkulasi harga real-time
@@ -246,13 +310,42 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
           <Button
             type="button"
             variant="outline"
-            className="h-11 px-4 text-xs font-semibold gap-2 border-[#FBCFE8]"
+            onClick={handleSaveDraft}
+            className="h-11 px-4 text-xs font-semibold gap-2 border-[#FBCFE8] cursor-pointer"
           >
             <Bookmark className="w-4 h-4 text-[#71717A]" />
             <span>Simpan Draft</span>
           </Button>
         </div>
       </div>
+
+      {/* Saved Draft Restore Banner (Create Mode Only) */}
+      {!isEditMode && draftAvailable && (
+        <div className="px-4 py-3 rounded-[12px] bg-[#FFF5FA] border border-[#FBCFE8] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-[#18181B]">
+            <strong>Draft tersimpan ditemukan.</strong> Ingin melanjutkan pengisian draft batch terakhir?
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleRestoreDraft}
+              className="h-8 px-3 rounded-[9px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold cursor-pointer"
+            >
+              Muat Draft
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleDiscardDraft}
+              className="h-8 px-3 rounded-[9px] border-[#FBCFE8] text-xs text-[#71717A] cursor-pointer"
+            >
+              Abaikan
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Alert Error / Success */}
       {errorMessage && (
@@ -318,7 +411,8 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
             <Button
               type="button"
               variant="outline"
-              className="h-11 px-3.5 text-xs font-semibold text-[#71717A] gap-1.5"
+              onClick={handleSaveDraft}
+              className="h-11 px-3.5 text-xs font-semibold text-[#71717A] gap-1.5 cursor-pointer"
             >
               <Bookmark className="w-3.5 h-3.5 text-[#71717A]" />
               <span>Draft</span>
@@ -375,7 +469,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
         totalTagihan={form.summary.totalTagihanBuyer}
         catatan={form.catatan}
         items={form.computedRows.map((r) => {
-          const buyer = REGISTERED_BUYERS.find((b) => b.id === r.buyerId);
+          const buyer = form.buyers.find((b) => b.id === r.buyerId);
           return {
             buyerName: buyer?.name || r.buyerId,
             buyerUsername: buyer?.username,

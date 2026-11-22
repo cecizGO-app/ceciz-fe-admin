@@ -16,15 +16,16 @@ export const VerificationStatusTabs: React.FC<VerificationStatusTabsProps> = ({
   approvedCount,
   rejectedCount,
 }) => {
-  const tabs: { key: StatusTab; label: string; count?: number }[] = [
-    { key: "PENDING", label: "Menunggu Verifikasi", count: pendingCount },
-    { key: "APPROVED", label: "Disetujui", count: approvedCount },
-    { key: "REJECTED", label: "Ditolak", count: rejectedCount },
-    { key: "ALL", label: "Semua Data" },
+  const totalCount = pendingCount + approvedCount + rejectedCount;
+  const tabs: { key: StatusTab; label: string; count: number }[] = [
+    { key: "PENDING", label: "Pending", count: pendingCount },
+    { key: "APPROVED", label: "Approved", count: approvedCount },
+    { key: "REJECTED", label: "Rejected", count: rejectedCount },
+    { key: "ALL", label: "All", count: totalCount },
   ];
 
   return (
-    <div className="flex items-center gap-6 border-b border-[#FCE7F3] overflow-x-auto no-scrollbar pt-1">
+    <div className="flex items-center gap-1.5 p-1 rounded-[12px] bg-[#FFF5FA] border border-[#FCE7F3] overflow-x-auto no-scrollbar shrink-0">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
         return (
@@ -32,23 +33,22 @@ export const VerificationStatusTabs: React.FC<VerificationStatusTabsProps> = ({
             key={tab.key}
             type="button"
             onClick={() => onTabChange(tab.key)}
-            className={`pb-3.5 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-colors relative cursor-pointer ${
-              isActive ? "text-[#EC4899]" : "text-[#71717A] hover:text-[#18181B]"
+            className={`h-8 px-3 rounded-[9px] text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              isActive
+                ? "bg-[#EC4899] text-white shadow-2xs"
+                : "text-[#71717A] hover:text-[#18181B] hover:bg-white/70"
             }`}
           >
             <span>{tab.label}</span>
-            {tab.count !== undefined && (
-              <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                  isActive ? "bg-[#FCE7F3] text-[#EC4899]" : "bg-zinc-100 text-[#71717A]"
-                }`}
-              >
-                {tab.count}
-              </span>
-            )}
-            {isActive && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EC4899] rounded-full" />
-            )}
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                isActive
+                  ? "bg-white/25 text-white"
+                  : "bg-[#FCE7F3] text-[#BE185D]"
+              }`}
+            >
+              {tab.count}
+            </span>
           </button>
         );
       })}

@@ -174,11 +174,18 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                       <SelectValue placeholder="Pilih Buyer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {registeredBuyers.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name} ({b.username})
-                        </SelectItem>
-                      ))}
+                      {registeredBuyers.length === 0 ? (
+                        <div className="px-3 py-2 text-xs text-zinc-500">
+                          Belum ada akun buyer terdaftar di database.
+                        </div>
+                      ) : (
+                        registeredBuyers.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name} ({b.username})
+                            {b.lineGroup ? ` · ${b.lineGroup.replace("_", " ")}` : ""}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -372,11 +379,18 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                             <SelectValue placeholder="Pilih Buyer" />
                           </SelectTrigger>
                           <SelectContent>
-                            {registeredBuyers.map((b) => (
-                              <SelectItem key={b.id} value={b.id}>
-                                {b.name} ({b.username})
-                              </SelectItem>
-                            ))}
+                            {registeredBuyers.length === 0 ? (
+                              <div className="px-3 py-2 text-xs text-zinc-500">
+                                Belum ada akun buyer terdaftar di database.
+                              </div>
+                            ) : (
+                              registeredBuyers.map((b) => (
+                                <SelectItem key={b.id} value={b.id}>
+                                  {b.name} ({b.username})
+                                  {b.lineGroup ? ` · ${b.lineGroup.replace("_", " ")}` : ""}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                       </TableCell>

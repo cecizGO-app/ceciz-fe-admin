@@ -49,7 +49,7 @@ export const RejectTaxProofModal: React.FC<RejectTaxProofModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-[20px] p-6">
+      <DialogContent className="max-w-md rounded-[24px] p-6">
         <DialogHeader>
           <div className="w-10 h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 mb-2">
             <AlertTriangle className="w-5 h-5 stroke-[2.2]" />

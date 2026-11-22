@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/table";
 import { CountryFlag } from "@/components/icons/CountryFlag";
 import { BatchRowActions } from "./BatchRowActions";
+import { TablePagination } from "@/components/verification/TablePagination";
 import type { BatchItem, BatchStatus } from "@/types/batch";
+
+const BATCH_PAGE_SIZE = 10;
 
 interface BatchTableProps {
   batches: BatchItem[];
@@ -31,7 +34,6 @@ function formatRupiah(amount: number): string {
 
 export const BatchTable: React.FC<BatchTableProps> = ({
   batches,
-  totalBatchesCount,
   onEditBatch,
   onCalculateBatch,
   onCopyBatch,
@@ -39,12 +41,22 @@ export const BatchTable: React.FC<BatchTableProps> = ({
   onUpdateBatchStatus,
   onDeleteBatch,
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(batches.length / BATCH_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = batches.length === 0 ? 0 : (safePage - 1) * BATCH_PAGE_SIZE + 1;
+  const endIndex = Math.min(safePage * BATCH_PAGE_SIZE, batches.length);
+  const paginatedBatches = batches.slice(
+    (safePage - 1) * BATCH_PAGE_SIZE,
+    safePage * BATCH_PAGE_SIZE,
+  );
+
   return (
     <>
       <div className="overflow-x-auto">
         <Table className="min-w-[880px]">
           <TableHeader>
-            <TableRow className="border-b border-[#FCE7F3] hover:bg-transparent">
+            <TableRow className="bg-[#FFF5FA]/60 border-b border-[#FCE7F3] hover:bg-[#FFF5FA]/60">
               <TableHead className="py-3 px-5 text-[11px] font-bold text-[#71717A] tracking-wider uppercase">
                 NOMOR BATCH
               </TableHead>
@@ -76,8 +88,8 @@ export const BatchTable: React.FC<BatchTableProps> = ({
           </TableHeader>
 
           <TableBody>
-            {batches.length > 0 ? (
-              batches.map((batch) => {
+            {paginatedBatches.length > 0 ? (
+              paginatedBatches.map((batch) => {
                 return (
                   <TableRow
                     key={batch.id}
@@ -203,10 +215,16 @@ export const BatchTable: React.FC<BatchTableProps> = ({
         </Table>
       </div>
 
-      {/* Table Footer */}
-      <div className="py-4 px-6 border-t border-[#FCE7F3]/70 text-xs text-[#71717A]">
-        Menampilkan {batches.length} dari {totalBatchesCount} batch
-      </div>
+      {/* Table Pagination Footer */}
+      <TablePagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalCount={batches.length}
+        itemLabel="batch"
+        onPageChange={setCurrentPage}
+      />
     </>
   );
 };

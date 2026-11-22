@@ -7,6 +7,7 @@ interface TablePaginationProps {
   startIndex: number;
   endIndex: number;
   totalCount: number;
+  itemLabel?: string;
   onPageChange: (page: number) => void;
 }
 
@@ -16,16 +17,19 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
   startIndex,
   endIndex,
   totalCount,
+  itemLabel = "antrian",
   onPageChange,
 }) => {
+  const safeTotalPages = Math.max(1, totalPages);
+
   return (
-    <div className="p-4 border-t border-[#FCE7F3] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+    <div className="p-4 border-t border-[#FCE7F3] bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
       <div className="text-[#71717A]">
         Menampilkan{" "}
         <strong className="text-[#18181B]">
           {startIndex}-{endIndex}
         </strong>{" "}
-        dari <strong className="text-[#18181B]">{totalCount}</strong> antrian
+        dari <strong className="text-[#18181B]">{totalCount}</strong> {itemLabel}
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -40,7 +44,7 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
           Sebelumnya
         </Button>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+        {Array.from({ length: safeTotalPages }, (_, i) => i + 1).map((p) => (
           <button
             key={p}
             type="button"
@@ -60,7 +64,7 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage >= totalPages}
+          disabled={currentPage >= safeTotalPages}
           className="h-8 px-3 rounded-[10px] border-[#FCE7F3] text-xs font-medium text-[#71717A] hover:text-[#18181B] disabled:opacity-40 cursor-pointer"
         >
           Selanjutnya

@@ -1,6 +1,7 @@
 import React from "react";
 import { Plus, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   TaxStatsCards,
   TaxFilterBar,
@@ -119,47 +120,49 @@ export const TagihanTaxPage: React.FC = () => {
       {/* 4 Stats Cards */}
       <TaxStatsCards stats={stats} />
 
-      {/* Filter and Search Bar aligned with PRD */}
-      <TaxFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={(q) => {
-          setSearchQuery(q);
-          setCurrentPage(1);
-        }}
-        statusFilter={statusFilter}
-        onStatusFilterChange={(s) => {
-          setStatusFilter(s);
-          setCurrentPage(1);
-        }}
-        periodFilter={periodFilter}
-        onPeriodFilterChange={(p) => {
-          setPeriodFilter(p);
-          setCurrentPage(1);
-        }}
-        countryFilter={countryFilter}
-        onCountryFilterChange={(c) => {
-          setCountryFilter(c);
-          setCurrentPage(1);
-        }}
-      />
+      {/* Unified Main Content Card: Filter Bar + Table + Pagination */}
+      <Card className="p-5 sm:p-6 rounded-[24px] border border-[#FBCFE8]/50 bg-white shadow-2xs space-y-5">
+        <TaxFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={(q) => {
+            setSearchQuery(q);
+            setCurrentPage(1);
+          }}
+          statusFilter={statusFilter}
+          onStatusFilterChange={(s) => {
+            setStatusFilter(s);
+            setCurrentPage(1);
+          }}
+          periodFilter={periodFilter}
+          onPeriodFilterChange={(p) => {
+            setPeriodFilter(p);
+            setCurrentPage(1);
+          }}
+          countryFilter={countryFilter}
+          onCountryFilterChange={(c) => {
+            setCountryFilter(c);
+            setCurrentPage(1);
+          }}
+        />
 
-      {/* Invoices Table per buyer with multi-column sorting */}
-      <TaxTable
-        items={paginatedInvoices}
-        onViewDetail={handleOpenDetail}
-        onEdit={handleOpenEdit}
-        sortConfig={sortConfig}
-        onToggleSort={handleToggleSort}
-      />
+        <div className="rounded-[14px] border border-[#FCE7F3] overflow-hidden bg-white">
+          <TaxTable
+            items={paginatedInvoices}
+            onViewDetail={handleOpenDetail}
+            onEdit={handleOpenEdit}
+            sortConfig={sortConfig}
+            onToggleSort={handleToggleSort}
+          />
 
-      {/* Pagination Footer */}
-      <TaxPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={sortedInvoicesCount}
-        pageSize={PAGE_SIZE}
-        onPageChange={(p) => setCurrentPage(p)}
-      />
+          <TaxPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={sortedInvoicesCount}
+            pageSize={PAGE_SIZE}
+            onPageChange={(p) => setCurrentPage(p)}
+          />
+        </div>
+      </Card>
 
       {/* Detail Modal with Proof and Items */}
       <TaxDetailModal

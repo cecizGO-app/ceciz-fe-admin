@@ -19,6 +19,8 @@ import { CashflowPage } from "./pages/cashflow/CashflowPage";
 import { FinancialReportsPage } from "./pages/reports/FinancialReportsPage";
 import { SettingsPage } from "./pages/settings/SettingsPage";
 import { RolesPermissionsPage } from "./pages/roles/RolesPermissionsPage";
+import { BuyerApprovalPage } from "./pages/buyer-approval/BuyerApprovalPage";
+import { InvoiceAdminPage } from "./pages/invoices/InvoiceAdminPage";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import {
   useSession,
@@ -102,7 +104,9 @@ function AppContent() {
   const getActiveMenu = () => {
     const p = location.pathname;
     if (p.startsWith("/batches")) return "batch";
+    if (p.startsWith("/buyer-approvals")) return "buyer-approvals";
     if (p.startsWith("/verification")) return "verifikasi";
+    if (p.startsWith("/invoices")) return "invoices";
     if (p.startsWith("/tracking")) return "tracking";
     if (p.startsWith("/tax")) return "tax";
     if (p.startsWith("/po-album")) return "po-album";
@@ -116,6 +120,8 @@ function AppContent() {
   const handleNavigate = (menu: string) => {
     if (menu === "dashboard") navigate("/dashboard");
     if (menu === "batch") navigate("/batches");
+    if (menu === "buyer-approvals") navigate("/buyer-approvals");
+    if (menu === "invoices") navigate("/invoices");
     if (menu === "tracking") navigate("/tracking");
     if (menu === "verifikasi") {
       clearBadge("verifikasi");
@@ -152,16 +158,18 @@ function AppContent() {
             <Navigate to="/dashboard" replace />
           ) : (
             <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setRoleOverride("owner");
-                  navigate("/dashboard");
-                }}
-                className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
-              >
-                Bypass ke Dashboard Admin &rarr;
-              </button>
+              {import.meta.env.DEV && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRoleOverride("owner");
+                    navigate("/dashboard");
+                  }}
+                  className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
+                >
+                  Bypass ke Dashboard Admin &rarr;
+                </button>
+              )}
               <LoginPage
                 initialError={authError}
                 onClearError={() => setAuthError(null)}
@@ -185,13 +193,15 @@ function AppContent() {
             <Navigate to="/login" replace />
           ) : (
             <div className="relative">
-              <button
-                type="button"
-                onClick={() => navigate("/login")}
-                className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#71717A] hover:text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
-              >
-                &larr; Lihat Login Page
-              </button>
+              {import.meta.env.DEV && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="fixed bottom-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#FBCFE8] shadow-md text-xs font-semibold text-[#71717A] hover:text-[#EC4899] hover:bg-[#FFF5FA] transition-all cursor-pointer"
+                >
+                  &larr; Lihat Login Page
+                </button>
+              )}
 
               <AdminLayout
                 activeMenu={getActiveMenu()}
@@ -243,9 +253,14 @@ function AppContent() {
                     }
                   />
                   <Route
+                    path="/buyer-approvals"
+                    element={<BuyerApprovalPage currentAdminName={displayName} />}
+                  />
+                  <Route
                     path="/verification"
                     element={<PaymentVerificationPage />}
                   />
+                  <Route path="/invoices" element={<InvoiceAdminPage />} />
                   <Route
                     path="/tracking"
                     element={

@@ -55,14 +55,14 @@ export const BatchFilterBar: React.FC<BatchFilterBarProps> = ({
             placeholder="Cari nomor batch, warehouse, proxy..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 h-10 rounded-[12px] border-[#FCE7F3] bg-[#FFF5FA]/30 focus:bg-white text-xs text-[#18181B] placeholder:text-[#A1A1AA]"
+            className="pl-9 h-10 rounded-[10px] border-[#FCE7F3] bg-[#FFF5FA]/30 focus:bg-white text-xs text-[#18181B] placeholder:text-[#A1A1AA]"
           />
         </div>
 
         {/* Status Dropdown */}
         <div className="sm:col-span-3">
           <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-            <SelectTrigger className="h-10 rounded-[12px] border-[#FCE7F3] bg-white text-xs font-medium text-[#18181B]">
+            <SelectTrigger className="h-10 rounded-[10px] border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B]">
               <SelectValue placeholder="Semua Status" />
             </SelectTrigger>
             <SelectContent>
@@ -77,7 +77,7 @@ export const BatchFilterBar: React.FC<BatchFilterBarProps> = ({
         {/* Warehouse Dropdown */}
         <div className="sm:col-span-3">
           <Select value={warehouseFilter} onValueChange={onWarehouseFilterChange}>
-            <SelectTrigger className="h-10 rounded-[12px] border-[#FCE7F3] bg-white text-xs font-medium text-[#18181B]">
+            <SelectTrigger className="h-10 rounded-[10px] border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B]">
               <SelectValue placeholder="Semua Warehouse" />
             </SelectTrigger>
             <SelectContent>

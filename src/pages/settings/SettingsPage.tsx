@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,12 @@ export const SettingsPage: React.FC = () => {
   );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [savingSection, setSavingSection] = useState<string | null>(null);
+
+  useEffect(() => {
+    settingsService.fetchSettingsApi().then((loaded) => {
+      setSettings(loaded);
+    });
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -106,7 +112,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 pb-16">
+    <div className="space-y-6 pb-12">
       {/* Toast Notifikasi Ringkas */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[#18181B] text-white px-4 py-2.5 rounded-[12px] shadow-lg text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 duration-150">
@@ -118,11 +124,16 @@ export const SettingsPage: React.FC = () => {
       {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
+          <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-1">
+            <span className="text-[#71717A]">Sistem</span>
+            <span>&gt;</span>
+            <span className="text-[#EC4899] font-medium">Settings</span>
+          </nav>
+          <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
             Settings
           </h1>
-          <p className="text-xs text-[#71717A] mt-0.5">
-            Manage active operational rates, fees, deadlines, and storage rules.
+          <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
+            Kelola kurs harian, fee operasional, aturan denda, rate tax, dan batas penyimpanan barang.
           </p>
         </div>
 
@@ -131,7 +142,7 @@ export const SettingsPage: React.FC = () => {
           variant="outline"
           size="sm"
           onClick={handleResetDefaults}
-          className="h-9 px-3 rounded-[10px] text-xs font-semibold border-[#FBCFE8] hover:bg-[#FFF5FA] hover:text-[#EC4899] shadow-2xs self-start sm:self-auto cursor-pointer"
+          className="h-10 sm:h-11 px-3.5 rounded-[12px] text-xs font-semibold border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] hover:text-[#EC4899] shadow-2xs self-start sm:self-auto cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5 mr-1.5 text-[#71717A]" />
           Reset ke Default

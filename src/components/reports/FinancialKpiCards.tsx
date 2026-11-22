@@ -71,7 +71,7 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({
           <Card
             key={card.id}
             size="sm"
-            className="gap-0 rounded-[18px] bg-white border border-[#FBCFE8]/60 p-4 sm:p-4.5 flex flex-col justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
+            className="gap-0 rounded-[20px] bg-white border border-[#FBCFE8]/60 p-5 sm:p-6 flex flex-col justify-between shadow-2xs hover:border-[#EC4899]/60 hover:shadow-xs transition-all"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-[#71717A]">
@@ -85,7 +85,17 @@ export const FinancialKpiCards: React.FC<FinancialKpiCardsProps> = ({
             </div>
 
             <div className="mt-2.5">
-              <p className="text-[20px] sm:text-[22px] font-bold text-[#18181B] tracking-tight">
+              <p
+                className={`text-[24px] sm:text-[28px] font-bold tracking-tight truncate ${
+                  card.id === "net-profit"
+                    ? card.value > 0
+                      ? "text-[#16A34A]"
+                      : card.value < 0
+                        ? "text-[#DC2626]"
+                        : "text-[#18181B]"
+                    : "text-[#18181B]"
+                }`}
+              >
                 {formatRupiah(card.value)}
               </p>
               {card.helper && (

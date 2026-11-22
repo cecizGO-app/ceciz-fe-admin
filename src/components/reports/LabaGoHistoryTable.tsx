@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -9,10 +9,12 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TablePagination } from "@/components/verification/TablePagination";
 import { formatRupiah } from "./formatters";
 import type { ProfitPeriodHistoryItem } from "@/types/reports";
+
+const HISTORY_PAGE_SIZE = 10;
 
 interface LabaGoHistoryTableProps {
   history: ProfitPeriodHistoryItem[];
@@ -23,6 +25,16 @@ export const LabaGoHistoryTable: React.FC<LabaGoHistoryTableProps> = ({
   history,
   onDelete,
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(history.length / HISTORY_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = history.length === 0 ? 0 : (safePage - 1) * HISTORY_PAGE_SIZE + 1;
+  const endIndex = Math.min(safePage * HISTORY_PAGE_SIZE, history.length);
+  const paginatedHistory = history.slice(
+    (safePage - 1) * HISTORY_PAGE_SIZE,
+    safePage * HISTORY_PAGE_SIZE,
+  );
+
   return (
     <Card className="rounded-[20px] border border-[#FBCFE8]/60 shadow-xs bg-white overflow-hidden">
       <CardHeader className="py-4 px-6 border-b border-[#FBCFE8]/30 flex flex-row items-center justify-between">
@@ -79,7 +91,7 @@ export const LabaGoHistoryTable: React.FC<LabaGoHistoryTableProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              history.map((row) => (
+              paginatedHistory.map((row) => (
                 <TableRow
                   key={row.id}
                   className="border-[#FBCFE8]/30 hover:bg-[#FFF5FA]/40 transition-colors"
@@ -93,13 +105,12 @@ export const LabaGoHistoryTable: React.FC<LabaGoHistoryTableProps> = ({
                   <TableCell className="text-xs">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {row.batches.map((b) => (
-                        <Badge
+                        <span
                           key={b}
-                          variant="secondary"
-                          className="text-[11px] px-2 py-0.5 rounded-md font-semibold bg-[#FFF5FA] border-[#FBCFE8] text-[#18181B]"
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[#FBCFE8] bg-[#FFF5FA] text-[#EC4899] font-bold text-[11px]"
                         >
                           {b}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
                   </TableCell>
@@ -134,6 +145,15 @@ export const LabaGoHistoryTable: React.FC<LabaGoHistoryTableProps> = ({
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalCount={history.length}
+          itemLabel="periode"
+          onPageChange={setCurrentPage}
+        />
       </CardContent>
     </Card>
   );

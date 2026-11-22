@@ -15,11 +15,10 @@ import {
   Edit2,
   Trash2,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   Receipt,
   Plus,
 } from "lucide-react";
+import { TablePagination } from "@/components/verification/TablePagination";
 import {
   CASHFLOW_CATEGORIES,
   type CashflowEntry,
@@ -135,7 +134,7 @@ export const CashflowTable: React.FC<CashflowTableProps> = ({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col rounded-[14px] border border-[#FCE7F3] overflow-hidden bg-white">
       {/* =========================================================================
           1. DESKTOP & TABLET VIEW (TABLE) - Visible on md & lg screens (>= 768px)
          ========================================================================= */}
@@ -394,51 +393,15 @@ export const CashflowTable: React.FC<CashflowTableProps> = ({
       {/* =========================================================================
           3. PAGINATION BAR
          ========================================================================= */}
-      <div className="p-3.5 sm:p-4 border-t border-[#FBCFE8]/40 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
-        <p className="text-xs text-[#71717A]">
-          Menampilkan{" "}
-          <span className="font-semibold text-[#18181B]">
-            {entries.length === 0 ? 0 : startIndex + 1}
-          </span>{" "}
-          -{" "}
-          <span className="font-semibold text-[#18181B]">
-            {Math.min(startIndex + pageSize, entries.length)}
-          </span>{" "}
-          dari{" "}
-          <span className="font-semibold text-[#18181B]">{entries.length}</span>{" "}
-          transaksi
-        </p>
-
-        <div className="flex items-center gap-1.5 self-center sm:self-auto">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage <= 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="h-8 px-2.5 text-xs rounded-xl border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#71717A] disabled:opacity-40 cursor-pointer"
-          >
-            <ChevronLeft className="w-3.5 h-3.5 mr-1" />
-            <span>Sebelumnya</span>
-          </Button>
-
-          <span className="text-xs font-semibold px-2 text-[#18181B]">
-            {currentPage} / {totalPages}
-          </span>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="h-8 px-2.5 text-xs rounded-xl border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#71717A] disabled:opacity-40 cursor-pointer"
-          >
-            <span>Berikutnya</span>
-            <ChevronRight className="w-3.5 h-3.5 ml-1" />
-          </Button>
-        </div>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        startIndex={entries.length === 0 ? 0 : startIndex + 1}
+        endIndex={Math.min(startIndex + pageSize, entries.length)}
+        totalCount={entries.length}
+        itemLabel="transaksi"
+        onPageChange={onPageChange}
+      />
     </div>
   );
 };

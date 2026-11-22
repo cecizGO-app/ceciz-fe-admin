@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, X, Check, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getAdminUsersApi, type BackendUserOption } from "@/services/batch.service";
 import type { PoAlbumOrder, PoAlbumDraft, OrderType } from "@/types/po-album";
 
 interface PoAlbumInputPanelProps {
@@ -41,11 +42,22 @@ export const PoAlbumInputPanel: React.FC<PoAlbumInputPanelProps> = ({
   const [batch, setBatch] = useState("KR-ALB-07");
   const [album, setAlbum] = useState("CATBBI Album Ver.");
   const [type, setType] = useState<OrderType>("PO Album");
+  const [registeredBuyers, setRegisteredBuyers] = useState<BackendUserOption[]>([]);
   const [rows, setRows] = useState<PoAlbumDraft[]>([
     blankDraft(),
     blankDraft(),
     blankDraft(),
   ]);
+
+  useEffect(() => {
+    getAdminUsersApi({ role: "BUYER" })
+      .then((users) => {
+        if (Array.isArray(users) && users.length > 0) {
+          setRegisteredBuyers(users);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const setRow = (k: number, patch: Partial<PoAlbumDraft>) =>
     setRows((rs) => rs.map((r) => (r.key === k ? { ...r, ...patch } : r)));
@@ -86,7 +98,7 @@ export const PoAlbumInputPanel: React.FC<PoAlbumInputPanelProps> = ({
     >
       <div className="flex items-start justify-between gap-3 border-b border-divider px-6 py-4 bg-subpanel/50">
         <div>
-          <h2 className="text-lg font-bold text-ink tracking-tight">
+          <h2 className="text-[17px] font-bold text-[#18181B] tracking-tight">
             Input PO Album / CO Web
           </h2>
           <p className="mt-0.5 text-xs text-ink-2">
@@ -204,11 +216,28 @@ export const PoAlbumInputPanel: React.FC<PoAlbumInputPanelProps> = ({
                 </td>
                 <td className="py-2.5 pr-2">
                   <Input
+                    list="po-album-registered-buyers"
                     value={r.buyer}
                     onChange={(e) => setRow(r.key, { buyer: e.target.value })}
-                    placeholder="@username"
+                    placeholder="Pilih atau ketik @username"
                     className="h-9 rounded-[8px] border-border/70 bg-surface text-xs text-ink"
                   />
+                  {i === 0 && registeredBuyers.length > 0 && (
+                    <datalist id="po-album-registered-buyers">
+                      {registeredBuyers.map((u) => {
+                        const handle = u.idLine
+                          ? `@${u.idLine.replace(/^@/, "")}`
+                          : u.name || u.email || u.id;
+                        return (
+                          <option
+                            key={u.id}
+                            value={handle}
+                            label={`${u.dnLine || u.name}${u.email ? ` (${u.email})` : ""}`}
+                          />
+                        );
+                      })}
+                    </datalist>
+                  )}
                 </td>
                 <td className="py-2.5 pr-2">
                   <Input

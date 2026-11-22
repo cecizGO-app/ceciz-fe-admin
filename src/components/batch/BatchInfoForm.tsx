@@ -41,6 +41,7 @@ interface BatchInfoFormProps {
   onChangeFeeProxy: (val: number) => void;
   adminNyelem: string;
   onChangeAdminNyelem: (val: string) => void;
+  adminOptions?: Array<{ id: string; name: string; email?: string; role?: string }>;
   feeNyelem: number;
   onChangeFeeNyelem: (val: number) => void;
   feeGO: number;
@@ -90,6 +91,7 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
   onChangeFeeProxy,
   adminNyelem,
   onChangeAdminNyelem,
+  adminOptions = [],
   feeNyelem,
   onChangeFeeNyelem,
   feeGO,
@@ -109,7 +111,7 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
   return (
     <Card className="gap-6 p-6 sm:p-7 shadow-sm border border-[#FBCFE8]/60">
       <CardHeader className="p-0 space-y-1.5">
-        <CardTitle className="text-xl font-bold text-zinc-900 tracking-tight">
+        <CardTitle className="text-[17px] font-bold text-[#18181B] tracking-tight">
           Informasi &amp; Biaya Batch
         </CardTitle>
         <CardDescription className="text-xs text-zinc-500">
@@ -462,15 +464,26 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
                   <SelectValue placeholder="Pilih Admin Nyelem" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin 1 (Aurel)">
-                    Admin 1 (Aurel)
-                  </SelectItem>
-                  <SelectItem value="Admin 2 (Nadia)">
-                    Admin 2 (Nadia)
-                  </SelectItem>
-                  <SelectItem value="Owner (Cecilia)">
-                    Owner (Cecilia)
-                  </SelectItem>
+                  {adminOptions.length > 0 ? (
+                    adminOptions.map((adm) => (
+                      <SelectItem key={adm.id} value={adm.id}>
+                        {adm.name}
+                        {adm.role ? ` (${adm.role})` : ""}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="Admin 1 (Aurel)">
+                        Admin 1 (Aurel)
+                      </SelectItem>
+                      <SelectItem value="Admin 2 (Nadia)">
+                        Admin 2 (Nadia)
+                      </SelectItem>
+                      <SelectItem value="Owner (Cecilia)">
+                        Owner (Cecilia)
+                      </SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

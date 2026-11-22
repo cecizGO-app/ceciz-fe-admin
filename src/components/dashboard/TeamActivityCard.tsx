@@ -50,7 +50,7 @@ export const TeamActivityCard: React.FC<TeamActivityCardProps> = ({
       )}
     >
       <CardHeader className="p-0">
-        <CardTitle className="text-sm font-bold text-[#18181B]">
+        <CardTitle className="text-[17px] font-bold text-[#18181B] tracking-tight">
           Aktivitas Tim Terbaru
         </CardTitle>
       </CardHeader>

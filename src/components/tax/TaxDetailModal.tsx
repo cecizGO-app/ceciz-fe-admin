@@ -142,7 +142,7 @@ export const TaxDetailModal: React.FC<TaxDetailModalProps> = ({
                 {item.status === "Pending" && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-300">
                     <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                    Pending (Menunggu Verifikasi)
+                    Pending
                   </span>
                 )}
                 {item.status === "Unpaid" && (
@@ -154,13 +154,13 @@ export const TaxDetailModal: React.FC<TaxDetailModalProps> = ({
                 {item.status === "Approved" && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-300">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    Approved (Lunas)
+                    Approved
                   </span>
                 )}
                 {item.status === "Overdue" && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-300">
                     <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                    Overdue (Terlambat)
+                    Overdue
                   </span>
                 )}
               </div>
