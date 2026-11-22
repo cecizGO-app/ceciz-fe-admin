@@ -130,10 +130,10 @@ export function mapBackendBatchToFrontend(batch: BackendBatch): BatchItem {
 
   const formattedDate = batch.batchDate
     ? new Date(batch.batchDate).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "-";
 
   const formattedBatchNumber = `${batch.countryCode}-${String(batch.batchNumber).padStart(3, "0")}`;
@@ -354,6 +354,18 @@ export async function deleteBatchApi(id: string): Promise<void> {
 }
 
 
+export interface BackendUserOption {
+  id: string;
+  name: string;
+  email?: string;
+  role?: string;
+  idLine?: string | null;
+  dnLine?: string | null;
+  lineGroup?: "GO_1" | "GO_2" | string | null;
+  contact?: string | null;
+  approvalStatus?: string | null;
+}
+
 export interface BackendFormOptions {
   settings?: {
     dailyRate?: Record<string, number>;
@@ -362,8 +374,40 @@ export interface BackendFormOptions {
     deadlineBatchHours?: number;
   };
   nextBatchNumbers?: Record<string, number>;
-  buyers?: Array<{ id: string; name: string; email?: string }>;
-  admins?: Array<{ id: string; name: string; email?: string; role?: string }>;
+  buyers?: BackendUserOption[];
+  admins?: BackendUserOption[];
+}
+
+/**
+ * GET /api/v1/admin/users
+ * Mengambil daftar user terdaftar (BUYER / STAFF / OWNER) dari database backend
+ */
+export async function getAdminUsersApi(params?: {
+  role?: "BUYER" | "STAFF" | "OWNER";
+  search?: string;
+}): Promise<BackendUserOption[]> {
+  const url = new URL(`${BASE_URL}/api/v1/admin/users`);
+  if (params?.role) url.searchParams.set("role", params.role);
+  if (params?.search) url.searchParams.set("search", params.search);
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const errorMsg =
+      json?.error?.message ||
+      (typeof json?.error === "string" ? json.error : null) ||
+      json?.message ||
+      `Gagal memuat daftar pengguna (HTTP ${res.status})`;
+    throw new Error(errorMsg);
+  }
+  return json?.data || [];
 }
 
 /**

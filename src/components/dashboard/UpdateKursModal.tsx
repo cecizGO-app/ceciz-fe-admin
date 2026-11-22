@@ -58,8 +58,8 @@ export const UpdateKursModal: React.FC<UpdateKursModalProps> = ({
             <DialogTitle>Update Kurs Valas Harian</DialogTitle>
           </div>
           <DialogDescription>
-            Perbarui nilai kurs valuta asing harian untuk Calculation Engine
-            (PRD §4 &amp; §5). Nilai akan berlaku untuk kalkulasi batch baru.
+            Perbarui nilai kurs valuta asing harian. Nilai akan berlaku untuk
+            kalkulasi batch baru
           </DialogDescription>
         </DialogHeader>
 

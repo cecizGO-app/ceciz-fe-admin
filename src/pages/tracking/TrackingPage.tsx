@@ -3,7 +3,6 @@ import { Package, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   TrackingStatsCards,
   TrackingFilterBar,
@@ -53,12 +52,12 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
 
   const tabs: { key: TrackingTab; label: string; count?: number }[] = [
     { key: "active", label: "Paket Aktif", count: activeCount },
-    { key: "done", label: "Arsip Selesai / Done", count: doneCount },
+    { key: "done", label: "Done Archive", count: doneCount },
     { key: "all", label: "Semua Pengiriman" },
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6 pb-12">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-5 left-1/2 z-[80] -translate-x-1/2 rounded-[12px] bg-[#18181B] px-4 py-3 text-xs text-white shadow-xl border border-zinc-800 animate-in fade-in zoom-in-95 duration-150">
@@ -91,13 +90,13 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
             variant="outline"
             onClick={refetch}
             disabled={isSyncing}
-            className="h-11 px-3.5 gap-1.5 text-xs font-semibold rounded-[12px] border-[#FBCFE8] hover:bg-[#FDF2F8] hover:border-[#EC4899] shadow-xs cursor-pointer disabled:opacity-60"
+            className="h-10 sm:h-11 px-3.5 gap-1.5 text-xs font-semibold rounded-[12px] border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#71717A] hover:text-[#EC4899] shadow-2xs cursor-pointer disabled:opacity-60"
             title="Muat ulang data tracking dari backend"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 text-[#EC4899] ${isSyncing ? "animate-spin" : ""}`}
             />
-            <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan"}</span>
+            <span>Refresh</span>
           </Button>
 
           {onNavigateToBatch && (
@@ -116,72 +115,72 @@ export const TrackingPage: React.FC<TrackingPageProps> = ({
       {/* KPI Stats Cards */}
       <TrackingStatsCards stats={stats} />
 
-      {/* Tab Navigasi */}
-      <div className="-mb-2 flex gap-1 overflow-x-auto border-b border-[#FBCFE8]/50">
-        {tabs.map((t) => {
-          const isActive = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => {
-                setTab(t.key);
-                resetPage();
-              }}
-              className={cn(
-                "relative flex h-11 shrink-0 items-center gap-2 px-3 text-xs sm:text-sm transition-colors duration-150 cursor-pointer",
-                isActive
-                  ? "text-primary font-bold"
-                  : "text-[#71717A] hover:text-[#18181B]",
-              )}
-            >
-              <span>{t.label}</span>
-              {t.count !== undefined && (
-                <Badge
-                  variant={isActive ? "default" : "secondary"}
+      {/* Main Table Card Section (Unified with Tabs + Search + Dropdowns) */}
+      <Card className="p-5 sm:p-6 rounded-[24px] border border-[#FBCFE8]/50 bg-white shadow-2xs space-y-5">
+        {/* Single Toolbar Row: [Tabs (Left)] — [Search (Center)] — [Dropdowns (Right)] */}
+        <div className="flex flex-col xl:flex-row xl:items-center gap-3">
+          {/* Segmented Pill Tabs */}
+          <div className="flex items-center gap-1.5 p-1 rounded-[12px] bg-[#FFF5FA] border border-[#FCE7F3] overflow-x-auto no-scrollbar shrink-0">
+            {tabs.map((t) => {
+              const isActive = tab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => {
+                    setTab(t.key);
+                    resetPage();
+                  }}
                   className={cn(
-                    "h-5 min-w-5 px-1.5 text-[10px] tabular-nums",
-                    !isActive &&
-                      "bg-zinc-100 text-[#71717A] border-transparent",
+                    "h-8 px-3 rounded-[9px] text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer",
+                    isActive
+                      ? "bg-[#EC4899] text-white shadow-2xs"
+                      : "text-[#71717A] hover:text-[#18181B] hover:bg-white/70",
                   )}
                 >
-                  {t.count}
-                </Badge>
-              )}
-              {isActive && (
-                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+                  <span>{t.label}</span>
+                  {t.count !== undefined && (
+                    <span
+                      className={cn(
+                        "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums",
+                        isActive
+                          ? "bg-white/25 text-white"
+                          : "bg-[#FCE7F3] text-[#BE185D]",
+                      )}
+                    >
+                      {t.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-      {/* Main Table Card Section */}
-      <Card className="overflow-hidden p-0 gap-0 border-[#FBCFE8]/60 bg-white shadow-card rounded-[24px]">
-        <TrackingFilterBar
-          searchQuery={searchQuery}
-          onSearchChange={(q) => {
-            setSearchQuery(q);
-            resetPage();
-          }}
-          country={country}
-          onCountryChange={(c) => {
-            setCountry(c);
-            resetPage();
-          }}
-          warehouse={warehouse}
-          onWarehouseChange={(w) => {
-            setWarehouse(w);
-            resetPage();
-          }}
-          stage={stage}
-          onStageChange={(s) => {
-            setStage(s);
-            resetPage();
-          }}
-          warehouses={warehouses}
-          tab={tab}
-        />
+          <TrackingFilterBar
+            searchQuery={searchQuery}
+            onSearchChange={(q) => {
+              setSearchQuery(q);
+              resetPage();
+            }}
+            country={country}
+            onCountryChange={(c) => {
+              setCountry(c);
+              resetPage();
+            }}
+            warehouse={warehouse}
+            onWarehouseChange={(w) => {
+              setWarehouse(w);
+              resetPage();
+            }}
+            stage={stage}
+            onStageChange={(s) => {
+              setStage(s);
+              resetPage();
+            }}
+            warehouses={warehouses}
+            tab={tab}
+          />
+        </div>
 
         <TrackingDataView
           items={paginatedRows}

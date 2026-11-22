@@ -20,7 +20,7 @@ export const TrackingStatsCards: React.FC<TrackingStatsCardsProps> = ({ stats })
       {stats.map((s) => (
         <Card
           key={s.label}
-          className="p-5 flex flex-col gap-3 rounded-[24px] border-[#FBCFE8]/60 bg-white shadow-card"
+          className="p-5 flex flex-col gap-3 rounded-[20px] border-[#FBCFE8]/60 bg-white shadow-card"
         >
           <div className="flex items-center gap-2">
             <span className={cn("size-2 shrink-0 rounded-full", s.dot)} />
@@ -28,7 +28,7 @@ export const TrackingStatsCards: React.FC<TrackingStatsCardsProps> = ({ stats })
           </div>
           <div>
             <p className="flex flex-wrap items-baseline gap-x-2">
-              <span className="text-[28px] font-bold text-[#18181B] tracking-tight tabular-nums">
+              <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight tabular-nums">
                 {s.value}
               </span>
               <span className="text-xs text-[#71717A]">{s.unit}</span>

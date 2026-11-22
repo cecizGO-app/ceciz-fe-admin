@@ -1,6 +1,5 @@
 import React from "react";
 import { Edit3 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,6 +12,7 @@ import {
 import type { Pkg } from "@/types/tracking";
 import { StageBadge, CheckBadge, MiniCheck, ResiChip } from "./TrackingBadges";
 import { TRACKING_PAGE_SIZE } from "@/hooks";
+import { TablePagination } from "@/components/verification/TablePagination";
 
 interface TrackingDataViewProps {
   items: Pkg[];
@@ -35,8 +35,18 @@ export const TrackingDataView: React.FC<TrackingDataViewProps> = ({
   onEdit,
   onCopyResi,
 }) => {
+  const startIndex =
+    totalFilteredCount === 0 ? 0 : (currentPage - 1) * TRACKING_PAGE_SIZE + 1;
+  const endIndex = Math.min(currentPage * TRACKING_PAGE_SIZE, totalFilteredCount);
+  const itemLabel =
+    tab === "active"
+      ? "paket berjalan"
+      : tab === "done"
+        ? "paket arsip"
+        : "pengiriman";
+
   return (
-    <>
+    <div className="rounded-[14px] border border-[#FCE7F3] overflow-hidden bg-white">
       {/* Desktop View (xl+) using shadcn Table */}
       <div className="hidden xl:block overflow-x-auto">
         <Table className="w-full table-fixed min-w-[880px]">
@@ -48,7 +58,7 @@ export const TrackingDataView: React.FC<TrackingDataViewProps> = ({
             <col className="w-[16%]" />
             <col className="w-[14%]" />
           </colgroup>
-          <TableHeader className="bg-[#FFF5FA]/70 border-y border-[#FBCFE8]/50">
+          <TableHeader className="bg-[#FFF5FA]/60 border-b border-[#FCE7F3]">
             <TableRow className="border-none hover:bg-transparent">
               <TableHead className="pl-6 pr-3 text-[11px] uppercase tracking-wider text-[#71717A] font-bold">
                 Batch &amp; Buyer
@@ -220,59 +230,15 @@ export const TrackingDataView: React.FC<TrackingDataViewProps> = ({
       )}
 
       {/* Pagination Toolbar */}
-      <div className="flex flex-col gap-3 border-t border-[#FBCFE8]/40 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-[#71717A]">
-          {totalFilteredCount === 0
-            ? "Tidak ada data"
-            : `Menampilkan ${(currentPage - 1) * TRACKING_PAGE_SIZE + 1}–${Math.min(
-                currentPage * TRACKING_PAGE_SIZE,
-                totalFilteredCount
-              )} dari ${totalFilteredCount} ${
-                tab === "active"
-                  ? "paket berjalan"
-                  : tab === "done"
-                    ? "paket arsip"
-                    : "pengiriman"
-              }`}
-        </p>
-        <div className="flex items-center gap-1.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="h-9 px-3 text-xs"
-          >
-            Sebelumnya
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-            <Button
-              key={n}
-              type="button"
-              variant={n === currentPage ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onPageChange(n)}
-              className={cn(
-                "size-9 p-0 text-xs tabular-nums",
-                n !== currentPage && "text-[#71717A] hover:bg-[#FFF5FA] hover:text-primary"
-              )}
-            >
-              {n}
-            </Button>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="h-9 px-3 text-xs"
-          >
-            Selanjutnya
-          </Button>
-        </div>
-      </div>
-    </>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalCount={totalFilteredCount}
+        itemLabel={itemLabel}
+        onPageChange={onPageChange}
+      />
+    </div>
   );
 };

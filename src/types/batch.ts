@@ -37,6 +37,10 @@ export interface BuyerOption {
   id: string;
   name: string;
   username: string;
+  email?: string;
+  dnLine?: string;
+  idLine?: string;
+  lineGroup?: "GO_1" | "GO_2" | string;
 }
 
 export interface OrderRow {

@@ -32,7 +32,7 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
       )}
     >
       <CardHeader className="p-0">
-        <CardTitle className="text-sm sm:text-base font-bold text-[#18181B]">
+        <CardTitle className="text-[17px] font-bold text-[#18181B] tracking-tight">
           Aksi Cepat
         </CardTitle>
       </CardHeader>

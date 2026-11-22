@@ -6,6 +6,7 @@ import {
 } from "./batch.service";
 import { getPaymentStatsApi } from "./payment.service";
 import { getTrackingStatsApi } from "./tracking.service";
+import { getTaxStatsApi } from "./tax.service";
 import type {
   DashboardMetricStats,
   RecentBatch,
@@ -61,12 +62,14 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
     trackingStatsRes,
     batchesListRes,
     formOptionsRes,
+    taxStatsRes,
   ] = await Promise.allSettled([
     getBatchStatsApi(),
     getPaymentStatsApi(),
     getTrackingStatsApi(),
     getBatchesApi(),
     getBatchFormOptionsApi(),
+    getTaxStatsApi(),
   ]);
 
   // 1. Parsing Batch Stats
@@ -240,6 +243,18 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
     errors.push(`Form Options: ${formOptionsRes.reason?.message || "Error"}`);
   }
 
+  // 6. Parsing Tax Stats Live dari Backend
+  let pendingTaxAmount = DEFAULT_METRIC_STATS.pendingTaxAmount;
+  let pendingTaxInvoicesCount = DEFAULT_METRIC_STATS.pendingTaxInvoicesCount;
+  let taxPeriodCutoff = DEFAULT_METRIC_STATS.taxPeriodCutoff;
+  if (taxStatsRes.status === "fulfilled") {
+    isLiveBackend = true;
+    const tx = taxStatsRes.value;
+    pendingTaxAmount = `Rp ${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(tx.unpaidAmount)}`;
+    pendingTaxInvoicesCount = tx.unpaidCount;
+    taxPeriodCutoff = tx.activePeriodMonth || tx.activePeriodName || DEFAULT_METRIC_STATS.taxPeriodCutoff;
+  }
+
   return {
     metricStats: {
       activeBatches,
@@ -249,9 +264,9 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
       overduePenaltyBuyers: DEFAULT_METRIC_STATS.overduePenaltyBuyers,
       activeTrackingPackages,
       arrivedWarehousePackages,
-      pendingTaxAmount: DEFAULT_METRIC_STATS.pendingTaxAmount,
-      pendingTaxInvoicesCount: DEFAULT_METRIC_STATS.pendingTaxInvoicesCount,
-      taxPeriodCutoff: DEFAULT_METRIC_STATS.taxPeriodCutoff,
+      pendingTaxAmount,
+      pendingTaxInvoicesCount,
+      taxPeriodCutoff,
     },
     recentBatches,
     countryDistributions,

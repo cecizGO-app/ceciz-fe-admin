@@ -65,11 +65,11 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({
   const endIndex = Math.min(currentPage * pageSize, totalFilteredCount);
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#FBCFE8]/50 shadow-2xs overflow-hidden">
+    <div className="rounded-[14px] border border-[#FCE7F3] overflow-hidden bg-white">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-[#FCE7F3] bg-[#FFF5FA]/30 hover:bg-[#FFF5FA]/30">
+            <TableRow className="border-b border-[#FCE7F3] bg-[#FFF5FA]/60 hover:bg-[#FFF5FA]/60">
               <TableHead className="w-12 px-4 py-3.5 text-center">
                 <Checkbox
                   checked={
@@ -242,19 +242,19 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({
                       {item.status === "PENDING" && (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50/70 border border-amber-200/60 px-2 py-0.5 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                          Menunggu
+                          Pending
                         </span>
                       )}
                       {item.status === "APPROVED" && (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50/70 border border-emerald-200/60 px-2 py-0.5 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                          Disetujui
+                          Approved
                         </span>
                       )}
                       {item.status === "REJECTED" && (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 bg-rose-50/70 border border-rose-200/60 px-2 py-0.5 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                          Ditolak
+                          Rejected
                         </span>
                       )}
                     </TableCell>
@@ -281,7 +281,7 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({
                         </div>
                       ) : (
                         <span className="text-[11px] text-[#A1A1AA] italic">
-                          Selesai
+                          Done
                         </span>
                       )}
                     </TableCell>

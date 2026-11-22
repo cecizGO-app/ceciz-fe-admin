@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import { FileSpreadsheet, FileText, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,30 +58,39 @@ export const FinancialReportsPage: React.FC = () => {
     periodNotes: "",
   });
 
-  // History state for Laba GO
+  // History & master data state hydrated from Backend API
   const [history, setHistory] = useState(() =>
     reportsService.getProfitHistory(),
   );
-
-  // State for Gaji Admin fee periods
   const [adminFeePeriods, setAdminFeePeriods] = useState(() =>
     reportsService.getAdminFeePeriods(),
   );
+  const [availableBatches, setAvailableBatches] = useState(() =>
+    reportsService.getAvailableBatches(),
+  );
+  const [kpis, setKpis] = useState(() => reportsService.getKpis());
+  const [monthlyTrends, setMonthlyTrends] = useState(() =>
+    reportsService.getMonthlyProfitTrends(),
+  );
+  const [paymentMethodsSummary, setPaymentMethodsSummary] = useState(() =>
+    reportsService.getPaymentMethodSummaries(),
+  );
 
-  // Master data
-  const availableBatches = useMemo(
-    () => reportsService.getAvailableBatches(),
-    [],
-  );
-  const kpis = useMemo(() => reportsService.getKpis(), []);
-  const monthlyTrends = useMemo(
-    () => reportsService.getMonthlyProfitTrends(),
-    [],
-  );
-  const paymentMethodsSummary = useMemo(
-    () => reportsService.getPaymentMethodSummaries(),
-    [],
-  );
+  useEffect(() => {
+    let active = true;
+    reportsService.hydrateFromBackend().then((data) => {
+      if (!active) return;
+      setKpis(data.kpis);
+      setAvailableBatches(data.batches);
+      setHistory(data.history);
+      setMonthlyTrends(data.monthlyTrends);
+      setAdminFeePeriods(data.adminFeePeriods);
+      setPaymentMethodsSummary(data.paymentMethodSummaries);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Live calculation preview for Laba GO
   const summary = useMemo(() => {
@@ -145,11 +154,47 @@ export const FinancialReportsPage: React.FC = () => {
   };
 
   const handleExportXLSX = () => {
-    showToast("Mengunduh laporan keuangan format XLSX (Excel)...");
+    const rows: string[][] =
+      activeTab === "gaji-admin"
+        ? [
+            ["Periode", "Admin", "Jumlah Batch", "Fee Nyelem", "Fee Rekap", "Total Fee", "Catatan"],
+            ...adminFeePeriods.map((r) => [
+              r.periodName,
+              r.adminName,
+              String(r.batchCount),
+              String(r.feeNyelem),
+              String(r.feeRekap),
+              String(r.totalFee),
+              r.notes || "-",
+            ]),
+          ]
+        : [
+            ["Periode", "Rentang Tanggal", "Batch", "Pemasukan", "Modal", "Laba Bersih", "Catatan"],
+            ...history.map((h) => [
+              h.periodName,
+              h.dateRange,
+              h.batches.join("; "),
+              String(h.pemasukan),
+              String(h.modal),
+              String(h.labaBersih),
+              h.notes || "-",
+            ]),
+          ];
+
+    const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ceciz-laporan-${activeTab}-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Laporan keuangan berhasil diunduh (CSV / Excel).");
   };
 
   const handleExportPDF = () => {
-    showToast("Menyiapkan dokumen rekap keuangan format PDF...");
+    showToast("Membuka dialog cetak / simpan PDF...");
+    setTimeout(() => window.print(), 200);
   };
 
   const handleResetFilters = () => {
@@ -160,7 +205,7 @@ export const FinancialReportsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 pb-16">
+    <div className="space-y-6 pb-12">
       {/* Toast Notifikasi Ringkas */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[#18181B] text-white px-4 py-2.5 rounded-[12px] shadow-lg text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 duration-150">
@@ -172,12 +217,16 @@ export const FinancialReportsPage: React.FC = () => {
       {/* Header Halaman Sesuai Screenshot */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
-            Financial Reports
+          <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-1">
+            <span className="text-[#71717A]">Laporan</span>
+            <span>&gt;</span>
+            <span className="text-[#EC4899] font-medium">Laporan Keuangan</span>
+          </nav>
+          <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
+            Laporan Keuangan
           </h1>
-          <p className="text-xs text-[#71717A] mt-0.5">
-            Review profit, admin compensation, and payment summaries from one
-            workspace.
+          <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
+            Pantau laba bersih GO, kompensasi gaji admin, dan rekap pembayaran dalam satu tempat.
           </p>
         </div>
 
@@ -188,7 +237,7 @@ export const FinancialReportsPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={handleExportXLSX}
-            className="h-9 px-3 rounded-[10px] text-xs font-semibold border-[#FBCFE8] hover:bg-[#FFF5FA] hover:text-[#EC4899] shadow-2xs cursor-pointer"
+            className="h-10 sm:h-11 px-3.5 rounded-[12px] text-xs font-semibold border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] hover:text-[#EC4899] shadow-2xs cursor-pointer"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
             XLSX
@@ -199,7 +248,7 @@ export const FinancialReportsPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={handleExportPDF}
-            className="h-9 px-3 rounded-[10px] text-xs font-semibold border-[#FBCFE8] hover:bg-[#FFF5FA] hover:text-[#EC4899] shadow-2xs cursor-pointer"
+            className="h-10 sm:h-11 px-3.5 rounded-[12px] text-xs font-semibold border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] hover:text-[#EC4899] shadow-2xs cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5 mr-1.5 text-rose-600" />
             PDF

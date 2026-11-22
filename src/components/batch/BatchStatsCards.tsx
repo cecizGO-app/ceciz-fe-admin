@@ -15,7 +15,7 @@ export const BatchStatsCards: React.FC<BatchStatsCardsProps> = ({ stats }) => {
           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
           <span>Total Batch Aktif</span>
         </div>
-        <div className="text-[28px] sm:text-[32px] font-bold text-[#18181B] tracking-tight mt-1">
+        <div className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight mt-1">
           {stats.activeBatches}
         </div>
         <div className="text-xs text-[#71717A]">batch Open</div>
@@ -27,7 +27,7 @@ export const BatchStatsCards: React.FC<BatchStatsCardsProps> = ({ stats }) => {
           <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
           <span>Total PC Diproses</span>
         </div>
-        <div className="text-[28px] sm:text-[32px] font-bold text-[#18181B] tracking-tight mt-1">
+        <div className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight mt-1">
           {stats.totalPc}
         </div>
         <div className="text-xs text-[#71717A]">PC berjalan</div>
@@ -39,7 +39,7 @@ export const BatchStatsCards: React.FC<BatchStatsCardsProps> = ({ stats }) => {
           <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
           <span>Menunggu Kalkulasi Laba</span>
         </div>
-        <div className="text-[28px] sm:text-[32px] font-bold text-[#18181B] tracking-tight mt-1">
+        <div className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight mt-1">
           {stats.waitingCalculation}
         </div>
         <div className="text-xs text-[#71717A]">sudah Arrive ID, laba belum diinput</div>
@@ -51,7 +51,7 @@ export const BatchStatsCards: React.FC<BatchStatsCardsProps> = ({ stats }) => {
           <span className="w-2 h-2 rounded-full bg-zinc-400 shrink-0" />
           <span>Batch Diarsipkan</span>
         </div>
-        <div className="text-[28px] sm:text-[32px] font-bold text-[#18181B] tracking-tight mt-1">
+        <div className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight mt-1">
           {stats.archivedBatches}
         </div>
         <div className="text-xs text-[#71717A]">batch Done / Archived</div>

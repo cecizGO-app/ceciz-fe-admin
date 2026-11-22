@@ -12,7 +12,10 @@ import {
   Settings,
   ShieldCheck,
   ShieldAlert,
+  UserCheck,
+  FileText,
 } from "lucide-react";
+import { rolesService } from "@/services/roles.service";
 
 interface SidebarProps {
   activeMenu?: string;
@@ -56,9 +59,19 @@ const MENU_SECTIONS: MenuSection[] = [
         icon: Calculator,
       },
       {
+        id: "buyer-approvals",
+        label: "Persetujuan Akun Buyer",
+        icon: UserCheck,
+      },
+      {
         id: "verifikasi",
         label: "Verifikasi Pembayaran",
         icon: ClipboardCheck,
+      },
+      {
+        id: "invoices",
+        label: "Invoice Admin",
+        icon: FileText,
       },
       {
         id: "tracking",
@@ -117,15 +130,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userRole = "owner",
   badges,
 }) => {
-  // Filter bagian menu yang boleh diakses berdasarkan role
+  // Filter bagian menu yang boleh diakses berdasarkan role & matriks Roles & Permissions
+  const staffPerms =
+    userRole === "staff" ? rolesService.getPermissions("Operations Staff") : [];
+  const staffModuleMap: Record<string, string> = {
+    batch: "batch",
+    "buyer-approvals": "approval",
+    verifikasi: "verification",
+    tracking: "tracking",
+    tax: "tax",
+    "po-album": "po_co",
+    cashflow: "cashflow",
+  };
+
   const visibleSections = MENU_SECTIONS.filter((section) =>
     section.roles.includes(userRole),
   ).map((section) => {
-    // Khusus Staff: Sembunyikan Cashflow dari OPERATIONS sesuai screenshot referensi Staff
     if (userRole === "staff" && section.title === "OPERATIONS") {
       return {
         ...section,
-        items: section.items.filter((item) => item.id !== "cashflow"),
+        items: section.items.filter((item) => {
+          // Owner-only mutlak: Cashflow & Invoice Admin
+          if (item.id === "cashflow" || item.id === "invoices") return false;
+          const permKey = staffModuleMap[item.id];
+          if (!permKey) return true;
+          const row = staffPerms.find((p) => p.moduleId === permKey);
+          return row ? row.view && !row.isOwnerOnly : true;
+        }),
       };
     }
     return section;

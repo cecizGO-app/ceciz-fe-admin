@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { MoreHorizontal, UserCheck, UserX, Trash2 } from "lucide-react";
+import { TablePagination } from "@/components/verification/TablePagination";
 import {
   Card,
   CardHeader,
@@ -32,12 +33,24 @@ interface StaffAccountsCardProps {
   onDeleteUser: (id: string) => void;
 }
 
+const STAFF_PAGE_SIZE = 10;
+
 export const StaffAccountsCard: React.FC<StaffAccountsCardProps> = ({
   users,
   onEditUser,
   onToggleStatus,
   onDeleteUser,
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(users.length / STAFF_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = users.length === 0 ? 0 : (safePage - 1) * STAFF_PAGE_SIZE + 1;
+  const endIndex = Math.min(safePage * STAFF_PAGE_SIZE, users.length);
+  const paginatedUsers = users.slice(
+    (safePage - 1) * STAFF_PAGE_SIZE,
+    safePage * STAFF_PAGE_SIZE,
+  );
+
   return (
     <Card className="rounded-[20px] border border-[#FBCFE8]/60 shadow-xs bg-white overflow-hidden">
       <CardHeader className="py-4 px-6 border-b border-[#FBCFE8]/30">
@@ -75,7 +88,7 @@ export const StaffAccountsCard: React.FC<StaffAccountsCardProps> = ({
           </TableHeader>
 
           <TableBody>
-            {users.map((user) => (
+            {paginatedUsers.map((user) => (
               <TableRow
                 key={user.id}
                 className="border-[#FBCFE8]/30 hover:bg-[#FFF5FA]/40 transition-colors"
@@ -173,6 +186,15 @@ export const StaffAccountsCard: React.FC<StaffAccountsCardProps> = ({
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalCount={users.length}
+          itemLabel="akun staff"
+          onPageChange={setCurrentPage}
+        />
       </CardContent>
     </Card>
   );

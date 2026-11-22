@@ -92,12 +92,12 @@ export const ProofReceiptModal: React.FC<ProofReceiptModalProps> = ({
             )}
             {item.status === "APPROVED" && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-                Disetujui
+                Approved
               </span>
             )}
             {item.status === "REJECTED" && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700">
-                Ditolak
+                Rejected
               </span>
             )}
           </div>

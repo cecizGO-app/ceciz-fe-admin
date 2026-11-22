@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AlertTriangle,
   ChevronRight,
@@ -12,7 +12,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { type TaxInvoiceItem, formatReadableDateTime } from "@/types/tax";
+import { getTaxPreviewApi } from "@/services/tax.service";
 
 interface ReleaseItemPreview {
   buyerName: string;
@@ -107,6 +110,7 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
   onSuccessRelease,
 }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [previewItems, setPreviewItems] = useState<ReleaseItemPreview[]>(mockUnbilledItems);
 
   // Step 2 Configuration state
   const [releaseName, setReleaseName] = useState("TAGIHAN TAX 24");
@@ -114,8 +118,25 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
   const [deadlineDateTime, setDeadlineDateTime] = useState("2026-09-25T23:59");
   const [buyerNotes, setBuyerNotes] = useState("");
 
-  const totalBuyers = 18;
-  const totalNominal = 3840000;
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    getTaxPreviewApi()
+      .then((liveItems) => {
+        if (active && liveItems.length > 0) {
+          setPreviewItems(liveItems);
+        }
+      })
+      .catch(() => {
+        // Fallback ke mockUnbilledItems jika offline
+      });
+    return () => {
+      active = false;
+    };
+  }, [open]);
+
+  const totalBuyers = new Set(previewItems.map((i) => i.buyerHandle || i.buyerName)).size || 1;
+  const totalNominal = previewItems.reduce((sum, i) => sum + i.subtotal, 0);
   const maxCheckoutDate = "24 Nov 2026";
 
   const handleNextStep = () => {
@@ -301,7 +322,7 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#FCE7F3]/60">
-                    {mockUnbilledItems.map((item, idx) => (
+                    {previewItems.map((item, idx) => (
                       <tr key={idx} className="hover:bg-[#FFF5FA]/25 transition-colors">
                         <td className="py-3 px-3.5 font-semibold text-[#18181B]">
                           {item.buyerName}
@@ -368,13 +389,13 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
                 <label className="text-xs font-semibold text-[#18181B] block mb-1.5">
                   Nama rilis tagihan
                 </label>
-                <input
+                <Input
                   type="text"
                   value={releaseName}
                   onChange={(e) => setReleaseName(e.target.value)}
                   placeholder="TAGIHAN TAX 24"
                   required
-                  className="w-full h-10 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold tracking-wider text-[#18181B] outline-none focus:border-[#EC4899] focus:ring-4 focus:ring-[#EC4899]/20 font-mono"
+                  className="h-10 rounded-[12px] border-[#FBCFE8] bg-white text-xs font-semibold tracking-wider text-[#18181B] font-mono"
                 />
               </div>
 
@@ -382,13 +403,13 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
                 <label className="text-xs font-semibold text-[#18181B] block mb-1.5">
                   Periode
                 </label>
-                <input
+                <Input
                   type="text"
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
                   placeholder="September 2026"
                   required
-                  className="w-full h-10 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] outline-none focus:border-[#EC4899] focus:ring-4 focus:ring-[#EC4899]/20"
+                  className="h-10 rounded-[12px] border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B]"
                 />
               </div>
             </div>
@@ -402,12 +423,12 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
                 </span>
               </label>
               <div className="relative">
-                <input
+                <Input
                   type="datetime-local"
                   value={deadlineDateTime}
                   onChange={(e) => setDeadlineDateTime(e.target.value)}
                   required
-                  className="w-full h-10 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-semibold text-[#18181B] outline-none focus:border-[#EC4899] focus:ring-4 focus:ring-[#EC4899]/20"
+                  className="h-10 rounded-[12px] border-[#FBCFE8] bg-white text-xs font-semibold text-[#18181B]"
                 />
               </div>
               <p className="text-[11px] text-[#71717A] mt-1">
@@ -429,12 +450,12 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
               <label className="text-xs font-semibold text-[#18181B] block mb-1.5">
                 Catatan tambahan untuk buyer (opsional)
               </label>
-              <textarea
+              <Textarea
                 rows={3}
                 value={buyerNotes}
                 onChange={(e) => setBuyerNotes(e.target.value)}
                 placeholder="Contoh: Mohon cantumkan nomor invoice di berita transfer."
-                className="w-full p-3.5 rounded-[12px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] outline-none focus:border-[#EC4899] focus:ring-4 focus:ring-[#EC4899]/20 resize-none"
+                className="rounded-[12px] border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] resize-none"
               />
             </div>
 

@@ -28,7 +28,7 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
       )}
     >
       <CardHeader className="p-0 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm sm:text-base font-bold text-[#18181B]">
+        <CardTitle className="text-[17px] font-bold text-[#18181B] tracking-tight">
           Review Pembayaran Hari Ini
         </CardTitle>
         <span className="text-[11px] font-medium text-[#71717A]">
@@ -47,12 +47,12 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
           <div
             className="h-full bg-emerald-500 transition-all duration-500"
             style={{ width: `${approvedPct}%` }}
-            title={`Disetujui: ${stats.approved}`}
+            title={`Approved: ${stats.approved}`}
           />
           <div
             className="h-full bg-rose-500 transition-all duration-500"
             style={{ width: `${rejectedPct}%` }}
-            title={`Ditolak: ${stats.rejected}`}
+            title={`Rejected: ${stats.rejected}`}
           />
         </div>
 
@@ -74,7 +74,7 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
               {stats.approved}
             </span>
             <span className="block text-[11px] font-medium text-emerald-700/80 leading-tight mt-0.5">
-              Disetujui
+              Approved
             </span>
           </div>
 
@@ -84,7 +84,7 @@ export const PaymentReviewCard: React.FC<PaymentReviewCardProps> = ({
               {stats.rejected}
             </span>
             <span className="block text-[11px] font-medium text-rose-700/80 leading-tight mt-0.5">
-              Ditolak
+              Rejected
             </span>
           </div>
         </div>

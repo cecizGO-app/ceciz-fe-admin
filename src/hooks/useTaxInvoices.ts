@@ -1,5 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { initialTaxStats, initialTaxInvoices } from "@/mocks/mockTaxData";
+import {
+  getTaxStatsApi,
+  getTaxInvoicesApi,
+  verifyTaxPaymentApi,
+  releaseTaxApi,
+  type BackendTaxInvoiceWithMeta,
+} from "@/services/tax.service";
 import type {
   TaxInvoiceItem,
   TaxStats,
@@ -10,8 +17,27 @@ import type {
 export const TAX_PAGE_SIZE = 6;
 
 export function useTaxInvoices() {
-  const [invoices, setInvoices] = useState<TaxInvoiceItem[]>(initialTaxInvoices);
+  const [invoices, setInvoices] = useState<BackendTaxInvoiceWithMeta[]>(initialTaxInvoices);
   const [stats, setStats] = useState<TaxStats>(initialTaxStats);
+
+  // Sinkronkan data Tagihan Tax live dari backend saat pertama dimuat
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([getTaxStatsApi(), getTaxInvoicesApi()]).then(
+      ([statsRes, invoicesRes]) => {
+        if (!active) return;
+        if (statsRes.status === "fulfilled") {
+          setStats(statsRes.value);
+        }
+        if (invoicesRes.status === "fulfilled" && invoicesRes.value.length > 0) {
+          setInvoices(invoicesRes.value);
+        }
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -208,6 +234,13 @@ export function useTaxInvoices() {
   };
 
   const handleApprove = (target: TaxInvoiceItem) => {
+    const metaTarget = target as BackendTaxInvoiceWithMeta;
+    if (metaTarget.backendPaymentId) {
+      verifyTaxPaymentApi(metaTarget.backendPaymentId, {
+        status: "APPROVED",
+      }).catch(() => {});
+    }
+
     setInvoices((prev) =>
       prev.map((i) =>
         i.id === target.id
@@ -253,6 +286,14 @@ export function useTaxInvoices() {
 
   const handleConfirmReject = (reason: string) => {
     if (!rejectItem) return;
+
+    const metaTarget = rejectItem as BackendTaxInvoiceWithMeta;
+    if (metaTarget.backendPaymentId) {
+      verifyTaxPaymentApi(metaTarget.backendPaymentId, {
+        status: "REJECTED",
+        rejectReason: reason,
+      }).catch(() => {});
+    }
 
     setInvoices((prev) =>
       prev.map((i) =>
@@ -335,6 +376,12 @@ export function useTaxInvoices() {
     newInvoices: TaxInvoiceItem[],
     periodName: string,
   ) => {
+    releaseTaxApi({
+      releaseName: periodName,
+      releasePeriod: newInvoices[0]?.periodMonth || periodName,
+      deadlinePayment: newInvoices[0]?.rawDeadline,
+    }).catch(() => {});
+
     setInvoices((prev) => [...newInvoices, ...prev]);
     setStats((prev) => ({
       ...prev,

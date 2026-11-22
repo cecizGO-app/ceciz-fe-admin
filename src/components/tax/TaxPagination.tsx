@@ -1,4 +1,5 @@
 import React from "react";
+import { TablePagination } from "@/components/verification/TablePagination";
 
 interface TaxPaginationProps {
   currentPage: number;
@@ -19,50 +20,14 @@ export const TaxPagination: React.FC<TaxPaginationProps> = ({
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3">
-      {/* Left items count */}
-      <span className="text-xs text-[#71717A] font-medium">
-        Menampilkan {startItem}&ndash;{endItem} dari {totalItems} invoice tax
-      </span>
-
-      {/* Right pagination controls */}
-      <div className="flex items-center gap-1.5 self-end sm:self-auto">
-        <button
-          type="button"
-          disabled={currentPage <= 1}
-          onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-1.5 rounded-[10px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#71717A] hover:text-[#18181B] hover:bg-[#FFF5FA] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-        >
-          Sebelumnya
-        </button>
-
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-          const isActive = pageNum === currentPage;
-          return (
-            <button
-              key={pageNum}
-              type="button"
-              onClick={() => onPageChange(pageNum)}
-              className={`w-8 h-8 rounded-[10px] text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                isActive
-                  ? "bg-[#EC4899] text-white shadow-xs"
-                  : "bg-white border border-[#FBCFE8] text-[#71717A] hover:bg-[#FFF5FA] hover:text-[#18181B]"
-              }`}
-            >
-              {pageNum}
-            </button>
-          );
-        })}
-
-        <button
-          type="button"
-          disabled={currentPage >= totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1.5 rounded-[10px] border border-[#FBCFE8] bg-white text-xs font-medium text-[#18181B] hover:bg-[#FFF5FA] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-        >
-          Selanjutnya
-        </button>
-      </div>
-    </div>
+    <TablePagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      startIndex={startItem}
+      endIndex={endItem}
+      totalCount={totalItems}
+      itemLabel="invoice tax"
+      onPageChange={onPageChange}
+    />
   );
 };

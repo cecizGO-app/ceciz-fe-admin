@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { TablePagination } from "@/components/verification/TablePagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,6 +141,8 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
   // Inner Table Filter State
   const [innerSearchQuery, setInnerSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const SALARY_PAGE_SIZE = 10;
 
   // Modal State: Tambah / Edit Periode
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -326,15 +329,15 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
             type="text"
             value={searchAdminQuery}
             onChange={(e) => setSearchAdminQuery(e.target.value)}
-            placeholder="Search admin..."
-            className="pl-9 h-10 text-xs rounded-[12px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white placeholder-[#71717A]"
+            placeholder="Cari nama admin..."
+            className="pl-9 h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 focus-visible:border-[#EC4899] bg-white placeholder-[#71717A]"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="w-full sm:w-44">
             <Select value={adminFilter} onValueChange={setAdminFilter}>
-              <SelectTrigger className="h-10 text-xs rounded-[12px] border-[#FBCFE8]/80 bg-white">
+              <SelectTrigger className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 bg-white">
                 <SelectValue placeholder="Semua Admin" />
               </SelectTrigger>
               <SelectContent>
@@ -348,7 +351,7 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
 
           <div className="w-full sm:w-44">
             <Select value={periodFilter} onValueChange={setPeriodFilter}>
-              <SelectTrigger className="h-10 text-xs rounded-[12px] border-[#FBCFE8]/80 bg-white">
+              <SelectTrigger className="h-10 text-xs rounded-[10px] border-[#FBCFE8]/80 bg-white">
                 <SelectValue placeholder="Semua Periode" />
               </SelectTrigger>
               <SelectContent>
@@ -497,7 +500,12 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPeriods.map((item) => (
+                filteredPeriods
+                  .slice(
+                    (Math.min(currentPage, Math.max(1, Math.ceil(filteredPeriods.length / SALARY_PAGE_SIZE))) - 1) * SALARY_PAGE_SIZE,
+                    Math.min(currentPage, Math.max(1, Math.ceil(filteredPeriods.length / SALARY_PAGE_SIZE))) * SALARY_PAGE_SIZE,
+                  )
+                  .map((item) => (
                   <TableRow
                     key={item.id}
                     className="border-[#FBCFE8]/30 hover:bg-[#FFF5FA]/40 transition-colors"
@@ -562,6 +570,22 @@ export const AdminSalaryTab: React.FC<AdminSalaryTabProps> = ({
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            currentPage={Math.min(currentPage, Math.max(1, Math.ceil(filteredPeriods.length / SALARY_PAGE_SIZE)))}
+            totalPages={Math.max(1, Math.ceil(filteredPeriods.length / SALARY_PAGE_SIZE))}
+            startIndex={
+              filteredPeriods.length === 0
+                ? 0
+                : (Math.min(currentPage, Math.max(1, Math.ceil(filteredPeriods.length / SALARY_PAGE_SIZE))) - 1) * SALARY_PAGE_SIZE + 1
+            }
+            endIndex={Math.min(
+              Math.min(currentPage, Math.max(1, Math.ceil(filteredPeriods.length / SALARY_PAGE_SIZE))) * SALARY_PAGE_SIZE,
+              filteredPeriods.length,
+            )}
+            totalCount={filteredPeriods.length}
+            itemLabel="periode fee admin"
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
 

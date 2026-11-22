@@ -48,7 +48,7 @@ export const FinancialFilterBar: React.FC<FinancialFilterBarProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search records..."
+          placeholder="Cari catatan atau batch..."
           className="pl-9 h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899] bg-[#FFF5FA]/20"
         />
       </div>

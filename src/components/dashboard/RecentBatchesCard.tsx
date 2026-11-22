@@ -10,6 +10,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { CountryFlag } from "@/components/icons/CountryFlag";
 import { cn } from "@/lib/utils";
 import type { RecentBatch } from "@/types/dashboard";
 
@@ -34,7 +35,7 @@ export const RecentBatchesCard: React.FC<RecentBatchesCardProps> = ({
       )}
     >
       <CardHeader className="p-0 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm sm:text-base font-bold text-[#18181B]">
+        <CardTitle className="text-[17px] font-bold text-[#18181B] tracking-tight">
           Batch Terbaru
         </CardTitle>
         <button
@@ -94,18 +95,14 @@ export const RecentBatchesCard: React.FC<RecentBatchesCardProps> = ({
                       {batch.batchNumber}
                     </TableCell>
 
-                    {/* Negara Badge */}
+                    {/* Negara Pill */}
                     <TableCell className="px-2.5 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="secondary"
-                          className="px-1.5 py-0 h-5 text-[10px] font-bold rounded bg-[#FFF5FA] text-[#EC4899] border-[#FCE7F3]"
-                        >
-                          {batch.countryCode}
-                        </Badge>
-                        <span className="text-xs text-[#71717A]">
-                          {batch.countryName}
-                        </span>
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[8px] bg-white border border-[#FBCFE8] text-xs font-semibold text-[#18181B] shadow-2xs">
+                        <CountryFlag
+                          code={batch.countryCode}
+                          className="w-4 h-3 rounded-[2px]"
+                        />
+                        <span>{batch.countryCode}</span>
                       </div>
                     </TableCell>
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,12 @@ export const RolesPermissionsPage: React.FC = () => {
   const [users, setUsers] = useState<StaffUser[]>(() =>
     rolesService.getStaffUsers(),
   );
+
+  useEffect(() => {
+    rolesService.fetchStaffUsersApi().then((loaded) => {
+      setUsers(loaded);
+    });
+  }, []);
   const [matrixRole, setMatrixRole] = useState<
     "Operations Staff" | "Finance Staff"
   >("Operations Staff");
@@ -98,7 +104,7 @@ export const RolesPermissionsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 pb-16">
+    <div className="space-y-6 pb-12">
       {/* Toast Notifikasi Ringkas */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[#18181B] text-white px-4 py-2.5 rounded-[12px] shadow-lg text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 duration-150">
@@ -110,11 +116,16 @@ export const RolesPermissionsPage: React.FC = () => {
       {/* Header Halaman Sesuai Screenshot */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
-            Roles & Permissions
+          <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-1">
+            <span className="text-[#71717A]">Sistem</span>
+            <span>&gt;</span>
+            <span className="text-[#EC4899] font-medium">Roles &amp; Permissions</span>
+          </nav>
+          <h1 className="text-[24px] sm:text-[30px] font-bold text-[#18181B] tracking-tight">
+            Roles &amp; Permissions
           </h1>
-          <p className="text-xs text-[#71717A] mt-0.5">
-            Manage internal staff access without exposing owner-only modules.
+          <p className="text-xs sm:text-[14px] text-[#71717A] mt-1 leading-relaxed">
+            Kelola akun staff internal dan atur hak akses modul tanpa membuka data khusus owner.
           </p>
         </div>
 
@@ -122,7 +133,7 @@ export const RolesPermissionsPage: React.FC = () => {
           type="button"
           onClick={() => setIsAddModalOpen(true)}
           size="sm"
-          className="h-9 px-4 rounded-[10px] bg-[#EC4899] hover:bg-[#DB2777] text-white font-semibold text-xs shadow-xs cursor-pointer self-start sm:self-auto"
+          className="h-10 sm:h-11 px-4 sm:px-5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white font-semibold text-xs sm:text-sm shadow-xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-3.5 h-3.5 mr-1.5" />
           Add Staff

@@ -63,8 +63,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right Controls: Role Switcher & Notification & User Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Quick Role Switcher Pill */}
-        {onChangeRole && (
+        {/* Quick Role Switcher Pill (Dev Mode Only — hidden in production) */}
+        {import.meta.env.DEV && onChangeRole && (
           <div className="flex items-center p-0.5 bg-[#FFF5FA] border border-[#FBCFE8] rounded-full text-xs shadow-2xs">
             <Button
               type="button"

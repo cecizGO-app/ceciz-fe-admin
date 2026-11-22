@@ -61,7 +61,7 @@ export const RejectReasonModal: React.FC<RejectReasonModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md p-6 rounded-[22px] border border-zinc-200/80 bg-white shadow-xl">
+      <DialogContent className="max-w-md p-6 rounded-[24px] border border-zinc-200/80 bg-white shadow-xl">
         <div>
           <DialogTitle className="text-base font-bold text-[#18181B] flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-rose-600" />

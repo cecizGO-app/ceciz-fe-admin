@@ -74,7 +74,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   return (
-    <div className="space-y-4.5 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Toast Notifikasi Ringkas */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[#18181B] text-white px-4 py-2.5 rounded-[12px] shadow-lg text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 duration-150">
@@ -95,8 +95,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             type="button"
             onClick={handleManualSync}
             disabled={isSyncing}
-            title="Sinkronkan data dengan backend Vercel"
-            className="h-8 px-2.5 rounded-[10px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#71717A] hover:text-[#EC4899] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-60"
+            title="Muat ulang data dari server backend"
+            className="h-10 sm:h-11 px-3.5 rounded-[12px] border border-[#FBCFE8] bg-white hover:bg-[#FFF5FA] text-[#71717A] hover:text-[#EC4899] text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-60"
           >
             <RefreshCw
               className={cn(
@@ -104,9 +104,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 isSyncing && "animate-spin",
               )}
             />
-            <span className="text-[11px]">
-              {isSyncing ? "Sinkron..." : "Sinkronkan"}
-            </span>
+            <span>Refresh</span>
           </button>
         </div>
       </div>

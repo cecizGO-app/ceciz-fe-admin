@@ -39,7 +39,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
           </Badge>
         </div>
         <div className="mt-3 flex items-baseline">
-          <span className="text-3xl font-bold text-[#16A34A]">
+          <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
             {stats.activeBatches}
           </span>
           <span className="text-xs font-medium text-[#71717A] ml-2">
@@ -69,7 +69,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
           </Badge>
         </div>
         <div className="mt-3 flex items-baseline">
-          <span className="text-3xl font-bold text-[#D97706]">
+          <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
             {stats.pendingVerifications}
           </span>
           <span className="text-xs font-medium text-[#71717A] ml-2">
@@ -94,7 +94,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
           <Truck className="w-4 h-4 text-[#71717A] shrink-0" />
         </div>
         <div className="mt-3 flex items-baseline">
-          <span className="text-3xl font-bold text-[#18181B]">
+          <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
             {stats.activeTrackingPackages}
           </span>
           <span className="text-xs font-medium text-[#71717A] ml-2">
@@ -120,7 +120,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
           </span>
         </div>
         <div className="mt-3 flex items-baseline">
-          <span className="text-2xl font-bold text-[#EC4899]">
+          <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
             {stats.pendingTaxAmount}
           </span>
         </div>

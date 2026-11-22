@@ -18,7 +18,7 @@ export const PoAlbumStatsCards: React.FC<PoAlbumStatsCardsProps> = ({
       {/* Card 1: Total Order Album */}
       <Card
         size="sm"
-        className="p-5 sm:p-6 gap-2 rounded-panel bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
+        className="p-5 sm:p-6 gap-2 rounded-[20px] bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
       >
         <div className="flex items-center gap-2 text-xs font-medium text-ink-2">
           <span className="w-2 h-2 rounded-full bg-info shrink-0" />
@@ -38,7 +38,7 @@ export const PoAlbumStatsCards: React.FC<PoAlbumStatsCardsProps> = ({
       {/* Card 2: Menunggu Pelunasan FP */}
       <Card
         size="sm"
-        className="p-5 sm:p-6 gap-2 rounded-panel bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
+        className="p-5 sm:p-6 gap-2 rounded-[20px] bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
       >
         <div className="flex items-center gap-2 text-xs font-medium text-ink-2">
           <span className="w-2 h-2 rounded-full bg-warning shrink-0" />
@@ -58,7 +58,7 @@ export const PoAlbumStatsCards: React.FC<PoAlbumStatsCardsProps> = ({
       {/* Card 3: Checkout Web Open */}
       <Card
         size="sm"
-        className="p-5 sm:p-6 gap-2 rounded-panel bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
+        className="p-5 sm:p-6 gap-2 rounded-[20px] bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
       >
         <div className="flex items-center gap-2 text-xs font-medium text-ink-2">
           <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
@@ -78,7 +78,7 @@ export const PoAlbumStatsCards: React.FC<PoAlbumStatsCardsProps> = ({
       {/* Card 4: Total Terkumpul (DP+FP) */}
       <Card
         size="sm"
-        className="p-5 sm:p-6 gap-2 rounded-panel bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
+        className="p-5 sm:p-6 gap-2 rounded-[20px] bg-surface border border-border/60 shadow-card hover:shadow-hover transition-all"
       >
         <div className="flex items-center gap-2 text-xs font-medium text-ink-2">
           <span className="w-2 h-2 rounded-full bg-success shrink-0" />

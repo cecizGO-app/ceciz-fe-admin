@@ -250,8 +250,8 @@ export const CashflowPage: React.FC = () => {
       {/* KPI Stats Cards Grid (Aligned identically with other pages) */}
       <CashflowStatsCards stats={stats} loading={loading} />
 
-      {/* Main Content: Filter Bar & Table Panel */}
-      <Card className="p-0 gap-0 rounded-[24px] bg-white border border-[#FBCFE8]/40 shadow-card overflow-hidden">
+      {/* Main Content: Unified Card (Filter Bar & Table Panel) */}
+      <Card className="p-5 sm:p-6 rounded-[24px] border border-[#FBCFE8]/50 bg-white shadow-2xs space-y-5">
         {/* Filter Bar */}
         <CashflowFilterBar
           filters={filters}
@@ -261,14 +261,14 @@ export const CashflowPage: React.FC = () => {
 
         {/* Info filter aktif jika ada */}
         {activeFilterCount > 0 && (
-          <div className="px-4 py-2 bg-[#FFF5FA]/40 border-b border-[#FBCFE8]/30 flex items-center justify-between text-xs text-[#71717A]">
+          <div className="px-4 py-2.5 rounded-[12px] bg-[#FFF5FA]/60 border border-[#FCE7F3] flex items-center justify-between text-xs text-[#71717A]">
             <span>
               Menyaring dengan <strong>{activeFilterCount}</strong> parameter aktif
             </span>
             <button
               type="button"
               onClick={handleResetFilters}
-              className="text-[#EC4899] font-medium hover:underline cursor-pointer"
+              className="text-[#EC4899] font-semibold hover:underline cursor-pointer"
             >
               Hapus semua filter
             </button>

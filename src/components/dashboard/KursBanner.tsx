@@ -17,7 +17,7 @@ export const KursBanner: React.FC<KursBannerProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Sisi Kiri: Judul & Timestamp Sesuai PRD §5 */}
         <div className="shrink-0">
-          <h2 className="text-sm font-bold text-[#18181B]">Kurs Hari Ini</h2>
+          <h2 className="text-[17px] font-bold text-[#18181B] tracking-tight">Kurs Hari Ini</h2>
           <p className="text-[11px] text-[#71717A] mt-0.5">
             Dicek {rates.checkedTime}
           </p>

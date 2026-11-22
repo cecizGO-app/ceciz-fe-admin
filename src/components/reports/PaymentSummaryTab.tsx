@@ -19,7 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatRupiah } from "./formatters";
+import { TablePagination } from "@/components/verification/TablePagination";
 import type { PaymentMethodSummary } from "@/types/reports";
+
+const SUMMARY_PAGE_SIZE = 10;
 
 interface PaymentSummaryTabProps {
   methodSummaries: PaymentMethodSummary[];
@@ -30,6 +33,7 @@ export const PaymentSummaryTab: React.FC<PaymentSummaryTabProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [periodFilter, setPeriodFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredSummaries = useMemo(() => {
     return methodSummaries.filter((m) => {
@@ -39,6 +43,15 @@ export const PaymentSummaryTab: React.FC<PaymentSummaryTabProps> = ({
       return matchSearch;
     });
   }, [methodSummaries, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSummaries.length / SUMMARY_PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = filteredSummaries.length === 0 ? 0 : (safePage - 1) * SUMMARY_PAGE_SIZE + 1;
+  const endIndex = Math.min(safePage * SUMMARY_PAGE_SIZE, filteredSummaries.length);
+  const paginatedSummaries = filteredSummaries.slice(
+    (safePage - 1) * SUMMARY_PAGE_SIZE,
+    safePage * SUMMARY_PAGE_SIZE,
+  );
 
   const totalPaymentsCount = filteredSummaries.reduce(
     (sum, m) => sum + m.paymentCount,
@@ -60,7 +73,7 @@ export const PaymentSummaryTab: React.FC<PaymentSummaryTabProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search records..."
+            placeholder="Cari metode pembayaran..."
             className="pl-9 h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899] bg-[#FFF5FA]/20"
           />
         </div>
@@ -115,7 +128,7 @@ export const PaymentSummaryTab: React.FC<PaymentSummaryTabProps> = ({
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredSummaries.map((row) => (
+                paginatedSummaries.map((row) => (
                   <TableRow
                     key={row.id}
                     className="border-[#FBCFE8]/30 hover:bg-[#FFF5FA]/40 transition-colors"
@@ -160,6 +173,15 @@ export const PaymentSummaryTab: React.FC<PaymentSummaryTabProps> = ({
               </TableFooter>
             )}
           </Table>
+          <TablePagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalCount={filteredSummaries.length}
+            itemLabel="metode pembayaran"
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
     </div>

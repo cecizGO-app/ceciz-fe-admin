@@ -60,7 +60,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[460px] p-6 rounded-[20px] border-[#FBCFE8]">
+      <DialogContent className="sm:max-w-[460px] p-6 rounded-[24px] border-[#FBCFE8]">
         <DialogHeader className="pb-3 border-b border-[#FBCFE8]/30">
           <DialogTitle className="text-[18px] font-bold text-[#18181B]">
             Edit Staff: {user.name}

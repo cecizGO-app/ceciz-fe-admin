@@ -22,7 +22,7 @@ export const CountryDistributionCard: React.FC<CountryDistributionCardProps> = (
       )}
     >
       <CardHeader className="p-0 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm sm:text-base font-bold text-[#18181B]">
+        <CardTitle className="text-[17px] font-bold text-[#18181B] tracking-tight">
           Distribusi Batch per Negara
         </CardTitle>
         <span className="text-xs text-[#71717A]">{periodLabel}</span>

@@ -2,14 +2,40 @@ import { useState, useMemo, useEffect } from "react";
 import {
   getNextBatchNumberApi,
   getBatchFormOptionsApi,
+  getAdminUsersApi,
+  type BackendUserOption,
 } from "@/services/batch.service";
-import type { CountryCode, OrderRow } from "@/types/batch";
+import type { BuyerOption, CountryCode, OrderRow } from "@/types/batch";
 import { calculateBatchPreview } from "@/lib/calculations/batch-preview";
 import { COUNTRIES, REGISTERED_BUYERS } from "@/components/batch/constants";
+
+function mapBackendUsersToBuyerOptions(users: BackendUserOption[]): BuyerOption[] {
+  return users.map((u) => {
+    const displayName = u.dnLine?.trim() || u.name || u.email || u.id;
+    const handle = u.idLine?.trim()
+      ? `@${u.idLine.replace(/^@/, "")}`
+      : u.email || u.id;
+  return {
+      id: u.id,
+      name: displayName,
+      username: handle,
+      email: u.email,
+      dnLine: u.dnLine ?? undefined,
+      idLine: u.idLine ?? undefined,
+      lineGroup: u.lineGroup ?? undefined,
+    };
+  });
+}
 
 export function useBatchForm() {
   // Selected Country
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>("CH");
+
+  // Live Buyers & Admins from Backend API (fallback to REGISTERED_BUYERS only if offline)
+  const [buyers, setBuyers] = useState<BuyerOption[]>(REGISTERED_BUYERS);
+  const [isBuyersFromApi, setIsBuyersFromApi] = useState(false);
+  const [isLoadingBuyers, setIsLoadingBuyers] = useState(true);
+  const [admins, setAdmins] = useState<BackendUserOption[]>([]);
 
   // Form State (Manual Batch Number sesuai schema Backend)
   const [batchName, setBatchName] = useState("WTS Album Chenle Digipack Ver");
@@ -41,10 +67,15 @@ export function useBatchForm() {
     };
   }, [selectedCountry]);
 
-  // Ambil opsi form (kurs harian dari settings) saat pertama kali dimuat
+  // Ambil opsi form (kurs harian, daftar buyer & admin asli dari database) saat pertama kali dimuat
   useEffect(() => {
+    let isMounted = true;
+    setIsLoadingBuyers(true);
+
     getBatchFormOptionsApi()
-      .then((opts) => {
+      .then(async (opts) => {
+        if (!isMounted) return;
+
         if (opts?.settings?.dailyRate) {
           const dr = opts.settings.dailyRate;
           if (selectedCountry === "CH" && dr.yuan) {
@@ -57,10 +88,63 @@ export function useBatchForm() {
             setKursRate(Number(dr.yen));
           }
         }
+
+        if (opts?.admins && Array.isArray(opts.admins) && opts.admins.length > 0) {
+          setAdmins(opts.admins);
+          setAdminNyelem(opts.admins[0].id);
+        }
+
+        let rawBuyers: BackendUserOption[] = Array.isArray(opts?.buyers) ? opts.buyers : [];
+        if (rawBuyers.length === 0) {
+          try {
+            rawBuyers = await getAdminUsersApi({ role: "BUYER" });
+          } catch {
+            // Biarkan fallback jika endpoint users gagal
+          }
+        }
+
+        if (isMounted && rawBuyers.length > 0) {
+          const mapped = mapBackendUsersToBuyerOptions(rawBuyers);
+          setBuyers(mapped);
+          setIsBuyersFromApi(true);
+          // Sinkronkan row default agar tidak menggunakan ID dummy (b_01/b_02/b_03)
+          setOrderRows((prev) =>
+            prev.map((row, idx) => {
+              const existsInReal = mapped.some((b) => b.id === row.buyerId);
+              if (existsInReal) return row;
+              const replacement = mapped[idx % mapped.length];
+  return { ...row, buyerId: replacement.id };
+            }),
+          );
+        }
       })
-      .catch((err) => {
-        console.warn("Gagal memuat settings kurs dari backend:", err);
+      .catch(async (err) => {
+        console.warn("Gagal memuat form-options dari backend:", err);
+        try {
+          const fallbackUsers = await getAdminUsersApi({ role: "BUYER" });
+          if (isMounted && fallbackUsers.length > 0) {
+            const mapped = mapBackendUsersToBuyerOptions(fallbackUsers);
+            setBuyers(mapped);
+            setIsBuyersFromApi(true);
+            setOrderRows((prev) =>
+              prev.map((row, idx) => {
+                const existsInReal = mapped.some((b) => b.id === row.buyerId);
+                if (existsInReal) return row;
+  return { ...row, buyerId: mapped[idx % mapped.length].id };
+              }),
+            );
+          }
+        } catch {
+          // Gunakan REGISTERED_BUYERS sebagai fallback offline
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingBuyers(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Rates & Fees
@@ -109,6 +193,11 @@ export function useBatchForm() {
     return COUNTRIES.find((c) => c.code === selectedCountry) || COUNTRIES[0];
   }, [selectedCountry]);
 
+  const getBuyerIdAt = (index: number) => {
+    const list = buyers.length > 0 ? buyers : REGISTERED_BUYERS;
+    return list[index % list.length]?.id || "";
+  };
+
   // Switch Country Handler
   const handleCountryChange = (code: CountryCode) => {
     setSelectedCountry(code);
@@ -133,14 +222,14 @@ export function useBatchForm() {
       setOrderRows([
         {
           id: "kr_1",
-          buyerId: REGISTERED_BUYERS[0].id,
+          buyerId: getBuyerIdAt(0),
           itemName: "PC Jaemin Weverse POB",
           qty: 1,
           hargaAsli: 0.2, // 2.000 won
         },
         {
           id: "kr_2",
-          buyerId: REGISTERED_BUYERS[1].id,
+          buyerId: getBuyerIdAt(1),
           itemName: "PC Jeno Lucky Draw",
           qty: 1,
           hargaAsli: 0.5, // 5.000 won
@@ -160,14 +249,14 @@ export function useBatchForm() {
       setOrderRows([
         {
           id: "th_1",
-          buyerId: REGISTERED_BUYERS[0].id,
+          buyerId: getBuyerIdAt(0),
           itemName: "Photocard GeminiFourth Ver A",
           qty: 1,
           hargaAsli: 45,
         },
         {
           id: "th_2",
-          buyerId: REGISTERED_BUYERS[1].id,
+          buyerId: getBuyerIdAt(1),
           itemName: "Postcard Set",
           qty: 1,
           hargaAsli: 30,
@@ -189,14 +278,14 @@ export function useBatchForm() {
       setOrderRows([
         {
           id: "ch_1",
-          buyerId: REGISTERED_BUYERS[0].id,
+          buyerId: getBuyerIdAt(0),
           itemName: "Chenle Set A",
           qty: 1,
           hargaAsli: 85,
         },
         {
           id: "ch_2",
-          buyerId: REGISTERED_BUYERS[1].id,
+          buyerId: getBuyerIdAt(1),
           itemName: "Chenle Photobook",
           qty: 1,
           hargaAsli: 50,
@@ -218,7 +307,7 @@ export function useBatchForm() {
       setOrderRows([
         {
           id: "jp_1",
-          buyerId: REGISTERED_BUYERS[0].id,
+          buyerId: getBuyerIdAt(0),
           itemName: "PC Jaemin Bstage Special",
           qty: 1,
           hargaAsli: 2500,
@@ -226,7 +315,7 @@ export function useBatchForm() {
         },
         {
           id: "jp_2",
-          buyerId: REGISTERED_BUYERS[1].id,
+          buyerId: getBuyerIdAt(1),
           itemName: "Album Unsealed Ver A",
           qty: 1,
           hargaAsli: 1200,
@@ -247,14 +336,14 @@ export function useBatchForm() {
       setOrderRows([
         {
           id: "ina_1",
-          buyerId: REGISTERED_BUYERS[0].id,
+          buyerId: getBuyerIdAt(0),
           itemName: "PC Mark Glitch Mode",
           qty: 1,
           hargaAsli: 45000,
         },
         {
           id: "ina_2",
-          buyerId: REGISTERED_BUYERS[1].id,
+          buyerId: getBuyerIdAt(1),
           itemName: "PC Renjun Candy",
           qty: 1,
           hargaAsli: 50000,
@@ -270,7 +359,7 @@ export function useBatchForm() {
       ...prev,
       {
         id: newId,
-        buyerId: REGISTERED_BUYERS[0].id,
+        buyerId: getBuyerIdAt(prev.length),
         itemName: "",
         qty: 1, // Konstan 1 pc
         hargaAsli: 0,
@@ -292,10 +381,9 @@ export function useBatchForm() {
       const newRows: OrderRow[] = [];
       const baseTimestamp = Date.now();
       for (let i = 0; i < diff; i++) {
-        const buyerIdx = (prev.length + i) % REGISTERED_BUYERS.length;
         newRows.push({
           id: `${baseTimestamp}_${i}`,
-          buyerId: REGISTERED_BUYERS[buyerIdx]?.id || "b_01",
+          buyerId: getBuyerIdAt(prev.length + i),
           itemName: "",
           qty: 1,
           hargaAsli: 0,
@@ -345,6 +433,139 @@ export function useBatchForm() {
     hargaCOShopeeSeller,
   ]);
 
+  const loadFromBackendBatch = (batch: {
+    countryCode: CountryCode;
+    title: string;
+    batchNumber: number;
+    batchDate: string;
+    rateHarian?: number | string | null;
+    shippingFee?: number | string | null;
+    feeWh?: number | string | null;
+    feeProxy?: number | string | null;
+    feeNyelem?: number | string;
+    feeGo?: number | string;
+    proxyCoName?: string | null;
+    adminNyelemId?: string | null;
+    description?: string | null;
+    items?: Array<{
+      id: string;
+      buyerId: string;
+      description: string;
+      hargaAsli: number | string;
+      pcs: number;
+      feeNyelem?: number | string | null;
+      hargaPerBuyer?: number | string | null;
+      hargaJualPerBuyer?: number | string | null;
+    }>;
+  }) => {
+    setSelectedCountry(batch.countryCode);
+    setBatchName(batch.title || "");
+    setBatchNumber(Number(batch.batchNumber) || 1);
+    if (batch.batchDate) {
+      setBatchDate(String(batch.batchDate).split("T")[0]);
+    }
+    if (batch.rateHarian != null) {
+      setKursRate(Number(batch.rateHarian) || 0);
+      setRateSeller(Number(batch.rateHarian) || 0);
+    }
+    if (batch.shippingFee != null) setShippingWHForeign(Number(batch.shippingFee) || 0);
+    if (batch.feeWh != null) setFeeWarehouse(Number(batch.feeWh) || 0);
+    if (batch.feeProxy != null) setFeeProxy(Number(batch.feeProxy) || 0);
+    if (batch.feeNyelem != null) setFeeNyelem(Number(batch.feeNyelem) || 0);
+    if (batch.feeGo != null) setFeeGO(Number(batch.feeGo) || 0);
+    if (batch.proxyCoName) setJasaProxy(batch.proxyCoName);
+    if (batch.adminNyelemId) setAdminNyelem(batch.adminNyelemId);
+    if (batch.description != null) setCatatan(batch.description);
+    if (Array.isArray(batch.items) && batch.items.length > 0) {
+      setOrderRows(
+        batch.items.map((it) => ({
+          id: it.id,
+          buyerId: it.buyerId,
+          itemName: it.description,
+          qty: 1,
+          hargaAsli: Number(it.hargaAsli) || 0,
+          feeNyelem: it.feeNyelem != null ? Number(it.feeNyelem) : undefined,
+          hargaBersih: it.hargaPerBuyer != null ? Number(it.hargaPerBuyer) : undefined,
+          hargaJualPerBuyer:
+            it.hargaJualPerBuyer != null ? Number(it.hargaJualPerBuyer) : undefined,
+        })),
+      );
+    }
+  };
+
+  const saveDraftToLocal = () => {
+    const draft = {
+      selectedCountry,
+      batchName,
+      batchNumber,
+      batchDate,
+      kursRate,
+      rateSeller,
+      shippingWHForeign,
+      warehouseTujuan,
+      feeWarehouse,
+      jasaProxy,
+      feeProxy,
+      adminNyelem,
+      feeNyelem,
+      feeGO,
+      hargaCOShopeeSeller,
+      catatan,
+      orderRows,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem("ceciz_admin_batch_draft_v1", JSON.stringify(draft));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const hasSavedDraft = (() => {
+    try {
+      return Boolean(localStorage.getItem("ceciz_admin_batch_draft_v1"));
+    } catch {
+      return false;
+    }
+  })();
+
+  const restoreDraftFromLocal = () => {
+    try {
+      const raw = localStorage.getItem("ceciz_admin_batch_draft_v1");
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      if (d.selectedCountry) setSelectedCountry(d.selectedCountry);
+      if (d.batchName) setBatchName(d.batchName);
+      if (d.batchNumber) setBatchNumber(Number(d.batchNumber));
+      if (d.batchDate) setBatchDate(d.batchDate);
+      if (d.kursRate != null) setKursRate(Number(d.kursRate));
+      if (d.rateSeller != null) setRateSeller(Number(d.rateSeller));
+      if (d.shippingWHForeign != null) setShippingWHForeign(Number(d.shippingWHForeign));
+      if (d.warehouseTujuan) setWarehouseTujuan(d.warehouseTujuan);
+      if (d.feeWarehouse != null) setFeeWarehouse(Number(d.feeWarehouse));
+      if (d.jasaProxy) setJasaProxy(d.jasaProxy);
+      if (d.feeProxy != null) setFeeProxy(Number(d.feeProxy));
+      if (d.adminNyelem) setAdminNyelem(d.adminNyelem);
+      if (d.feeNyelem != null) setFeeNyelem(Number(d.feeNyelem));
+      if (d.feeGO != null) setFeeGO(Number(d.feeGO));
+      if (d.hargaCOShopeeSeller != null) setHargaCOShopeeSeller(Number(d.hargaCOShopeeSeller));
+      if (d.catatan != null) setCatatan(d.catatan);
+      if (Array.isArray(d.orderRows) && d.orderRows.length > 0) setOrderRows(d.orderRows);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const clearDraftFromLocal = () => {
+    try {
+      localStorage.removeItem("ceciz_admin_batch_draft_v1");
+    } catch {
+      // Ignore
+    }
+  };
+
   return {
     selectedCountry,
     handleCountryChange,
@@ -388,5 +609,14 @@ export function useBatchForm() {
     summary,
     overheadPerPc,
     computedRows,
+    buyers,
+    isBuyersFromApi,
+    isLoadingBuyers,
+    admins,
+    loadFromBackendBatch,
+    saveDraftToLocal,
+    hasSavedDraft,
+    restoreDraftFromLocal,
+    clearDraftFromLocal,
   };
 }

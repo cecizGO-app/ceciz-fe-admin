@@ -114,11 +114,11 @@ export const TaxTable: React.FC<TaxTableProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#FBCFE8]/60 shadow-xs overflow-hidden">
+    <div className="bg-white overflow-hidden">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-[#FCE7F3] bg-[#FFF5FA]/40 hover:bg-[#FFF5FA]/40">
+            <TableRow className="border-b border-[#FCE7F3] bg-[#FFF5FA]/60 hover:bg-[#FFF5FA]/60">
               {/* Kolom 1: Invoice & Buyer (Sortable) */}
               <TableHead
                 onClick={() => onToggleSort("buyer")}

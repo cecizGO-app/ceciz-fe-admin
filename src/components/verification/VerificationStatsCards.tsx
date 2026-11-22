@@ -24,7 +24,7 @@ export const VerificationStatsCards: React.FC<VerificationStatsCardsProps> = ({
           <span>Menunggu Verifikasi</span>
         </div>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-[28px] sm:text-[32px] font-bold text-[#18181B] tracking-tight">
+          <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
             {stats.waitingCount}
           </span>
           <span className="text-xs font-medium text-[#71717A]">
@@ -43,7 +43,7 @@ export const VerificationStatsCards: React.FC<VerificationStatsCardsProps> = ({
           <span>Disetujui Hari Ini</span>
         </div>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-[28px] sm:text-[32px] font-bold text-[#18181B] tracking-tight">
+          <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
             {stats.approvedTodayCount}
           </span>
           <span className="text-xs font-medium text-[#71717A]">
@@ -62,7 +62,7 @@ export const VerificationStatsCards: React.FC<VerificationStatsCardsProps> = ({
           <span>Ditolak Hari Ini</span>
         </div>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-[28px] sm:text-[32px] font-bold text-[#18181B] tracking-tight">
+          <span className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight">
             {stats.rejectedTodayCount}
           </span>
           <span className="text-xs font-medium text-[#71717A]">

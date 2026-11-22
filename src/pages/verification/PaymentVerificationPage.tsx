@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CheckCircle2, XCircle, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   VerificationStatsCards,
   VerificationFilterBar,
@@ -152,7 +153,7 @@ export const PaymentVerificationPage: React.FC = () => {
             <RefreshCw
               className={`w-3.5 h-3.5 text-[#EC4899] ${isSyncing ? "animate-spin" : ""}`}
             />
-            <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan"}</span>
+            <span>Refresh</span>
           </Button>
 
           <Button
@@ -169,55 +170,58 @@ export const PaymentVerificationPage: React.FC = () => {
       {/* Summary Cards */}
       <VerificationStatsCards stats={stats} />
 
-      {/* Filter Bar */}
-      <VerificationFilterBar
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        pendingCount={pendingCount}
-        approvedCount={approvedCount}
-        rejectedCount={rejectedCount}
-        searchQuery={searchQuery}
-        onSearchChange={(q) => {
-          setSearchQuery(q);
-          setCurrentPage(1);
-        }}
-        methodFilter={methodFilter}
-        onMethodFilterChange={(m) => {
-          setMethodFilter(m);
-          setCurrentPage(1);
-        }}
-        batchFilter={batchFilter}
-        onBatchFilterChange={(b) => {
-          setBatchFilter(b);
-          setCurrentPage(1);
-        }}
-        dateFilter={dateFilter}
-        onDateFilterChange={(d) => {
-          setDateFilter(d);
-          setCurrentPage(1);
-        }}
-        availableBatches={availableBatches}
-        selectedCount={selectedIds.length}
-        onBulkApprove={handleBulkApprove}
-        onBulkReject={handleOpenBulkReject}
-        onClearSelection={handleClearSelection}
-      />
+      {/* Main Content Card (mirrors BuyerApprovalPage) */}
+      <Card className="p-5 sm:p-6 rounded-[24px] border border-[#FBCFE8]/50 bg-white shadow-2xs space-y-5">
+        {/* Filter Bar */}
+        <VerificationFilterBar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          pendingCount={pendingCount}
+          approvedCount={approvedCount}
+          rejectedCount={rejectedCount}
+          searchQuery={searchQuery}
+          onSearchChange={(q) => {
+            setSearchQuery(q);
+            setCurrentPage(1);
+          }}
+          methodFilter={methodFilter}
+          onMethodFilterChange={(m) => {
+            setMethodFilter(m);
+            setCurrentPage(1);
+          }}
+          batchFilter={batchFilter}
+          onBatchFilterChange={(b) => {
+            setBatchFilter(b);
+            setCurrentPage(1);
+          }}
+          dateFilter={dateFilter}
+          onDateFilterChange={(d) => {
+            setDateFilter(d);
+            setCurrentPage(1);
+          }}
+          availableBatches={availableBatches}
+          selectedCount={selectedIds.length}
+          onBulkApprove={handleBulkApprove}
+          onBulkReject={handleOpenBulkReject}
+          onClearSelection={handleClearSelection}
+        />
 
-      {/* Verification Table */}
-      <VerificationTable
-        items={paginatedItems}
-        selectedIds={selectedIds}
-        onToggleSelectRow={handleToggleSelectRow}
-        onToggleSelectAll={handleToggleSelectAll}
-        onViewProof={handleViewProof}
-        onApproveSingle={handleApproveSingle}
-        onRejectSingle={handleOpenSingleReject}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(p) => setCurrentPage(p)}
-        totalFilteredCount={filteredItems.length}
-        pageSize={PAGE_SIZE}
-      />
+        {/* Verification Table */}
+        <VerificationTable
+          items={paginatedItems}
+          selectedIds={selectedIds}
+          onToggleSelectRow={handleToggleSelectRow}
+          onToggleSelectAll={handleToggleSelectAll}
+          onViewProof={handleViewProof}
+          onApproveSingle={handleApproveSingle}
+          onRejectSingle={handleOpenSingleReject}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(p) => setCurrentPage(p)}
+          totalFilteredCount={filteredItems.length}
+          pageSize={PAGE_SIZE}
+        />
+      </Card>
 
       {/* Modal: Detail Pembayaran (Matching User Reference) */}
       <ProofReceiptModal
