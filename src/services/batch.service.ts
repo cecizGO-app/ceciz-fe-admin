@@ -148,6 +148,13 @@ export function mapBackendBatchToFrontend(batch: BackendBatch): BatchItem {
       ? new Set(batch.items.map((i) => i.buyerId)).size
       : (batch._count?.items ?? 0);
 
+  const feeNyelemTotal =
+    batch.feeNyelem != null
+      ? batch.countryCode === "JP"
+        ? Number(batch.feeNyelem)
+        : Number(batch.feeNyelem) * Math.max(1, totalPc)
+      : undefined;
+
   return {
     id: batch.id,
     batchNumber: formattedBatchNumber,
@@ -159,6 +166,11 @@ export function mapBackendBatchToFrontend(batch: BackendBatch): BatchItem {
     totalPc,
     status: mapBackendStatusToFrontend(batch.status),
     labaAmount: batch.labaBersih != null ? Number(batch.labaBersih) : null,
+    hargaTotal: batch.hargaTotal != null ? Number(batch.hargaTotal) : undefined,
+    hargaTfSeller:
+      batch.hargaTfSeller != null ? Number(batch.hargaTfSeller) : undefined,
+    feeNyelem: feeNyelemTotal,
+    feeRekap: batch.feeRekap != null ? Number(batch.feeRekap) : undefined,
     isHidden: false,
   };
 }
@@ -306,7 +318,13 @@ export async function createBatchApi(
  */
 export async function patchBatchApi(
   id: string,
-  payload: Partial<BackendCreateBatchInput> & { status?: BackendBatchStatus },
+  payload: Partial<BackendCreateBatchInput> & {
+    status?: BackendBatchStatus;
+    labaBersih?: number;
+    hargaTotal?: number;
+    hargaTfSeller?: number;
+    selisihHarga?: number;
+  },
 ): Promise<BackendBatch> {
   const res = await fetch(`${BASE_URL}/api/v1/admin/batches/${id}`, {
     method: "PATCH",

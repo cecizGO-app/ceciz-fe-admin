@@ -187,7 +187,7 @@ export const TagihanTaxPage: React.FC = () => {
       <RejectTaxProofModal
         open={rejectModalOpen}
         onOpenChange={setRejectModalOpen}
-        invoiceNo={rejectItem?.id}
+        invoiceNo={rejectItem?.invoiceNumber || rejectItem?.id}
         buyerName={rejectItem?.buyerName}
         onConfirmReject={handleConfirmReject}
       />
@@ -196,7 +196,7 @@ export const TagihanTaxPage: React.FC = () => {
       <WaivePenaltyModal
         open={waiveModalOpen}
         onOpenChange={setWaiveModalOpen}
-        invoiceNo={waiveItem?.id}
+        invoiceNo={waiveItem?.invoiceNumber || waiveItem?.id}
         penaltyAmount={waiveItem?.penaltyAmount || 0}
         onConfirmWaive={handleConfirmWaive}
       />

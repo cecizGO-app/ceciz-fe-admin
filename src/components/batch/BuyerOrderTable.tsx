@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import type { BuyerOption, OrderRow, CountryCode } from "@/types/batch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +58,36 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
   const isJapan = countryCode === "JP";
   const isKorea = countryCode === "KR";
   const isIndonesia = countryCode === "INA";
+
+  // Simpan string mentah sementara agar user bebas mengetik "0", "0.", "0,5", "0.25"
+  const [rawHargaMap, setRawHargaMap] = useState<Record<string, string>>({});
+
+  const getHargaInputValue = (row: OrderRow): string => {
+    if (rawHargaMap[row.id] !== undefined) return rawHargaMap[row.id];
+    return row.hargaAsli !== undefined && row.hargaAsli !== null && row.hargaAsli !== 0
+      ? String(row.hargaAsli)
+      : "";
+  };
+
+  const handleHargaInputChange = (rowId: string, raw: string) => {
+    // Izinkan koma atau titik untuk desimal, ubah koma -> titik, bersihkan karakter non-numerik
+    const normalized = raw.replace(/,/g, ".").replace(/[^0-9.]/g, "");
+    const parts = normalized.split(".");
+    const sanitized =
+      parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : normalized;
+
+    setRawHargaMap((prev) => ({ ...prev, [rowId]: sanitized }));
+    const parsed = parseFloat(sanitized);
+    onUpdateRow(rowId, "hargaAsli", Number.isFinite(parsed) ? parsed : 0);
+  };
+
+  const handleHargaInputBlur = (rowId: string) => {
+    setRawHargaMap((prev) => {
+      const next = { ...prev };
+      delete next[rowId];
+      return next;
+    });
+  };
 
   return (
     <Card className="gap-4">
@@ -214,18 +244,15 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                     </label>
                     <div className="relative flex items-center">
                       <Input
-                        type="number"
-                        step={isKorea ? "0.01" : "1"}
-                        value={row.hargaAsli || ""}
+                        type="text"
+                        inputMode="decimal"
+                        value={getHargaInputValue(row)}
                         onChange={(e) =>
-                          onUpdateRow(
-                            row.id,
-                            "hargaAsli",
-                            Number(e.target.value) || 0,
-                          )
+                          handleHargaInputChange(row.id, e.target.value)
                         }
+                        onBlur={() => handleHargaInputBlur(row.id)}
                         className="pr-9 border-[#FCE7F3] hover:border-[#FBCFE8] font-semibold"
-                        placeholder="0"
+                        placeholder={isKorea ? "0.5" : "0"}
                       />
                       <span className="absolute right-2.5 text-[11px] font-semibold text-[#A1A1AA] pointer-events-none">
                         {currency}
@@ -421,18 +448,15 @@ export const BuyerOrderTable: React.FC<BuyerOrderTableProps> = ({
                         <div className="relative flex items-center">
                           <Input
                             size="sm"
-                            type="number"
-                            step={isKorea ? "0.01" : "1"}
-                            value={row.hargaAsli || ""}
+                            type="text"
+                            inputMode="decimal"
+                            value={getHargaInputValue(row)}
                             onChange={(e) =>
-                              onUpdateRow(
-                                row.id,
-                                "hargaAsli",
-                                Number(e.target.value) || 0,
-                              )
+                              handleHargaInputChange(row.id, e.target.value)
                             }
+                            onBlur={() => handleHargaInputBlur(row.id)}
                             className="pr-11 font-semibold border-[#FCE7F3] hover:border-[#FBCFE8]"
-                            placeholder="0"
+                            placeholder={isKorea ? "0.5" : "0"}
                           />
                           <span className="absolute right-3 text-[11px] font-semibold text-[#A1A1AA] pointer-events-none">
                             {currency}

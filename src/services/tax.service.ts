@@ -61,28 +61,109 @@ function normalizeTaxInvoice(raw: Record<string, unknown>): BackendTaxInvoiceWit
       : [];
   const latestPayment = payments[0];
   const hasPendingPayment =
-    latestPayment && String(latestPayment.status || "").toUpperCase() === "PENDING";
+    Boolean(raw.pendingPaymentsCount && Number(raw.pendingPaymentsCount) > 0) ||
+    (latestPayment &&
+      String(
+        latestPayment.taxVerificationStatus ?? latestPayment.status ?? "",
+      ).toUpperCase() === "PENDING");
 
-  const status = mapBackendTaxStatus(String(raw.status ?? "UNPAID"), Boolean(hasPendingPayment));
-  const rawItems = Array.isArray(raw.items)
-    ? (raw.items as Array<Record<string, unknown>>)
-    : Array.isArray(raw.breakdown)
-      ? (raw.breakdown as Array<Record<string, unknown>>)
-      : [];
+  const status = mapBackendTaxStatus(
+    String(raw.displayStatus ?? raw.status ?? "UNPAID"),
+    Boolean(hasPendingPayment),
+  );
 
-  const batches: BatchItemRef[] = rawItems.map((it) => {
+  const rawItems = Array.isArray(raw.breakdownDetail)
+    ? (raw.breakdownDetail as Array<Record<string, unknown>>)
+    : Array.isArray(raw.items)
+      ? (raw.items as Array<Record<string, unknown>>)
+      : Array.isArray(raw.breakdown)
+        ? (raw.breakdown as Array<Record<string, unknown>>)
+        : [];
+
+  let batches: BatchItemRef[] = rawItems.map((it) => {
     const batchObj = (it.batch as Record<string, unknown> | undefined) || {};
-    const cc = String(it.countryCode ?? batchObj.countryCode ?? "CH").toUpperCase();
-    const country = (["CH", "KR", "TH", "JP", "INA"].includes(cc) ? cc : "CH") as CountryCode;
+    const rawCode = String(
+      it.batchCode ??
+        it.batch_code ??
+        batchObj.batchCode ??
+        batchObj.code ??
+        "",
+    ).trim();
+    const ccFromCode = rawCode.includes("-") ? rawCode.split("-")[0] : "";
+    const cc = String(
+      it.countryCode ?? it.country ?? batchObj.countryCode ?? ccFromCode ?? "CH",
+    ).toUpperCase();
+    const country = (
+      ["CH", "KR", "TH", "JP", "INA"].includes(cc) ? cc : "CH"
+    ) as CountryCode;
+    const batchNum =
+      it.batch_number ?? it.batchNumber ?? batchObj.batchNumber;
+    const batchCode =
+      rawCode ||
+      (batchNum !== undefined && batchNum !== null
+        ? `${country}-${String(batchNum).padStart(3, "0")}`
+        : Array.isArray(raw.coveredBatches) && raw.coveredBatches[0]
+          ? String(raw.coveredBatches[0])
+          : `${country}-001`);
+
     return {
-      batchCode: String(it.batchCode ?? batchObj.batchCode ?? `${country}-${String(batchObj.batchNumber ?? "001").padStart(3, "0")}`),
+      batchCode,
       country,
-      itemName: String(it.item ?? it.itemName ?? it.description ?? "Item"),
-      qty: Number(it.pcs ?? it.qty ?? 1),
+      itemName: String(
+        it.item_desc ??
+          it.item ??
+          it.itemName ??
+          it.description ??
+          it.title ??
+          "Item",
+      ),
+      qty: Number(it.qty ?? it.pcs ?? 1),
       isPhotocard: String(it.category ?? "PC").toUpperCase() === "PC",
-      itemTax: Number(it.subtotal ?? it.itemTax ?? 0),
+      itemTax: Number(it.subtotal_tax ?? it.subtotal ?? it.itemTax ?? 0),
     };
   });
+
+  // Fallback: jika breakdownDetail kosong tapi backend mengirim coveredBatches (mis. ["KR-001", "CH-002"])
+  if (batches.length === 0 && Array.isArray(raw.coveredBatches)) {
+    batches = (raw.coveredBatches as unknown[])
+      .map((code) => String(code || "").trim())
+      .filter(Boolean)
+      .map((batchCode) => {
+        const prefix = batchCode.split("-")[0]?.toUpperCase() || "CH";
+        const country = (
+          ["CH", "KR", "TH", "JP", "INA"].includes(prefix) ? prefix : "CH"
+        ) as CountryCode;
+        return {
+          batchCode,
+          country,
+          itemName: String(raw.itemSummary ?? `Batch ${batchCode}`),
+          qty: 1,
+          isPhotocard: true,
+          itemTax: 0,
+        };
+      });
+  }
+
+  const rawId = String(raw.id ?? raw.invoiceCode ?? `TAX-${Date.now()}`);
+  const rawInvoiceNumber = String(
+    raw.invoiceNumber ?? raw.invoiceCode ?? "",
+  ).trim();
+  const formattedInvoiceNumber =
+    rawInvoiceNumber ||
+    (rawId.length > 16
+      ? `TAX-${rawId.slice(-6).toUpperCase()}`
+      : rawId);
+
+  const rawIdLine = buyer.idLine ? String(buyer.idLine).trim() : "";
+  const isPhoneLike = (val: string) =>
+    /^(?:\+?62|0)?\d{8,15}$/.test(val.replace(/^@/, "").replace(/[\s\-()]/g, ""));
+  const buyerName = String(buyer.dnLine ?? buyer.name ?? raw.buyerName ?? "Buyer");
+  const buyerHandle =
+    rawIdLine && !isPhoneLike(rawIdLine)
+      ? `@${rawIdLine.replace(/^@/, "")}`
+      : buyer.email
+        ? `@${String(buyer.email).split("@")[0]}`
+        : String(raw.buyerHandle ?? `@${buyerName.toLowerCase().replace(/\s+/g, "_")}`);
 
   const rawDeadline = String(raw.deadlinePayment ?? raw.deadline ?? new Date().toISOString());
   const rawMaxCo = String(raw.maxCheckoutDate ?? rawDeadline);
@@ -91,17 +172,22 @@ function normalizeTaxInvoice(raw: Record<string, unknown>): BackendTaxInvoiceWit
     : undefined;
 
   return {
-    id: String(raw.id ?? raw.invoiceCode ?? `TAX-${Date.now()}`),
-    buyerName: String(buyer.dnLine ?? buyer.name ?? raw.buyerName ?? "Buyer"),
-    buyerHandle: buyer.idLine
-      ? `@${String(buyer.idLine).replace(/^@/, "")}`
-      : String(buyer.email ?? raw.buyerHandle ?? "-"),
+    id: rawId,
+    invoiceNumber: formattedInvoiceNumber,
+    buyerName,
+    buyerHandle,
     buyerPhone: String(buyer.contact ?? raw.buyerPhone ?? "-"),
-    buyerLineId: String(buyer.idLine ?? raw.buyerLineId ?? "-"),
+    buyerLineId: rawIdLine || String(raw.buyerLineId ?? "-"),
     status,
     batches,
-    totalItemsCount: batches.reduce((acc, b) => acc + b.qty, 0) || Number(raw.totalPcs ?? 1),
-    itemSummary: batches.map((b) => b.itemName).slice(0, 2).join(", ") || undefined,
+    totalItemsCount:
+      Number(raw.totalItem ?? raw.totalPcs ?? 0) ||
+      batches.reduce((acc, b) => acc + b.qty, 0) ||
+      1,
+    itemSummary:
+      (raw.itemSummary ? String(raw.itemSummary) : undefined) ||
+      batches.map((b) => b.itemName).slice(0, 2).join(", ") ||
+      undefined,
     totalAmount: Number(raw.totalTax ?? raw.totalAmount ?? 0),
     penaltyAmount: Number(raw.penaltyAmount ?? 0),
     penaltyWaived: Boolean(raw.penaltyWaived),
@@ -111,7 +197,12 @@ function normalizeTaxInvoice(raw: Record<string, unknown>): BackendTaxInvoiceWit
     maxCheckoutDate: formatShortDate(rawMaxCo),
     period: String(raw.releaseName ?? raw.period ?? "TAGIHAN TAX"),
     periodMonth: String(raw.releasePeriod ?? raw.periodMonth ?? "-"),
-    hasProof: Boolean(latestPayment?.proofImageUrl || latestPayment?.proofUrl || hasPendingPayment),
+    hasProof: Boolean(
+      raw.hasPaymentProof ||
+        latestPayment?.proofImageUrl ||
+        latestPayment?.proofUrl ||
+        hasPendingPayment,
+    ),
     proofStatus: mapProofStatus(status, paymentMethod),
     paymentMethod,
     bankName: paymentMethod,

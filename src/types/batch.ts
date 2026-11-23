@@ -14,6 +14,10 @@ export interface BatchItem {
   totalPc: number;
   status: BatchStatus;
   labaAmount: number | null; // null = "Belum dihitung", number = nominal laba
+  hargaTotal?: number;
+  hargaTfSeller?: number;
+  feeNyelem?: number;
+  feeRekap?: number;
   isHidden: boolean;
 }
 

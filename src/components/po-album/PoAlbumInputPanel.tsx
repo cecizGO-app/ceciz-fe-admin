@@ -69,9 +69,7 @@ export const PoAlbumInputPanel: React.FC<PoAlbumInputPanelProps> = ({
     onSave(
       valid.map((r) => ({
         batch: batch.trim().toUpperCase(),
-        buyer: r.buyer.trim().startsWith("@")
-          ? r.buyer.trim()
-          : `@${r.buyer.trim()}`,
+        buyer: r.buyer.trim(),
         album: album.trim(),
         member: r.member.trim() || "All Member",
         qty: 1,
@@ -87,6 +85,18 @@ export const PoAlbumInputPanel: React.FC<PoAlbumInputPanelProps> = ({
       }))
     );
   };
+
+  const formatBuyerOptionLabel = (u: BackendUserOption) => {
+    const displayName = (u.dnLine || u.name || u.email || u.id).trim();
+    const cleanIdLine = u.idLine?.replace(/^@/, "").trim();
+    const isPhone = cleanIdLine && /^(?:\+?62|0)?\d{8,15}$/.test(cleanIdLine.replace(/[\s\-()]/g, ""));
+    const handlePart = cleanIdLine && !isPhone ? ` (@${cleanIdLine})` : "";
+    const groupPart = u.lineGroup ? ` · ${u.lineGroup.replace("_", " ")}` : "";
+    return `${displayName}${handlePart}${groupPart}`;
+  };
+
+  const getBuyerStoredName = (u: BackendUserOption) =>
+    (u.dnLine || u.name || u.idLine || u.email || u.id).trim();
 
   const headClass =
     "py-3 pr-2 text-left text-[11px] uppercase tracking-wider text-ink-2 font-bold whitespace-nowrap";
@@ -215,28 +225,32 @@ export const PoAlbumInputPanel: React.FC<PoAlbumInputPanelProps> = ({
                   />
                 </td>
                 <td className="py-2.5 pr-2">
-                  <Input
-                    list="po-album-registered-buyers"
-                    value={r.buyer}
-                    onChange={(e) => setRow(r.key, { buyer: e.target.value })}
-                    placeholder="Pilih atau ketik @username"
-                    className="h-9 rounded-[8px] border-border/70 bg-surface text-xs text-ink"
-                  />
-                  {i === 0 && registeredBuyers.length > 0 && (
-                    <datalist id="po-album-registered-buyers">
-                      {registeredBuyers.map((u) => {
-                        const handle = u.idLine
-                          ? `@${u.idLine.replace(/^@/, "")}`
-                          : u.name || u.email || u.id;
-                        return (
-                          <option
-                            key={u.id}
-                            value={handle}
-                            label={`${u.dnLine || u.name}${u.email ? ` (${u.email})` : ""}`}
-                          />
-                        );
-                      })}
-                    </datalist>
+                  {registeredBuyers.length > 0 ? (
+                    <Select
+                      value={r.buyer}
+                      onValueChange={(val) => setRow(r.key, { buyer: val })}
+                    >
+                      <SelectTrigger className="h-9 rounded-[8px] border-[#FCE7F3] hover:border-[#FBCFE8] bg-white text-xs text-[#18181B]">
+                        <SelectValue placeholder="Pilih Buyer" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-[12px] border-[#FBCFE8]">
+                        {registeredBuyers.map((u) => {
+                          const valueName = getBuyerStoredName(u);
+                          return (
+                            <SelectItem key={u.id} value={valueName} className="text-xs">
+                              {formatBuyerOptionLabel(u)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      value={r.buyer}
+                      onChange={(e) => setRow(r.key, { buyer: e.target.value })}
+                      placeholder="Nama Buyer (DN LINE)"
+                      className="h-9 rounded-[8px] border-border/70 bg-surface text-xs text-ink"
+                    />
                   )}
                 </td>
                 <td className="py-2.5 pr-2">
@@ -334,12 +348,35 @@ export const PoAlbumInputPanel: React.FC<PoAlbumInputPanelProps> = ({
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-2.5">
-              <Input
-                value={r.buyer}
-                onChange={(e) => setRow(r.key, { buyer: e.target.value })}
-                placeholder="@username buyer"
-                className="col-span-2 h-9 text-xs"
-              />
+              {registeredBuyers.length > 0 ? (
+                <div className="col-span-2">
+                  <Select
+                    value={r.buyer}
+                    onValueChange={(val) => setRow(r.key, { buyer: val })}
+                  >
+                    <SelectTrigger className="h-9 rounded-[8px] border-[#FCE7F3] hover:border-[#FBCFE8] bg-white text-xs text-[#18181B]">
+                      <SelectValue placeholder="Pilih Buyer" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[12px] border-[#FBCFE8]">
+                      {registeredBuyers.map((u) => {
+                        const valueName = getBuyerStoredName(u);
+                        return (
+                          <SelectItem key={u.id} value={valueName} className="text-xs">
+                            {formatBuyerOptionLabel(u)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <Input
+                  value={r.buyer}
+                  onChange={(e) => setRow(r.key, { buyer: e.target.value })}
+                  placeholder="Nama Buyer (DN LINE)"
+                  className="col-span-2 h-9 text-xs"
+                />
+              )}
               <Input
                 value={r.member}
                 onChange={(e) => setRow(r.key, { member: e.target.value })}

@@ -19,11 +19,19 @@ import {
 
 export type InternalCalculationValues = BatchProfitInput;
 
+export interface BatchFinancialDefaults {
+  totalHargaJual?: number;
+  hargaTFSeller?: number;
+  feeNyelem?: number;
+  feeRekap?: number;
+}
+
 interface InternalCalculationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   batchNumber: string;
   initialLaba?: number | null;
+  batchFinancials?: BatchFinancialDefaults;
   isArrivedINA?: boolean;
   onSave?: (batchNumber: string, labaBersih: number) => void;
 }
@@ -36,28 +44,37 @@ function formatRupiah(amount: number): string {
 
 function getInitialValues(
   initialLaba?: number | null,
+  batchFinancials?: BatchFinancialDefaults,
 ): InternalCalculationValues {
-  if (initialLaba && initialLaba > 0) {
+  const hasRealFinancials =
+    batchFinancials &&
+    (batchFinancials.totalHargaJual !== undefined ||
+      batchFinancials.hargaTFSeller !== undefined ||
+      batchFinancials.feeNyelem !== undefined ||
+      batchFinancials.feeRekap !== undefined);
+
+  if (hasRealFinancials) {
     return {
-      totalHargaJual: initialLaba + 250000,
-      hargaTFSeller: 200000,
-      tagihanPC: 80000,
-      tagihanFreebies: 10000,
-      hargaCOShopee: 20000,
-      hargaTagihanWH: 40000,
-      feeNyelem: 10000,
-      feeRekap: 20000,
+      totalHargaJual: Math.round(batchFinancials.totalHargaJual ?? 0),
+      hargaTFSeller: Math.round(batchFinancials.hargaTFSeller ?? 0),
+      tagihanPC: 0,
+      tagihanFreebies: 0,
+      hargaCOShopee: 0,
+      hargaTagihanWH: 0,
+      feeNyelem: Math.round(batchFinancials.feeNyelem ?? 0),
+      feeRekap: Math.round(batchFinancials.feeRekap ?? 0),
     };
   }
+
   return {
-    totalHargaJual: 0,
+    totalHargaJual: initialLaba && initialLaba > 0 ? Math.round(initialLaba) : 0,
     hargaTFSeller: 0,
     tagihanPC: 0,
     tagihanFreebies: 0,
     hargaCOShopee: 0,
     hargaTagihanWH: 0,
-    feeNyelem: 10000,
-    feeRekap: 20000,
+    feeNyelem: 0,
+    feeRekap: 0,
   };
 }
 
@@ -68,11 +85,12 @@ export const InternalCalculationModal: React.FC<
   onOpenChange,
   batchNumber,
   initialLaba,
+  batchFinancials,
   isArrivedINA = false,
   onSave,
 }) => {
   const [values, setValues] = useState<InternalCalculationValues>(() =>
-    getInitialValues(initialLaba),
+    getInitialValues(initialLaba, batchFinancials),
   );
 
   const handleChange = (

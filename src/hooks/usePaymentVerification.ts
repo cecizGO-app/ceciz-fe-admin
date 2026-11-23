@@ -15,7 +15,12 @@ import {
   bulkVerifyPaymentsApi,
   mapBackendPaymentToFrontend,
   mapBackendStatsToFrontend,
+  type BackendPayment,
 } from "@/services/payment.service";
+import {
+  getAdminUsersApi,
+  type BackendUserOption,
+} from "@/services/batch.service";
 
 export const PAGE_SIZE = 8;
 
@@ -64,13 +69,53 @@ export function usePaymentVerification() {
           console.warn("Backend stats API unavailable, using fallback:", err);
         });
 
-      // 2. Fetch list pembayaran
-      const paymentsPromise = getPaymentsApi({
-        limit: 100, // Ambil batch data untuk filter lokal yang responsif
-      })
-        .then((res) => {
+      // 2. Fetch daftar buyer (untuk melengkapi idLine jika /admin/payments belum menyertakannya)
+      const buyersPromise = getAdminUsersApi({ role: "BUYER" }).catch((err) => {
+        console.warn("Backend buyers list API unavailable for idLine enrichment:", err);
+        return [] as BackendUserOption[];
+      });
+
+      // 3. Fetch list pembayaran
+      const paymentsPromise = Promise.all([
+        getPaymentsApi({
+          limit: 100, // Ambil batch data untuk filter lokal yang responsif
+        }),
+        buyersPromise,
+      ])
+        .then(([res, buyers]) => {
           if (res.data && res.data.length > 0) {
-            const mapped = res.data.map(mapBackendPaymentToFrontend);
+            const buyerById = new Map<string, BackendUserOption>();
+            const buyerByEmail = new Map<string, BackendUserOption>();
+            for (const b of buyers) {
+              if (b.id) buyerById.set(b.id, b);
+              if (b.email) buyerByEmail.set(b.email.toLowerCase(), b);
+            }
+
+            const enrichedPayments: BackendPayment[] = res.data.map((p) => {
+              const matchedBuyer =
+                (p.buyerId ? buyerById.get(p.buyerId) : undefined) ||
+                (p.buyer?.id ? buyerById.get(p.buyer.id) : undefined) ||
+                (p.buyer?.email
+                  ? buyerByEmail.get(p.buyer.email.toLowerCase())
+                  : undefined);
+
+              if (!matchedBuyer || p.buyer?.idLine) return p;
+
+              return {
+                ...p,
+                buyer: {
+                  ...p.buyer,
+                  id: p.buyer?.id || matchedBuyer.id,
+                  name: p.buyer?.name || matchedBuyer.dnLine || matchedBuyer.name,
+                  email: p.buyer?.email ?? matchedBuyer.email,
+                  contact: p.buyer?.contact ?? matchedBuyer.contact,
+                  idLine: matchedBuyer.idLine ?? p.buyer?.idLine,
+                  image: p.buyer?.image,
+                },
+              };
+            });
+
+            const mapped = enrichedPayments.map(mapBackendPaymentToFrontend);
             setItems(mapped);
           }
         })

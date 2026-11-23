@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Save } from "lucide-react";
 import {
   Dialog,
@@ -16,9 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  availableBuyersList,
-  availableBatchCodesList,
-} from "@/mocks/mockTaxData";
+  getAdminUsersApi,
+  getBatchesApi,
+  mapBackendBatchToFrontend,
+} from "@/services/batch.service";
 import {
   type TaxInvoiceItem,
   type TaxStatus,
@@ -26,6 +27,25 @@ import {
   type CountryCode,
   formatReadableDateTime,
 } from "@/types/tax";
+
+interface BuyerSelectOption {
+  id: string;
+  name: string;
+  handle: string;
+  phone: string;
+  lineId: string;
+}
+
+interface BatchSelectOption {
+  code: string;
+  country: CountryCode;
+  label: string;
+}
+
+const isPhoneLike = (val?: string | null) => {
+  if (!val) return false;
+  return /^(?:\+?62|0)?\d{8,15}$/.test(val.replace(/^@/, "").replace(/[\s\-()]/g, ""));
+};
 
 interface FormBatchItem {
   id: string;
@@ -55,15 +75,115 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
   onClose,
   onSave,
 }) => {
-  // Find buyer from available buyers
-  const initialBuyer =
-    availableBuyersList.find((b) => b.name === item.buyerName) ||
-    availableBuyersList[0];
+  const initialBuyerOption: BuyerSelectOption = useMemo(
+    () => ({
+      id: `current-${item.buyerName}`,
+      name: item.buyerName,
+      handle: item.buyerHandle,
+      phone: item.buyerPhone,
+      lineId: item.buyerLineId,
+    }),
+    [item.buyerName, item.buyerHandle, item.buyerPhone, item.buyerLineId],
+  );
+
+  const [liveBuyers, setLiveBuyers] = useState<BuyerSelectOption[]>([]);
+  const [liveBatches, setLiveBatches] = useState<BatchSelectOption[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([
+      getAdminUsersApi({ role: "BUYER" }),
+      getBatchesApi(),
+    ]).then(([usersRes, batchesRes]) => {
+      if (!active) return;
+      if (usersRes.status === "fulfilled" && Array.isArray(usersRes.value)) {
+        setLiveBuyers(
+          usersRes.value.map((u) => {
+            const name = (u.dnLine || u.name || u.email || u.id).trim();
+            const rawLine = u.idLine?.trim() || "";
+            const handle =
+              rawLine && !isPhoneLike(rawLine)
+                ? `@${rawLine.replace(/^@/, "")}`
+                : u.email
+                  ? `@${u.email.split("@")[0]}`
+                  : `@${name.toLowerCase().replace(/\s+/g, "_")}`;
+            return {
+              id: u.id,
+              name,
+              handle,
+              phone: u.contact || "-",
+              lineId: rawLine || "-",
+            };
+          }),
+        );
+      }
+      if (batchesRes.status === "fulfilled" && Array.isArray(batchesRes.value)) {
+        setLiveBatches(
+          batchesRes.value.map((rawB) => {
+            const mapped = mapBackendBatchToFrontend(rawB);
+            return {
+              code: mapped.batchNumber,
+              country: mapped.countryCode,
+              label: `${mapped.batchNumber} (${mapped.countryCode})`,
+            };
+          }),
+        );
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const buyerOptions = useMemo<BuyerSelectOption[]>(() => {
+    const map = new Map<string, BuyerSelectOption>();
+    map.set(initialBuyerOption.name.toLowerCase(), initialBuyerOption);
+    for (const b of liveBuyers) {
+      if (!map.has(b.name.toLowerCase())) {
+        map.set(b.name.toLowerCase(), b);
+      }
+    }
+    return Array.from(map.values());
+  }, [initialBuyerOption, liveBuyers]);
+
+  const batchOptions = useMemo<BatchSelectOption[]>(() => {
+    const map = new Map<string, BatchSelectOption>();
+    for (const b of item.batches || []) {
+      if (!map.has(b.batchCode)) {
+        map.set(b.batchCode, {
+          code: b.batchCode,
+          country: b.country,
+          label: `${b.batchCode} (${b.country})`,
+        });
+      }
+    }
+    for (const b of liveBatches) {
+      if (!map.has(b.code)) {
+        map.set(b.code, b);
+      }
+    }
+    return Array.from(map.values());
+  }, [item.batches, liveBatches]);
 
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>(
-    initialBuyer.id
+    initialBuyerOption.id,
   );
-  const [period, setPeriod] = useState<string>(item.periodMonth || "September 2026");
+  const [period, setPeriod] = useState<string>(item.periodMonth || item.period || "September 2026");
+
+  const periodOptions = useMemo(() => {
+    const defaults = [
+      "November 2026",
+      "Oktober 2026",
+      "September 2026",
+      "Agustus 2026",
+      "Juli 2026",
+    ];
+    if (period && !defaults.includes(period)) {
+      return [period, ...defaults];
+    }
+    return defaults;
+  }, [period]);
+
   const [deadline, setDeadline] = useState<string>(() => {
     if (item.rawDeadline) {
       try {
@@ -76,9 +196,7 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
     return "2026-09-25T23:59";
   });
   const [status, setStatus] = useState<TaxStatus>(item.status || "Pending");
-  const [notes, setNotes] = useState<string>(
-    item.notes || "Gabungan barang yang sudah tiba di warehouse Indonesia."
-  );
+  const [notes, setNotes] = useState<string>(item.notes || "");
 
   // Initialize batch items
   const [batchItems, setBatchItems] = useState<FormBatchItem[]>(() => {
@@ -96,21 +214,22 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
     return [
       {
         id: "item-default-1",
-        batchCode: "CH-015",
-        country: "CH",
-        itemName: "IVE Photocard Set",
-        qty: 2,
-        itemTax: 72000,
+        batchCode: batchOptions[0]?.code || "KR-001",
+        country: batchOptions[0]?.country || "KR",
+        itemName: item.itemSummary || "",
+        qty: item.totalItemsCount || 1,
+        itemTax: item.totalAmount || 0,
         isPhotocard: true,
       },
     ];
   });
 
   const handleAddItem = () => {
+    const fallbackBatch = batchOptions[0];
     const newItem: FormBatchItem = {
       id: `item-${Date.now()}`,
-      batchCode: "CH-015",
-      country: "CH",
+      batchCode: fallbackBatch?.code || "KR-001",
+      country: fallbackBatch?.country || "KR",
       itemName: "",
       qty: 1,
       itemTax: 0,
@@ -133,7 +252,7 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
       prev.map((b) => {
         if (b.id !== id) return b;
         if (field === "batchCode") {
-          const found = availableBatchCodesList.find((c) => c.code === value);
+          const found = batchOptions.find((c) => c.code === value);
           return {
             ...b,
             batchCode: String(value),
@@ -162,7 +281,7 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
     e.preventDefault();
 
     const currentBuyer =
-      availableBuyersList.find((b) => b.id === selectedBuyerId) || initialBuyer;
+      buyerOptions.find((b) => b.id === selectedBuyerId) || initialBuyerOption;
 
     const updatedBatches: BatchItemRef[] = batchItems.map((b) => ({
       batchCode: b.batchCode,
@@ -224,7 +343,7 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
               <SelectValue placeholder="Pilih buyer" />
             </SelectTrigger>
             <SelectContent className="rounded-[16px] border-[#FBCFE8] shadow-card max-h-56">
-              {availableBuyersList.map((buyer) => (
+              {buyerOptions.map((buyer) => (
                 <SelectItem key={buyer.id} value={buyer.id}>
                   {buyer.name} ({buyer.handle})
                 </SelectItem>
@@ -242,9 +361,11 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
               <SelectValue placeholder="Pilih periode" />
             </SelectTrigger>
             <SelectContent className="rounded-[16px] border-[#FBCFE8] shadow-card">
-              <SelectItem value="September 2026">September 2026</SelectItem>
-              <SelectItem value="Agustus 2026">Agustus 2026</SelectItem>
-              <SelectItem value="Juli 2026">Juli 2026</SelectItem>
+              {periodOptions.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -346,7 +467,7 @@ const EditTaxInvoiceForm: React.FC<EditFormProps> = ({
                       <SelectValue placeholder="Pilih batch" />
                     </SelectTrigger>
                     <SelectContent className="rounded-[14px] border-[#FBCFE8] shadow-card max-h-48">
-                      {availableBatchCodesList.map((batch) => (
+                      {batchOptions.map((batch) => (
                         <SelectItem key={batch.code} value={batch.code}>
                           {batch.label}
                         </SelectItem>
@@ -488,7 +609,7 @@ export const EditTaxInvoiceModal: React.FC<EditTaxInvoiceModalProps> = ({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold text-[#18181B] tracking-tight">
-              Edit Tagihan
+              Edit Tagihan &middot; {item.invoiceNumber || item.id}
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs text-[#71717A] mt-0.5">

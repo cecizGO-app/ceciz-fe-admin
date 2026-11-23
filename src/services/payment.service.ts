@@ -210,25 +210,49 @@ export function mapBackendPaymentToFrontend(p: BackendPayment): PaymentItem {
     rawName = "Siti Rahma";
   }
 
-  const rawIdLine = p.buyer?.idLine;
-  const rawEmail = p.buyer?.email;
-  const rawHandle = (p.buyer as unknown as { handle?: string })?.handle;
+  const rawIdLine = p.buyer?.idLine?.trim();
+  const rawEmail = p.buyer?.email?.trim();
+  const rawHandle = (p.buyer as unknown as { handle?: string })?.handle?.trim();
+
+  // Helper: jangan jadikan nomor HP (08..., +62..., atau murni digit panjang) sebagai handle @id_line
+  const isPhoneLike = (val?: string | null) => {
+    if (!val) return false;
+    const cleaned = val.replace(/^@/, "").replace(/[\s\-()]/g, "");
+    return /^(?:\+?62|0)?\d{8,15}$/.test(cleaned);
+  };
+
+  const validIdLine =
+    rawIdLine &&
+    !rawIdLine.includes("@buyer.ceciz") &&
+    !isPhoneLike(rawIdLine)
+      ? rawIdLine
+      : undefined;
+
+  const validHandle =
+    rawHandle &&
+    !rawHandle.includes("@buyer.ceciz") &&
+    !/_\d{10,}/.test(rawHandle) &&
+    !isPhoneLike(rawHandle)
+      ? rawHandle
+      : undefined;
 
   let buyerUsername = "";
   if (rawId && /^b[-_]0\d$/i.test(rawId)) {
     buyerUsername = `@${rawId.toLowerCase().replace("-", "_")}`;
-  } else if (rawIdLine && /^b[-_]0\d$/i.test(rawIdLine)) {
-    buyerUsername = `@${rawIdLine.toLowerCase().replace("-", "_")}`;
-  } else if (rawIdLine && !rawIdLine.includes("@buyer.ceciz")) {
-    buyerUsername = `@${rawIdLine.replace(/^@/, "")}`;
-  } else if (rawHandle && !rawHandle.includes("@buyer.ceciz") && !/_\d{10,}/.test(rawHandle)) {
-    buyerUsername = rawHandle.startsWith("@") ? rawHandle : `@${rawHandle}`;
-  } else if (rawName && rawName !== "Anonim" && !/^b[-_]0\d$/i.test(rawName)) {
-    const firstWord = rawName.trim().toLowerCase().split(/\s+/)[0];
-    buyerUsername = `@${firstWord}`;
+  } else if (validIdLine && /^b[-_]0\d$/i.test(validIdLine)) {
+    buyerUsername = `@${validIdLine.toLowerCase().replace("-", "_")}`;
+  } else if (validIdLine) {
+    buyerUsername = `@${validIdLine.replace(/^@/, "")}`;
+  } else if (validHandle) {
+    buyerUsername = validHandle.startsWith("@") ? validHandle : `@${validHandle}`;
   } else if (rawEmail) {
     const prefix = rawEmail.split("@")[0].replace(/_\d{10,}$/, "");
-    buyerUsername = `@${prefix}`;
+    buyerUsername = !isPhoneLike(prefix)
+      ? `@${prefix}`
+      : `@${rawName.trim().toLowerCase().replace(/\s+/g, "_")}`;
+  } else if (rawName && rawName !== "Anonim" && !/^b[-_]0\d$/i.test(rawName)) {
+    const slug = rawName.trim().toLowerCase().replace(/\s+/g, "_");
+    buyerUsername = `@${slug}`;
   } else {
     buyerUsername = "@buyer";
   }
