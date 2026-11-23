@@ -325,16 +325,20 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
     errors.push(`Batches List: ${batchesListRes.reason?.message || "Error"}`);
   }
 
-  // 5. Parsing Kurs Valas Live dari Settings Backend
+  // 5. Parsing Kurs Valas Live dari Settings Backend (dukung key CH/KR/TH/JP & yuan/won/baht/yen)
   let rates: ExchangeRates = { ...DEFAULT_RATES };
   if (formOptionsRes.status === "fulfilled" && formOptionsRes.value?.settings?.dailyRate) {
     isLiveBackend = true;
-    const dRate = formOptionsRes.value.settings.dailyRate;
+    const dRate = formOptionsRes.value.settings.dailyRate as Record<string, number | undefined>;
+    const yuanVal = Number(dRate.CH ?? dRate.yuan ?? 2250);
+    const wonVal = Number(dRate.KR ?? dRate.won ?? 11.8);
+    const bahtVal = Number(dRate.TH ?? dRate.baht ?? 450);
+    const yenVal = Number(dRate.JP ?? dRate.yen ?? 108);
     rates = {
-      yuan: Number(dRate.yuan || 2350).toLocaleString("id-ID"),
-      won: Number(dRate.won || 12.4).toLocaleString("id-ID"),
-      baht: Number(dRate.baht || 475).toLocaleString("id-ID"),
-      yen: Number(dRate.yen || 108).toLocaleString("id-ID"),
+      yuan: yuanVal.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      won: wonVal.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      baht: bahtVal.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      yen: yenVal.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
       checkedTime: "Hari ini (Live)",
     };
   } else if (formOptionsRes.status === "rejected") {

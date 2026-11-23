@@ -1,4 +1,5 @@
 import type { AppSettings } from "@/types/settings";
+import { DEFAULT_PRD_FEE_REKAP_TIERS } from "@/lib/calculations/fee-rekap";
 
 export const DEFAULT_SETTINGS: AppSettings = {
   checkoutLinks: {
@@ -10,32 +11,30 @@ export const DEFAULT_SETTINGS: AppSettings = {
     isShopeeOpen: false,
   },
   feeNyelem: {
-    defaultFeePerPc: 10000,
+    defaultFeePerPc: 2000,
   },
   dailyRates: {
-    yuan: 2350,
-    won: 12.4,
-    baht: 475,
+    yuan: 2250,
+    won: 11.8,
+    baht: 450,
     yen: 108,
   },
   feeRekap: {
-    tier1_1_10: 15000,
-    tier2_11_25: 25000,
-    tier3_26_plus: 40000,
+    tiers: DEFAULT_PRD_FEE_REKAP_TIERS.map((t) => ({ ...t })),
   },
   penaltyRules: {
-    amountPerDay: 5000,
-    batchDeadlineDays: 7,
-    taxDeadlineDays: 5,
+    amountPerDay: 2000,
+    batchDeadlineDays: 1,
+    taxDeadlineDays: 3,
   },
   taxRate: {
-    chPcTax: 18000,
-    krPcTax: 20000,
-    thPcTax: 16000,
-    jpPcTax: 22000,
+    chPcTax: 7000,
+    krPcTax: 6000,
+    thPcTax: 7000,
+    jpPcTax: 7000,
     nonPcPerKg: 85000,
   },
   storage: {
-    maxDurationDays: 30,
+    maxDurationDays: 60,
   },
 };

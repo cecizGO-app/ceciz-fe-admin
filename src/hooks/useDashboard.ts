@@ -20,6 +20,22 @@ import {
   DEFAULT_TEAM_ACTIVITIES,
 } from "@/mocks/mockDashboardData";
 import { useNotificationStore } from "@/stores/useNotificationStore";
+import { settingsService } from "@/services/settings.service";
+
+function parseRateInput(raw: string, fallback: number): number {
+  const trimmed = raw.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.includes(",")) {
+    const n = Number(trimmed.replace(/\./g, "").replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+  }
+  if (/^\d{1,3}(\.\d{3})+$/.test(trimmed)) {
+    const n = Number(trimmed.replace(/\./g, ""));
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+  }
+  const n = Number(trimmed);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
 
 export function useDashboard() {
   const [metricStats, setMetricStats] =
@@ -99,8 +115,24 @@ export function useDashboard() {
     loadDashboardData(true);
   }, [loadDashboardData]);
 
-  const updateRates = (newRates: ExchangeRates) => {
-    setRates(newRates);
+  const updateRates = async (newRates: ExchangeRates) => {
+    const current = settingsService.getSettings().dailyRates;
+    const parsedRates = {
+      yuan: parseRateInput(newRates.yuan, current.yuan),
+      won: parseRateInput(newRates.won, current.won),
+      baht: parseRateInput(newRates.baht, current.baht),
+      yen: parseRateInput(newRates.yen, current.yen),
+    };
+
+    setRates({
+      yuan: parsedRates.yuan.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      won: parsedRates.won.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      baht: parsedRates.baht.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      yen: parsedRates.yen.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      checkedTime: newRates.checkedTime,
+    });
+
+    await settingsService.updateSectionAsync("dailyRates", parsedRates);
   };
 
   return {

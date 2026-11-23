@@ -7,6 +7,11 @@ import {
 } from "@/services/batch.service";
 import type { BuyerOption, CountryCode, OrderRow } from "@/types/batch";
 import { calculateBatchPreview } from "@/lib/calculations/batch-preview";
+import {
+  DEFAULT_PRD_FEE_REKAP_TIERS,
+  type FeeRekapTier,
+} from "@/lib/calculations/fee-rekap";
+import { settingsService } from "@/services/settings.service";
 import { COUNTRIES, REGISTERED_BUYERS } from "@/components/batch/constants";
 
 function mapBackendUsersToBuyerOptions(users: BackendUserOption[]): BuyerOption[] {
@@ -67,26 +72,65 @@ export function useBatchForm() {
     };
   }, [selectedCountry]);
 
-  // Ambil opsi form (kurs harian, daftar buyer & admin asli dari database) saat pertama kali dimuat
+  // Settings live cache untuk kurs, fee nyelem default, dan tier fee rekap
+  const [settingsRates, setSettingsRates] = useState<Record<CountryCode, number>>(() => {
+    const cached = settingsService.getSettings().dailyRates;
+    return {
+      CH: cached.yuan || 2250,
+      KR: cached.won || 11.8,
+      TH: cached.baht || 450,
+      JP: cached.yen || 108,
+      INA: 1,
+    };
+  });
+  const [settingsFeeNyelem, setSettingsFeeNyelem] = useState<number>(
+    () => settingsService.getSettings().feeNyelem.defaultFeePerPc || 2000,
+  );
+  const [settingsFeeRekapTiers, setSettingsFeeRekapTiers] = useState<FeeRekapTier[]>(
+    () => settingsService.getSettings().feeRekap.tiers || DEFAULT_PRD_FEE_REKAP_TIERS,
+  );
+
+  // Ambil opsi form (kurs harian, fee nyelem, fee rekap, daftar buyer & admin asli dari database) saat pertama kali dimuat
   useEffect(() => {
     let isMounted = true;
     setIsLoadingBuyers(true);
 
-    getBatchFormOptionsApi()
-      .then(async (opts) => {
+    Promise.allSettled([getBatchFormOptionsApi(), settingsService.fetchSettingsApi()])
+      .then(async ([optsRes, liveSettingsRes]) => {
         if (!isMounted) return;
 
-        if (opts?.settings?.dailyRate) {
-          const dr = opts.settings.dailyRate;
-          if (selectedCountry === "CH" && dr.yuan) {
-            setKursRate(Number(dr.yuan));
-          } else if (selectedCountry === "KR" && dr.won) {
-            setKursRate(Number(dr.won));
-          } else if (selectedCountry === "TH" && dr.baht) {
-            setKursRate(Number(dr.baht));
-          } else if (selectedCountry === "JP" && dr.yen) {
-            setKursRate(Number(dr.yen));
+        const opts = optsRes.status === "fulfilled" ? optsRes.value : null;
+        const liveSettings =
+          liveSettingsRes.status === "fulfilled" ? liveSettingsRes.value : null;
+
+        // 1. Sinkronkan Kurs Harian (prioritaskan key CH/KR/TH/JP dari backend Settings)
+        const dr = (opts?.settings?.dailyRate || {}) as Record<string, number | undefined>;
+        const nextRates: Record<CountryCode, number> = {
+          CH: Number(dr.CH ?? dr.yuan ?? liveSettings?.dailyRates.yuan ?? 2250),
+          KR: Number(dr.KR ?? dr.won ?? liveSettings?.dailyRates.won ?? 11.8),
+          TH: Number(dr.TH ?? dr.baht ?? liveSettings?.dailyRates.baht ?? 450),
+          JP: Number(dr.JP ?? dr.yen ?? liveSettings?.dailyRates.yen ?? 108),
+          INA: 1,
+        };
+        setSettingsRates(nextRates);
+        setKursRate(nextRates[selectedCountry] ?? nextRates.CH);
+
+        // 2. Sinkronkan Fee Nyelem default dari Settings
+        const resolvedFeeNyelem = Number(
+          opts?.settings?.defaultFeeNyelem ??
+            liveSettings?.feeNyelem.defaultFeePerPc ??
+            2000,
+        );
+        if (resolvedFeeNyelem > 0) {
+          setSettingsFeeNyelem(resolvedFeeNyelem);
+          if (selectedCountry !== "JP") {
+            setFeeNyelem(resolvedFeeNyelem);
           }
+        }
+
+        // 3. Sinkronkan Tier Fee Rekap PRD dari Settings
+        if (liveSettings?.feeRekap?.tiers && liveSettings.feeRekap.tiers.length > 0) {
+          setSettingsFeeRekapTiers(liveSettings.feeRekap.tiers);
         }
 
         if (opts?.admins && Array.isArray(opts.admins) && opts.admins.length > 0) {
@@ -113,29 +157,9 @@ export function useBatchForm() {
               const existsInReal = mapped.some((b) => b.id === row.buyerId);
               if (existsInReal) return row;
               const replacement = mapped[idx % mapped.length];
-  return { ...row, buyerId: replacement.id };
+              return { ...row, buyerId: replacement.id };
             }),
           );
-        }
-      })
-      .catch(async (err) => {
-        console.warn("Gagal memuat form-options dari backend:", err);
-        try {
-          const fallbackUsers = await getAdminUsersApi({ role: "BUYER" });
-          if (isMounted && fallbackUsers.length > 0) {
-            const mapped = mapBackendUsersToBuyerOptions(fallbackUsers);
-            setBuyers(mapped);
-            setIsBuyersFromApi(true);
-            setOrderRows((prev) =>
-              prev.map((row, idx) => {
-                const existsInReal = mapped.some((b) => b.id === row.buyerId);
-                if (existsInReal) return row;
-  return { ...row, buyerId: mapped[idx % mapped.length].id };
-              }),
-            );
-          }
-        } catch {
-          // Gunakan REGISTERED_BUYERS sebagai fallback offline
         }
       })
       .finally(() => {
@@ -203,8 +227,9 @@ export function useBatchForm() {
     setSelectedCountry(code);
     const target = COUNTRIES.find((c) => c.code === code);
     if (target) {
-      setKursRate(target.defaultRate);
-      setRateSeller(target.defaultRateSeller ?? target.defaultRate);
+      const configuredRate = settingsRates[code] ?? target.defaultRate;
+      setKursRate(configuredRate);
+      setRateSeller(target.defaultRateSeller ?? configuredRate);
     }
     if (code === "KR") {
       setWarehouseTujuan("WH Seoul");
@@ -212,7 +237,7 @@ export function useBatchForm() {
       setShippingWHForeign(0.3); // 3.000 won / 10.000
       setFeeWarehouse(15000);
       setFeeProxy(10000);
-      setFeeNyelem(2000); // 2k/pc
+      setFeeNyelem(settingsFeeNyelem);
       setFeeGO(25000);
       setHargaCOShopeeSeller(0);
       setBatchName("WTS Batch Merch Korea (Weverse / Bunjang)");
@@ -241,7 +266,7 @@ export function useBatchForm() {
       setShippingWHForeign(50); // 50 baht
       setFeeWarehouse(15000);
       setFeeProxy(10000);
-      setFeeNyelem(2000); // 2k/pc
+      setFeeNyelem(settingsFeeNyelem);
       setFeeGO(25000);
       setHargaCOShopeeSeller(0);
       setBatchName("WTS Batch Merch Thailand (GMMTV)");
@@ -268,7 +293,7 @@ export function useBatchForm() {
       setShippingWHForeign(15); // 15 yuan
       setFeeWarehouse(15000);
       setFeeProxy(10000);
-      setFeeNyelem(2000); // 2k/pc
+      setFeeNyelem(settingsFeeNyelem);
       setFeeGO(25000);
       setHargaCOShopeeSeller(0);
       setBatchName("WTS Album Chenle Digipack Ver");
@@ -328,7 +353,7 @@ export function useBatchForm() {
       setShippingWHForeign(0);
       setFeeWarehouse(0);
       setFeeProxy(0);
-      setFeeNyelem(2000); // Fee adm nyelem
+      setFeeNyelem(settingsFeeNyelem);
       setFeeGO(4000); // 2 pcs * 2.000 (default PRD B §7.4: 2k/pc)
       setHargaCOShopeeSeller(15000); // Harga CO Shopee dari seller
       setBatchName("WTS Batch Ready INA (Split PC NCT Dream)");
@@ -419,6 +444,7 @@ export function useBatchForm() {
       feeGO,
       feeNyelem,
       hargaCOShopeeSeller,
+      feeRekapTiers: settingsFeeRekapTiers,
     });
   }, [
     selectedCountry,
@@ -431,6 +457,7 @@ export function useBatchForm() {
     feeGO,
     feeNyelem,
     hargaCOShopeeSeller,
+    settingsFeeRekapTiers,
   ]);
 
   const loadFromBackendBatch = (batch: {

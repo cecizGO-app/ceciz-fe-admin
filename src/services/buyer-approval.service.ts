@@ -96,9 +96,12 @@ function normalizeBackendRequest(raw: Record<string, unknown>): BuyerAccountRequ
   const statusRaw = String(
     raw.approvalStatus ?? raw.approval_status ?? raw.verificationStatus ?? raw.status ?? "PENDING",
   ).toUpperCase();
-  const groupRaw = String(raw.lineGroup ?? raw.line_group ?? raw.group ?? "GO_1")
-    .toUpperCase()
-    .replace(/\s+/g, "_");
+  const rawGroupVal = raw.lineGroup ?? raw.line_group ?? raw.group;
+  const groupRaw = rawGroupVal
+    ? String(rawGroupVal).toUpperCase().replace(/\s+/g, "_")
+    : "";
+  const resolvedLineGroup: LineGroup | null =
+    groupRaw === "GO_1" ? "GO_1" : groupRaw === "GO_2" ? "GO_2" : null;
   const approverRaw = raw.approvedBy ?? raw.verifiedBy;
   const approvedByName =
     typeof approverRaw === "object" && approverRaw !== null
@@ -113,7 +116,7 @@ function normalizeBackendRequest(raw: Record<string, unknown>): BuyerAccountRequ
     email: String(raw.email ?? "-"),
     dnLine: String(raw.dnLine ?? raw.dn_line ?? raw.displayName ?? raw.name ?? "-"),
     idLine: String(raw.idLine ?? raw.id_line ?? raw.lineId ?? "-").replace(/^@/, ""),
-    lineGroup: (groupRaw === "GO_2" ? "GO_2" : "GO_1") as LineGroup,
+    lineGroup: resolvedLineGroup,
     approvalStatus: (["PENDING", "APPROVED", "REJECTED"].includes(statusRaw)
       ? statusRaw
       : "PENDING") as BuyerApprovalStatus,
@@ -247,10 +250,7 @@ function applyLocalFilter(
       return true;
     })
     .sort((a, b) => {
-      // PRD §6.12: Tab Pending diurutkan dari yang terlama agar antrean adil
-      if (filter?.status === "PENDING") {
-        return new Date(a.requestedAt).getTime() - new Date(b.requestedAt).getTime();
-      }
+      // Urutkan dari tanggal & waktu terbaru di urutan teratas
       return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
     });
 }
@@ -298,7 +298,12 @@ export async function getBuyerRequestsApi(
           : Array.isArray(json)
             ? json
             : [];
-    const items = rawList.map(normalizeBackendRequest);
+    const items = rawList
+      .map(normalizeBackendRequest)
+      .sort(
+        (a, b) =>
+          new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime(),
+      );
 
     let stats = computeBuyerApprovalStats(items);
     if (statsRes && statsRes.ok) {

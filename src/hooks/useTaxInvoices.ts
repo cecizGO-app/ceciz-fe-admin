@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { initialTaxStats, initialTaxInvoices } from "@/mocks/mockTaxData";
 import {
   getTaxStatsApi,
@@ -7,6 +7,7 @@ import {
   releaseTaxApi,
   type BackendTaxInvoiceWithMeta,
 } from "@/services/tax.service";
+import type { TaxReleaseRequestPayload } from "@/components/tax/ReleaseTaxWizardModal";
 import type {
   TaxInvoiceItem,
   TaxStats,
@@ -19,6 +20,19 @@ export const TAX_PAGE_SIZE = 6;
 export function useTaxInvoices() {
   const [invoices, setInvoices] = useState<BackendTaxInvoiceWithMeta[]>(initialTaxInvoices);
   const [stats, setStats] = useState<TaxStats>(initialTaxStats);
+
+  const refreshTaxData = useCallback(async () => {
+    const [statsRes, invoicesRes] = await Promise.allSettled([
+      getTaxStatsApi(),
+      getTaxInvoicesApi(),
+    ]);
+    if (statsRes.status === "fulfilled") {
+      setStats(statsRes.value);
+    }
+    if (invoicesRes.status === "fulfilled") {
+      setInvoices(invoicesRes.value);
+    }
+  }, []);
 
   // Sinkronkan data Tagihan Tax live dari backend saat pertama dimuat
   useEffect(() => {
@@ -374,30 +388,27 @@ export function useTaxInvoices() {
     );
   };
 
-  const handleSuccessRelease = (
-    newInvoices: TaxInvoiceItem[],
-    periodName: string,
-  ) => {
-    releaseTaxApi({
-      releaseName: periodName,
-      releasePeriod: newInvoices[0]?.periodMonth || periodName,
-      deadlinePayment: newInvoices[0]?.rawDeadline,
-    }).catch(() => {});
-
-    setInvoices((prev) => [...newInvoices, ...prev]);
-    setStats((prev) => ({
-      ...prev,
-      activePeriodName: periodName,
-      unpaidCount: prev.unpaidCount + newInvoices.length,
-      unpaidAmount:
-        prev.unpaidAmount +
-        newInvoices.reduce((acc, inv) => acc + inv.totalAmount, 0),
-    }));
-
-    showToast(
-      "success",
-      `Berhasil merilis ${newInvoices.length} invoice tax baru untuk ${periodName}!`,
-    );
+  const handleSuccessRelease = async (payload: TaxReleaseRequestPayload) => {
+    try {
+      await releaseTaxApi({
+        releaseName: payload.releaseName,
+        releasePeriod: payload.releasePeriod,
+        deadlinePayment: payload.deadlinePayment,
+      });
+      await refreshTaxData();
+      setCurrentPage(1);
+      showToast(
+        "success",
+        `Berhasil merilis tagihan tax untuk ${payload.releaseName} (${payload.releasePeriod})!`,
+      );
+    } catch (err) {
+      showToast(
+        "error",
+        err instanceof Error
+          ? err.message
+          : "Gagal merilis tagihan tax ke server.",
+      );
+    }
   };
 
   return {

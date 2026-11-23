@@ -7,7 +7,7 @@ export interface BuyerAccountRequest {
   email: string;
   dnLine: string;
   idLine: string;
-  lineGroup: LineGroup;
+  lineGroup: LineGroup | null;
   approvalStatus: BuyerApprovalStatus;
   requestedAt: string;
   approvedBy?: string | null;

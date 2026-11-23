@@ -59,9 +59,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }, 3000);
   };
 
-  const handleSaveRates = (newRates: ExchangeRates) => {
-    updateRates(newRates);
-    showToast("Kurs harian berhasil diperbarui!");
+  const handleSaveRates = async (newRates: ExchangeRates) => {
+    await updateRates(newRates);
+    showToast("Kurs harian berhasil disimpan ke server & diterapkan!");
   };
 
   const handleManualSync = async () => {

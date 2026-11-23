@@ -30,77 +30,41 @@ export const FeeRekapCard: React.FC<FeeRekapCardProps> = ({
       <div>
         <CardHeader className="pb-3 border-b border-[#FBCFE8]/30">
           <CardTitle className="text-[17px] font-bold text-[#18181B] tracking-tight">
-            Fee Rekap
+            Fee Rekap (Tier PRD)
           </CardTitle>
           <CardDescription className="text-xs text-[#71717A]">
-            Tiered rekap fees; values are editable references only.
+            Tier resmi berdasarkan total PC per batch. Nilai tersimpan otomatis dipakai di kalkulasi Batch Baru.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="pt-4 space-y-3.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block">
-                Tier 1 · 1-10 PC
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#71717A]">
-                  Rp
-                </span>
-                <Input
-                  type="number"
-                  min={0}
-                  value={data.tier1_1_10 || ""}
-                  onChange={(e) =>
-                    onChange({ tier1_1_10: Number(e.target.value) || 0 })
-                  }
-                  placeholder="15.000"
-                  className="pl-9 h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
-                />
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-1">
+            {data.tiers.map((tier, idx) => (
+              <div key={`${tier.min_pcs}-${tier.max_pcs ?? "plus"}`}>
+                <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block">
+                  {tier.label}
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#71717A]">
+                    Rp
+                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={tier.fee || ""}
+                    onChange={(e) => {
+                      const nextFee = Number(e.target.value) || 0;
+                      const nextTiers = data.tiers.map((t, i) =>
+                        i === idx ? { ...t, fee: nextFee } : t,
+                      );
+                      onChange({ tiers: nextTiers });
+                    }}
+                    placeholder={String(tier.fee)}
+                    className="pl-9 h-9 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
+                  />
+                </div>
               </div>
-            </div>
-
-            <div>
-              <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block">
-                Tier 2 · 11-25 PC
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#71717A]">
-                  Rp
-                </span>
-                <Input
-                  type="number"
-                  min={0}
-                  value={data.tier2_11_25 || ""}
-                  onChange={(e) =>
-                    onChange({ tier2_11_25: Number(e.target.value) || 0 })
-                  }
-                  placeholder="25.000"
-                  className="pl-9 h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs font-semibold text-[#18181B] mb-1.5 block">
-              Tier 3 · 26+ PC
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#71717A]">
-                Rp
-              </span>
-              <Input
-                type="number"
-                min={0}
-                value={data.tier3_26_plus || ""}
-                onChange={(e) =>
-                  onChange({ tier3_26_plus: Number(e.target.value) || 0 })
-                }
-                placeholder="40.000"
-                className="pl-9 h-10 text-xs rounded-[10px] border-[#FBCFE8]/70 focus-visible:border-[#EC4899]"
-              />
-            </div>
+            ))}
           </div>
         </CardContent>
       </div>

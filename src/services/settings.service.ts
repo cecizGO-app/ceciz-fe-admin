@@ -1,11 +1,15 @@
 import { DEFAULT_SETTINGS } from "@/mocks/mockSettingsData";
+import {
+  DEFAULT_PRD_FEE_REKAP_TIERS,
+  type FeeRekapTier,
+} from "@/lib/calculations/fee-rekap";
 import type { AppSettings } from "@/types/settings";
 
 const BASE_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
   "https://ceciz-backend.vercel.app";
 
-const STORAGE_KEY = "ceciz_admin_settings_v1";
+const STORAGE_KEY = "ceciz_admin_settings_v2";
 
 function toDateOnly(val: unknown, fallback: string): string {
   if (!val) return fallback;
@@ -13,15 +17,51 @@ function toDateOnly(val: unknown, fallback: string): string {
   return s.includes("T") ? s.split("T")[0] : s;
 }
 
+function isLegacyDummyThreeTiers(tiers: FeeRekapTier[]): boolean {
+  return (
+    tiers.length === 3 &&
+    tiers[0]?.min_pcs === 1 &&
+    tiers[0]?.max_pcs === 10 &&
+    Number(tiers[0]?.fee) === 15000 &&
+    Number(tiers[1]?.fee) === 25000 &&
+    Number(tiers[2]?.fee) === 40000
+  );
+}
+
+function normalizeFeeRekapTiers(rawTiers: unknown): FeeRekapTier[] {
+  if (!Array.isArray(rawTiers) || rawTiers.length === 0) {
+    return DEFAULT_PRD_FEE_REKAP_TIERS.map((t) => ({ ...t }));
+  }
+  const parsed: FeeRekapTier[] = rawTiers
+    .filter((t) => t && typeof t === "object")
+    .map((t) => {
+      const obj = t as Record<string, unknown>;
+      const min = Number(obj.min_pcs ?? 1);
+      const max =
+        obj.max_pcs === null || obj.max_pcs === undefined
+          ? null
+          : Number(obj.max_pcs);
+      const fee = Number(obj.fee ?? 0);
+      const label =
+        typeof obj.label === "string" && obj.label.trim()
+          ? obj.label.trim()
+          : max === null
+            ? `${min}+ pcs`
+            : min === max
+              ? `${min} pc`
+              : `${min}-${max} pcs`;
+      return { min_pcs: min, max_pcs: max, fee, label };
+    });
+
+  if (parsed.length === 0 || isLegacyDummyThreeTiers(parsed)) {
+    return DEFAULT_PRD_FEE_REKAP_TIERS.map((t) => ({ ...t }));
+  }
+  return parsed;
+}
+
 function mapBackendToAppSettings(raw: Record<string, unknown>, base: AppSettings): AppSettings {
   const dailyRate = (raw.dailyRate as Record<string, number> | undefined) || {};
-  const tiers = Array.isArray(raw.feeRekapTiers)
-    ? (raw.feeRekapTiers as Array<{ min_pcs: number; max_pcs: number | null; fee: number }>)
-    : [];
-
-  const tier1 = tiers.find((t) => t.min_pcs <= 10)?.fee ?? base.feeRekap.tier1_1_10;
-  const tier2 = tiers.find((t) => t.min_pcs >= 11 && t.min_pcs <= 25)?.fee ?? base.feeRekap.tier2_11_25;
-  const tier3 = tiers.find((t) => t.min_pcs >= 26)?.fee ?? base.feeRekap.tier3_26_plus;
+  const normalizedTiers = normalizeFeeRekapTiers(raw.feeRekapTiers);
 
   return {
     checkoutLinks: {
@@ -46,9 +86,7 @@ function mapBackendToAppSettings(raw: Record<string, unknown>, base: AppSettings
       yen: Number(dailyRate.JP ?? dailyRate.yen ?? base.dailyRates.yen),
     },
     feeRekap: {
-      tier1_1_10: Number(tier1),
-      tier2_11_25: Number(tier2),
-      tier3_26_plus: Number(tier3),
+      tiers: normalizedTiers,
     },
     penaltyRules: {
       amountPerDay: Number(raw.penaltyPerDay ?? base.penaltyRules.amountPerDay),
@@ -75,6 +113,7 @@ function mapBackendToAppSettings(raw: Record<string, unknown>, base: AppSettings
 function mapSectionToBackendPayload<K extends keyof AppSettings>(
   section: K,
   data: AppSettings[K],
+  prevSettings?: AppSettings,
 ): Record<string, unknown> {
   if (section === "checkoutLinks") {
     const d = data as AppSettings["checkoutLinks"];
@@ -100,11 +139,12 @@ function mapSectionToBackendPayload<K extends keyof AppSettings>(
   if (section === "feeRekap") {
     const d = data as AppSettings["feeRekap"];
     return {
-      feeRekapTiers: [
-        { min_pcs: 1, max_pcs: 10, fee: d.tier1_1_10, label: "Tier 1 · 1-10 PC" },
-        { min_pcs: 11, max_pcs: 25, fee: d.tier2_11_25, label: "Tier 2 · 11-25 PC" },
-        { min_pcs: 26, max_pcs: null, fee: d.tier3_26_plus, label: "Tier 3 · 26+ PC" },
-      ],
+      feeRekapTiers: d.tiers.map((t) => ({
+        min_pcs: t.min_pcs,
+        max_pcs: t.max_pcs,
+        fee: Number(t.fee) || 0,
+        label: t.label,
+      })),
     };
   }
   if (section === "penaltyRules") {
@@ -117,8 +157,15 @@ function mapSectionToBackendPayload<K extends keyof AppSettings>(
   }
   if (section === "taxRate") {
     const d = data as AppSettings["taxRate"];
+    const prev = prevSettings?.taxRate;
+    const sharedChThJp =
+      prev && d.thPcTax !== prev.thPcTax && d.chPcTax === prev.chPcTax
+        ? d.thPcTax
+        : prev && d.jpPcTax !== prev.jpPcTax && d.chPcTax === prev.chPcTax
+          ? d.jpPcTax
+          : d.chPcTax;
     return {
-      taxRatePcChThJp: d.chPcTax,
+      taxRatePcChThJp: sharedChThJp,
       taxRatePcKr: d.krPcTax,
       taxRateNonPcPerGram: d.nonPcPerKg,
     };
@@ -194,6 +241,7 @@ class SettingsService {
     section: K,
     data: AppSettings[K],
   ): Promise<AppSettings> {
+    const prevSettings = this.settings;
     this.settings = {
       ...this.settings,
       [section]: data,
@@ -201,7 +249,7 @@ class SettingsService {
     this.persistLocal();
 
     try {
-      const payload = mapSectionToBackendPayload(section, data);
+      const payload = mapSectionToBackendPayload(section, data, prevSettings);
       const res = await fetch(`${BASE_URL}/api/v1/admin/settings`, {
         method: "PATCH",
         credentials: "include",
