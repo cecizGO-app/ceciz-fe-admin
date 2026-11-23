@@ -42,7 +42,7 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
 
-  const form = useBatchForm();
+  const form = useBatchForm(isEditMode);
 
   // Muat data batch existing jika dalam mode Edit (/batches/:batchId/edit)
   useEffect(() => {
@@ -148,6 +148,9 @@ export const BatchInputPage: React.FC<BatchInputPageProps> = ({
           ? form.adminNyelem
           : undefined,
         proxyCoName: form.jasaProxy ? form.jasaProxy.trim() : undefined,
+        hargaTotal: Math.round(form.summary.totalTagihanBuyer),
+        hargaTfSeller: Math.round(form.summary.subtotalTfSeller),
+        selisihHarga: Math.round(form.summary.selisihHarga),
         items: form.computedRows.map((r) => {
           const matchedBuyer = form.buyers.find((b) => b.id === r.buyerId);
           return {
