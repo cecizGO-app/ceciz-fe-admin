@@ -14,6 +14,7 @@ import type {
   PaymentReviewStats,
   ExchangeRates,
   CountryCode,
+  TeamActivityItem,
 } from "@/types/dashboard";
 import {
   DEFAULT_RATES,
@@ -21,7 +22,99 @@ import {
   DEFAULT_RECENT_BATCHES,
   DEFAULT_COUNTRY_DISTRIBUTIONS,
   DEFAULT_PAYMENT_STATS,
+  DEFAULT_TEAM_ACTIVITIES,
 } from "@/mocks/mockDashboardData";
+
+const BASE_URL =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
+  "https://ceciz-backend.vercel.app";
+
+function formatRelativeTimeId(dateVal?: unknown): string {
+  if (!dateVal) return "";
+  const d = new Date(String(dateVal));
+  if (Number.isNaN(d.getTime())) return String(dateVal);
+  const diffSec = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
+  if (diffSec < 60) return "Baru saja";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} mnt lalu`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour} jam lalu`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 7) return `${diffDay} hari lalu`;
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+}
+
+function resolveActivityIconType(raw: Record<string, unknown>): TeamActivityItem["iconType"] {
+  const rawIcon = String(raw.iconType ?? raw.icon ?? "").toLowerCase();
+  if (rawIcon === "check" || rawIcon === "truck" || rawIcon === "package" || rawIcon === "receipt") {
+    return rawIcon;
+  }
+  const hint = `${raw.type ?? ""} ${raw.category ?? ""} ${raw.eventType ?? ""} ${raw.title ?? ""}`.toLowerCase();
+  if (hint.includes("track") || hint.includes("ship") || hint.includes("otw") || hint.includes("wh") || hint.includes("kirim")) {
+    return "truck";
+  }
+  if (hint.includes("tax") || hint.includes("pajak") || hint.includes("invoice") || hint.includes("tagihan")) {
+    return "receipt";
+  }
+  if (hint.includes("pay") || hint.includes("bayar") || hint.includes("bukti") || hint.includes("verif") || hint.includes("approve")) {
+    return "check";
+  }
+  return "package";
+}
+
+/**
+ * GET /api/v1/admin/dashboard/activities
+ * Mengambil log aktivitas tim terbaru dari backend live
+ */
+export async function getDashboardActivitiesApi(limit = 10): Promise<TeamActivityItem[]> {
+  const url = new URL(`${BASE_URL}/api/v1/admin/dashboard/activities`);
+  url.searchParams.set("limit", String(limit));
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const json = await res.json();
+  const rawList: Array<Record<string, unknown>> = Array.isArray(json?.data)
+    ? json.data
+    : Array.isArray(json?.data?.items)
+      ? json.data.items
+      : Array.isArray(json?.activities)
+        ? json.activities
+        : Array.isArray(json)
+          ? json
+          : [];
+
+  return rawList.map((raw, idx) => {
+    const title = String(raw.title ?? raw.action ?? raw.message ?? "Aktivitas tim");
+    const directSubtitle = raw.subtitle ? String(raw.subtitle).trim() : "";
+    const actor = String(
+      raw.actorName ?? raw.actor ?? raw.userName ?? raw.buyerName ?? raw.description ?? "",
+    ).trim();
+    const relTime =
+      raw.timeAgo && String(raw.timeAgo).trim()
+        ? String(raw.timeAgo).trim()
+        : formatRelativeTimeId(raw.createdAt ?? raw.timestamp ?? raw.updatedAt);
+
+    const subtitle =
+      directSubtitle ||
+      [actor, relTime].filter(Boolean).join(" · ") ||
+      "Baru saja";
+
+    return {
+      id: String(raw.id ?? raw.referenceId ?? `act-${idx}`),
+      title,
+      subtitle,
+      iconType: resolveActivityIconType(raw),
+    };
+  });
+}
 
 const COUNTRY_NAMES: Record<string, string> = {
   CH: "China",
@@ -37,6 +130,7 @@ export interface DashboardDataResult {
   countryDistributions: CountryDistribution[];
   paymentStats: PaymentReviewStats;
   rates: ExchangeRates;
+  teamActivities: TeamActivityItem[];
   totalBatchesMonth: number;
   periodLabel: string;
   isLiveBackend: boolean;
@@ -50,12 +144,14 @@ export interface DashboardDataResult {
  * 3. GET /api/v1/admin/tracking/stats (Tracking Paket Berjalan, Tiba di WH ID)
  * 4. GET /api/v1/admin/batches (Tabel 5 Batch Terbaru & Distribusi per Negara)
  * 5. GET /api/v1/admin/batches/form-options (Kurs Harian Valas)
+ * 6. GET /api/v1/admin/taxes/stats (Statistik Tagihan Tax)
+ * 7. GET /api/v1/admin/dashboard/activities (Aktivitas Tim Terbaru)
  */
 export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
   const errors: string[] = [];
   let isLiveBackend = false;
 
-  // Jalankan pemanggilan 5 endpoint secara paralel menggunakan Promise.allSettled
+  // Jalankan pemanggilan 7 endpoint secara paralel menggunakan Promise.allSettled
   const [
     batchStatsRes,
     paymentStatsRes,
@@ -63,6 +159,7 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
     batchesListRes,
     formOptionsRes,
     taxStatsRes,
+    activitiesRes,
   ] = await Promise.allSettled([
     getBatchStatsApi(),
     getPaymentStatsApi(),
@@ -70,6 +167,7 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
     getBatchesApi(),
     getBatchFormOptionsApi(),
     getTaxStatsApi(),
+    getDashboardActivitiesApi(6),
   ]);
 
   // 1. Parsing Batch Stats
@@ -255,6 +353,15 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
     taxPeriodCutoff = tx.activePeriodMonth || tx.activePeriodName || DEFAULT_METRIC_STATS.taxPeriodCutoff;
   }
 
+  // 7. Parsing Aktivitas Tim Terbaru Live dari Backend
+  let teamActivities: TeamActivityItem[] = [...DEFAULT_TEAM_ACTIVITIES];
+  if (activitiesRes.status === "fulfilled") {
+    isLiveBackend = true;
+    teamActivities = activitiesRes.value;
+  } else {
+    errors.push(`Dashboard Activities: ${activitiesRes.reason?.message || "Error"}`);
+  }
+
   return {
     metricStats: {
       activeBatches,
@@ -272,6 +379,7 @@ export async function fetchDashboardDataApi(): Promise<DashboardDataResult> {
     countryDistributions,
     paymentStats,
     rates,
+    teamActivities,
     totalBatchesMonth,
     periodLabel,
     isLiveBackend,
