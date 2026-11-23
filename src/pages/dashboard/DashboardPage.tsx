@@ -12,7 +12,6 @@ import {
 } from "@/components/dashboard";
 import type { ExchangeRates } from "@/types/dashboard";
 import { useDashboard } from "@/hooks";
-import { DEFAULT_TEAM_ACTIVITIES } from "@/mocks/mockDashboardData";
 import { cn } from "@/lib/utils";
 
 interface DashboardPageProps {
@@ -34,6 +33,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     countryDistributions,
     paymentStats,
     rates,
+    teamActivities,
     totalBatchesMonth,
     periodLabel,
     isSyncing,
@@ -160,7 +160,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             onNavigateVerifikasi={() => onNavigate?.("verifikasi")}
           />
 
-          <TeamActivityCard activities={DEFAULT_TEAM_ACTIVITIES} />
+          <TeamActivityCard activities={teamActivities} />
         </div>
       </div>
 

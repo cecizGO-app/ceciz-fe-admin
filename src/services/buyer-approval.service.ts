@@ -93,23 +93,127 @@ function saveLocalRequests(items: BuyerAccountRequest[]) {
 }
 
 function normalizeBackendRequest(raw: Record<string, unknown>): BuyerAccountRequest {
-  const statusRaw = String(raw.approvalStatus ?? raw.approval_status ?? "PENDING").toUpperCase();
-  const groupRaw = String(raw.lineGroup ?? raw.line_group ?? "GO_1").toUpperCase().replace(/\s+/g, "_");
+  const statusRaw = String(
+    raw.approvalStatus ?? raw.approval_status ?? raw.verificationStatus ?? raw.status ?? "PENDING",
+  ).toUpperCase();
+  const groupRaw = String(raw.lineGroup ?? raw.line_group ?? raw.group ?? "GO_1")
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+  const approverRaw = raw.approvedBy ?? raw.verifiedBy;
+  const approvedByName =
+    typeof approverRaw === "object" && approverRaw !== null
+      ? String((approverRaw as { name?: unknown }).name ?? "") || null
+      : approverRaw
+        ? String(approverRaw)
+        : null;
+
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? raw.dnLine ?? raw.dn_line ?? "-"),
     email: String(raw.email ?? "-"),
-    dnLine: String(raw.dnLine ?? raw.dn_line ?? raw.name ?? "-"),
-    idLine: String(raw.idLine ?? raw.id_line ?? "-").replace(/^@/, ""),
+    dnLine: String(raw.dnLine ?? raw.dn_line ?? raw.displayName ?? raw.name ?? "-"),
+    idLine: String(raw.idLine ?? raw.id_line ?? raw.lineId ?? "-").replace(/^@/, ""),
     lineGroup: (groupRaw === "GO_2" ? "GO_2" : "GO_1") as LineGroup,
     approvalStatus: (["PENDING", "APPROVED", "REJECTED"].includes(statusRaw)
       ? statusRaw
       : "PENDING") as BuyerApprovalStatus,
-    requestedAt: String(raw.requestedAt ?? raw.requested_at ?? raw.createdAt ?? new Date().toISOString()),
-    approvedBy: raw.approvedBy ? String(raw.approvedBy) : null,
-    approvedAt: raw.approvedAt ? String(raw.approvedAt) : null,
-    rejectReason: raw.rejectReason ? String(raw.rejectReason) : null,
+    requestedAt: String(
+      raw.requestedAt ?? raw.requested_at ?? raw.submittedAt ?? raw.createdAt ?? new Date().toISOString(),
+    ),
+    approvedBy: approvedByName,
+    approvedAt: raw.approvedAt
+      ? String(raw.approvedAt)
+      : raw.verifiedAt
+        ? String(raw.verifiedAt)
+        : null,
+    rejectReason: raw.rejectReason
+      ? String(raw.rejectReason)
+      : raw.reject_reason
+        ? String(raw.reject_reason)
+        : null,
     avatarUrl: raw.image ? String(raw.image) : null,
+  };
+}
+
+function readNumericStat(val: unknown): number | undefined {
+  if (typeof val === "number" && !Number.isNaN(val)) return val;
+  if (typeof val === "string" && val.trim() !== "" && !Number.isNaN(Number(val))) {
+    return Number(val);
+  }
+  if (typeof val === "object" && val !== null) {
+    const obj = val as Record<string, unknown>;
+    return readNumericStat(obj.count ?? obj.total ?? obj.value);
+  }
+  return undefined;
+}
+
+function normalizeBackendStats(
+  sd: Record<string, unknown>,
+  fallback: BuyerApprovalStats,
+): BuyerApprovalStats {
+  const tabCounts = (sd.tabCounts as Record<string, unknown> | undefined) ?? {};
+  const groupCounts = (sd.groupCounts as Record<string, unknown> | undefined) ?? {};
+  const memberAktif =
+    typeof sd.totalMemberAktif === "object" && sd.totalMemberAktif !== null
+      ? (sd.totalMemberAktif as Record<string, unknown>)
+      : typeof sd.memberAktif === "object" && sd.memberAktif !== null
+        ? (sd.memberAktif as Record<string, unknown>)
+        : undefined;
+
+  const pendingCount =
+    readNumericStat(sd.pendingCount) ??
+    readNumericStat(tabCounts.pending) ??
+    readNumericStat(sd.menungguPersetujuan) ??
+    readNumericStat(sd.pending) ??
+    fallback.pendingCount;
+
+  const approvedCount =
+    readNumericStat(sd.approvedCount) ??
+    readNumericStat(tabCounts.approved) ??
+    readNumericStat(sd.akunDisetujui) ??
+    readNumericStat(sd.disetujui) ??
+    readNumericStat(sd.approved) ??
+    fallback.approvedCount;
+
+  const rejectedCount =
+    readNumericStat(sd.rejectedCount) ??
+    readNumericStat(tabCounts.rejected) ??
+    readNumericStat(sd.pengajuanDitolak) ??
+    readNumericStat(sd.ditolak) ??
+    readNumericStat(sd.rejected) ??
+    fallback.rejectedCount;
+
+  const go1Count =
+    readNumericStat(sd.go1Count) ??
+    readNumericStat(memberAktif?.go1) ??
+    readNumericStat(memberAktif?.GO_1) ??
+    readNumericStat(groupCounts.GO_1) ??
+    readNumericStat(groupCounts.go1) ??
+    readNumericStat(sd.go1) ??
+    fallback.go1Count;
+
+  const go2Count =
+    readNumericStat(sd.go2Count) ??
+    readNumericStat(memberAktif?.go2) ??
+    readNumericStat(memberAktif?.GO_2) ??
+    readNumericStat(groupCounts.GO_2) ??
+    readNumericStat(groupCounts.go2) ??
+    readNumericStat(sd.go2) ??
+    fallback.go2Count;
+
+  const totalActiveMembers =
+    readNumericStat(sd.totalActiveMembers) ??
+    readNumericStat(sd.totalMemberAktif) ??
+    readNumericStat(sd.memberAktif) ??
+    (go1Count + go2Count > 0 ? go1Count + go2Count : approvedCount);
+
+  return {
+    pendingCount,
+    approvedCount,
+    rejectedCount,
+    go1Count,
+    go2Count,
+    totalActiveMembers,
   };
 }
 
@@ -158,53 +262,51 @@ export interface BuyerRequestsResponse {
 }
 
 /**
- * GET /api/v1/admin/buyers/requests (PRD v1.5 §6.12)
+ * GET /api/v1/admin/buyer-approvals & GET /api/v1/admin/buyer-approvals/stats (PRD v1.5 §6.12)
  */
 export async function getBuyerRequestsApi(
   filter?: BuyerApprovalFilter,
 ): Promise<BuyerRequestsResponse> {
   try {
-    const url = new URL(`${BASE_URL}/api/v1/admin/buyers/requests`);
+    const url = new URL(`${BASE_URL}/api/v1/admin/buyer-approvals`);
     if (filter?.status && filter.status !== "ALL") url.searchParams.set("status", filter.status);
     if (filter?.lineGroup && filter.lineGroup !== "ALL") url.searchParams.set("lineGroup", filter.lineGroup);
     if (filter?.search?.trim()) url.searchParams.set("search", filter.search.trim());
+    url.searchParams.set("limit", "100");
 
-    const res = await fetch(url.toString(), {
-      method: "GET",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    });
+    const [listRes, statsRes] = await Promise.all([
+      fetch(url.toString(), {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      }),
+      fetch(`${BASE_URL}/api/v1/admin/buyer-approvals/stats`, {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      }).catch(() => null),
+    ]);
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
+    if (!listRes.ok) throw new Error(`HTTP ${listRes.status}`);
+    const json = await listRes.json();
     const rawList: Array<Record<string, unknown>> = Array.isArray(json?.data)
       ? json.data
-      : Array.isArray(json)
-        ? json
-        : [];
+      : Array.isArray(json?.data?.items)
+        ? json.data.items
+        : Array.isArray(json?.items)
+          ? json.items
+          : Array.isArray(json)
+            ? json
+            : [];
     const items = rawList.map(normalizeBackendRequest);
 
     let stats = computeBuyerApprovalStats(items);
-    try {
-      const statsRes = await fetch(`${BASE_URL}/api/v1/admin/buyers/requests/stats`, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (statsRes.ok) {
-        const sJson = await statsRes.json();
-        const sd = sJson?.data || sJson;
-        if (sd && typeof sd.pendingCount === "number") {
-          stats = {
-            pendingCount: Number(sd.pendingCount ?? 0),
-            approvedCount: Number(sd.approvedCount ?? 0),
-            rejectedCount: Number(sd.rejectedCount ?? 0),
-            go1Count: Number(sd.go1Count ?? 0),
-            go2Count: Number(sd.go2Count ?? 0),
-          };
-        }
+    if (statsRes && statsRes.ok) {
+      const sJson = await statsRes.json().catch(() => null);
+      const sd = (sJson?.data || sJson) as Record<string, unknown> | null;
+      if (sd && typeof sd === "object") {
+        stats = normalizeBackendStats(sd, stats);
       }
-    } catch {
-      // Gunakan stats yang dihitung dari items
     }
 
     return { items, stats, source: "api" };
@@ -219,7 +321,7 @@ export async function getBuyerRequestsApi(
 }
 
 /**
- * PATCH /api/v1/admin/buyers/:id/verify (PRD v1.5 §6.12)
+ * PATCH /api/v1/admin/buyer-approvals/:id/verify (PRD v1.5 §6.12)
  */
 export async function verifyBuyerAccountApi(params: {
   id: string;
@@ -228,14 +330,13 @@ export async function verifyBuyerAccountApi(params: {
   adminName?: string;
 }): Promise<{ source: "api" | "local" }> {
   try {
-    const res = await fetch(`${BASE_URL}/api/v1/admin/buyers/${params.id}/verify`, {
+    const res = await fetch(`${BASE_URL}/api/v1/admin/buyer-approvals/${params.id}/verify`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         status: params.action === "APPROVE" ? "APPROVED" : "REJECTED",
-        action: params.action,
-        rejectReason: params.rejectReason || undefined,
+        ...(params.rejectReason ? { rejectReason: params.rejectReason } : {}),
       }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -265,7 +366,7 @@ export async function verifyBuyerAccountApi(params: {
 }
 
 /**
- * POST /api/v1/admin/buyers/bulk-verify (PRD v1.5 §6.12)
+ * POST /api/v1/admin/buyer-approvals/bulk-verify (PRD v1.5 §6.12)
  */
 export async function bulkVerifyBuyerAccountsApi(params: {
   ids: string[];
@@ -274,16 +375,14 @@ export async function bulkVerifyBuyerAccountsApi(params: {
   adminName?: string;
 }): Promise<{ source: "api" | "local" }> {
   try {
-    const res = await fetch(`${BASE_URL}/api/v1/admin/buyers/bulk-verify`, {
+    const res = await fetch(`${BASE_URL}/api/v1/admin/buyer-approvals/bulk-verify`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         buyerIds: params.ids,
-        ids: params.ids,
         status: params.action === "APPROVE" ? "APPROVED" : "REJECTED",
-        action: params.action,
-        rejectReason: params.rejectReason || undefined,
+        ...(params.rejectReason ? { rejectReason: params.rejectReason } : {}),
       }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

@@ -338,7 +338,7 @@ export const BuyerApprovalPage: React.FC<BuyerApprovalPageProps> = ({
             <span>Total Member Aktif</span>
           </div>
           <div className="text-[24px] sm:text-[28px] font-bold text-[#18181B] tracking-tight mt-1">
-            {stats.go1Count + stats.go2Count}
+            {stats.totalActiveMembers ?? stats.go1Count + stats.go2Count}
           </div>
           <p className="text-xs text-[#71717A]">
             Member aktif di grup LINE GO 1 &amp; GO 2

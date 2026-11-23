@@ -56,19 +56,25 @@ export const TeamActivityCard: React.FC<TeamActivityCardProps> = ({
       </CardHeader>
 
       <CardContent className="p-0 space-y-2.5">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-center gap-2.5 text-left">
-            {renderIcon(activity.iconType)}
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-[#18181B] leading-tight truncate">
-                {activity.title}
-              </p>
-              <p className="text-[11px] text-[#71717A] leading-tight mt-0.5 truncate">
-                {activity.subtitle}
-              </p>
+        {activities.length === 0 ? (
+          <p className="text-xs text-[#71717A] py-2">
+            Belum ada aktivitas tim terbaru.
+          </p>
+        ) : (
+          activities.map((activity) => (
+            <div key={activity.id} className="flex items-center gap-2.5 text-left">
+              {renderIcon(activity.iconType)}
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-[#18181B] leading-tight truncate">
+                  {activity.title}
+                </p>
+                <p className="text-[11px] text-[#71717A] leading-tight mt-0.5 truncate">
+                  {activity.subtitle}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );

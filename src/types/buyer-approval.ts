@@ -22,6 +22,7 @@ export interface BuyerApprovalStats {
   rejectedCount: number;
   go1Count: number;
   go2Count: number;
+  totalActiveMembers?: number;
 }
 
 export interface BuyerApprovalFilter {

@@ -9,6 +9,7 @@ import type {
   CountryDistribution,
   PaymentReviewStats,
   ExchangeRates,
+  TeamActivityItem,
 } from "@/types/dashboard";
 import {
   DEFAULT_RATES,
@@ -16,6 +17,7 @@ import {
   DEFAULT_RECENT_BATCHES,
   DEFAULT_COUNTRY_DISTRIBUTIONS,
   DEFAULT_PAYMENT_STATS,
+  DEFAULT_TEAM_ACTIVITIES,
 } from "@/mocks/mockDashboardData";
 import { useNotificationStore } from "@/stores/useNotificationStore";
 
@@ -29,6 +31,9 @@ export function useDashboard() {
   const [paymentStats, setPaymentStats] =
     useState<PaymentReviewStats>(DEFAULT_PAYMENT_STATS);
   const [rates, setRates] = useState<ExchangeRates>(DEFAULT_RATES);
+  const [teamActivities, setTeamActivities] = useState<TeamActivityItem[]>(
+    DEFAULT_TEAM_ACTIVITIES,
+  );
   const [totalBatchesMonth, setTotalBatchesMonth] = useState<number>(24);
   const [periodLabel, setPeriodLabel] = useState<string>("September · 24 batch");
 
@@ -51,6 +56,7 @@ export function useDashboard() {
       setCountryDistributions(result.countryDistributions);
       setPaymentStats(result.paymentStats);
       setRates(result.rates);
+      setTeamActivities(result.teamActivities);
       setTotalBatchesMonth(result.totalBatchesMonth);
       setPeriodLabel(result.periodLabel);
       setIsLiveBackend(result.isLiveBackend);
@@ -103,6 +109,7 @@ export function useDashboard() {
     countryDistributions,
     paymentStats,
     rates,
+    teamActivities,
     totalBatchesMonth,
     periodLabel,
     isLoading,
