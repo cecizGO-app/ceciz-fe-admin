@@ -32,7 +32,7 @@ function mapBackendUsersToBuyerOptions(users: BackendUserOption[]): BuyerOption[
   });
 }
 
-export function useBatchForm() {
+export function useBatchForm(isEditMode = false) {
   // Selected Country
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>("CH");
 
@@ -55,7 +55,9 @@ export function useBatchForm() {
   }, [selectedCountry, batchNumber]);
 
   // Otomatis mengambil Nomor Batch Berikutnya (Next Batch Number) dari Backend Vercel
+  // Hanya dijalankan saat mode Buat Batch Baru (bukan mode Edit agar nomor batch existing tidak tertimpa)
   useEffect(() => {
+    if (isEditMode) return;
     let isCurrent = true;
     getNextBatchNumberApi(selectedCountry)
       .then((res) => {
@@ -70,7 +72,7 @@ export function useBatchForm() {
     return () => {
       isCurrent = false;
     };
-  }, [selectedCountry]);
+  }, [selectedCountry, isEditMode]);
 
   // Settings live cache untuk kurs, fee nyelem default, dan tier fee rekap
   const [settingsRates, setSettingsRates] = useState<Record<CountryCode, number>>(() => {
@@ -113,7 +115,11 @@ export function useBatchForm() {
           INA: 1,
         };
         setSettingsRates(nextRates);
-        setKursRate(nextRates[selectedCountry] ?? nextRates.CH);
+        if (!isEditMode) {
+          const activeRate = nextRates[selectedCountry] ?? nextRates.CH;
+          setRateSeller(activeRate);
+          setKursRate(activeRate);
+        }
 
         // 2. Sinkronkan Fee Nyelem default dari Settings
         const resolvedFeeNyelem = Number(
@@ -123,7 +129,7 @@ export function useBatchForm() {
         );
         if (resolvedFeeNyelem > 0) {
           setSettingsFeeNyelem(resolvedFeeNyelem);
-          if (selectedCountry !== "JP") {
+          if (!isEditMode && selectedCountry !== "JP") {
             setFeeNyelem(resolvedFeeNyelem);
           }
         }
@@ -171,9 +177,9 @@ export function useBatchForm() {
     };
   }, []);
 
-  // Rates & Fees
-  const [kursRate, setKursRate] = useState(2250); // Rate Buyer
-  const [rateSeller, setRateSeller] = useState(2200); // Rate Seller (kurs transfer ke seller/WH)
+  // Rates & Fees (default mengikuti Kurs Harian dari Dashboard/Settings)
+  const [kursRate, setKursRate] = useState<number>(() => settingsRates.CH); // Rate Buyer (bisa dinaikkan manual oleh admin)
+  const [rateSeller, setRateSeller] = useState<number>(() => settingsRates.CH); // Rate Seller (otomatis ikut Kurs Harian)
   const [shippingWHForeign, setShippingWHForeign] = useState(15);
   const [warehouseTujuan, setWarehouseTujuan] = useState("WH Guangzhou");
   const [feeWarehouse, setFeeWarehouse] = useState(15000);
@@ -228,8 +234,8 @@ export function useBatchForm() {
     const target = COUNTRIES.find((c) => c.code === code);
     if (target) {
       const configuredRate = settingsRates[code] ?? target.defaultRate;
+      setRateSeller(configuredRate);
       setKursRate(configuredRate);
-      setRateSeller(target.defaultRateSeller ?? configuredRate);
     }
     if (code === "KR") {
       setWarehouseTujuan("WH Seoul");

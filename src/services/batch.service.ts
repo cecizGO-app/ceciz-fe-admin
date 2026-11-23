@@ -34,6 +34,9 @@ export interface BackendCreateBatchInput {
   feeProxy?: number;
   adminNyelemId?: string;
   proxyCoName?: string;
+  hargaTotal?: number;
+  hargaTfSeller?: number;
+  selisihHarga?: number;
   items?: BackendBatchItemInput[];
 }
 
