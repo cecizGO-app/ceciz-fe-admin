@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import type { CountryCode, CountryOption } from "@/types/batch";
 
 import { CountryFlag } from "@/components/icons/CountryFlag";
@@ -107,6 +107,25 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
   const isINA = selectedCountry === "INA";
   const isKR = selectedCountry === "KR";
   const isJP = selectedCountry === "JP";
+
+  const [rawShipping, setRawShipping] = useState<string | null>(null);
+
+  const shippingInputValue =
+    rawShipping !== null
+      ? rawShipping
+      : shippingForeign !== 0
+        ? String(shippingForeign)
+        : "";
+
+  const handleShippingChange = (raw: string) => {
+    const normalized = raw.replace(/,/g, ".").replace(/[^0-9.]/g, "");
+    const parts = normalized.split(".");
+    const sanitized =
+      parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : normalized;
+    setRawShipping(sanitized);
+    const parsed = parseFloat(sanitized);
+    onChangeShippingForeign(Number.isFinite(parsed) ? parsed : 0);
+  };
 
   return (
     <Card className="gap-6 p-6 sm:p-7 shadow-sm border border-[#FBCFE8]/60">
@@ -283,14 +302,13 @@ export const BatchInfoForm: React.FC<BatchInfoFormProps> = ({
                   <div className="relative flex items-center">
                     <Input
                       id="shipping-foreign"
-                      type="number"
-                      step={isKR ? "0.01" : "1"}
-                      value={shippingForeign || ""}
-                      onChange={(e) =>
-                        onChangeShippingForeign(Number(e.target.value) || 0)
-                      }
+                      type="text"
+                      inputMode="decimal"
+                      value={shippingInputValue}
+                      onChange={(e) => handleShippingChange(e.target.value)}
+                      onBlur={() => setRawShipping(null)}
                       className="h-10 pr-12 font-semibold text-xs"
-                      placeholder="0"
+                      placeholder={isKR ? "0.3" : "0"}
                     />
                     <span className="absolute right-3 text-xs font-semibold text-[#71717A] pointer-events-none">
                       {currentCurrency}

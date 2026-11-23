@@ -8,6 +8,7 @@ import {
   MOCK_ADMIN_FEE_PERIODS,
   MOCK_PAYMENT_METHODS_SUMMARY,
 } from "@/mocks/mockReportsData";
+import { getBatchesApi, mapBackendBatchToFrontend } from "@/services/batch.service";
 import type {
   FinancialKpiMetrics,
   BatchOptionForProfit,
@@ -43,7 +44,7 @@ class ReportsService {
     adminFeePeriods: AdminFeePeriodRecord[];
     paymentMethodSummaries: PaymentMethodSummary[];
   }> {
-    const [profitRes, feesRes, paySummaryRes] = await Promise.allSettled([
+    const [profitRes, feesRes, paySummaryRes, liveBatchesRes] = await Promise.allSettled([
       fetch(`${BASE_URL}/api/v1/admin/reports/profit`, {
         method: "GET",
         credentials: "include",
@@ -56,7 +57,19 @@ class ReportsService {
         method: "GET",
         credentials: "include",
       }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))),
+      getBatchesApi(),
     ]);
+
+    const liveBatchMap = new Map<
+      string,
+      ReturnType<typeof mapBackendBatchToFrontend>
+    >();
+    if (liveBatchesRes.status === "fulfilled" && Array.isArray(liveBatchesRes.value)) {
+      for (const rawBatch of liveBatchesRes.value) {
+        const mapped = mapBackendBatchToFrontend(rawBatch);
+        liveBatchMap.set(mapped.id, mapped);
+      }
+    }
 
     if (profitRes.status === "fulfilled") {
       const pd = profitRes.value?.data || profitRes.value;
@@ -72,16 +85,37 @@ class ReportsService {
         this.kpis = { ...this.kpis, ...pd.kpis };
       }
       if (Array.isArray(pd?.availableBatches) && pd.availableBatches.length > 0) {
-        this.batches = pd.availableBatches.map((b: Record<string, unknown>) => ({
-          id: String(b.id),
-          batchNumber: String(b.code ?? b.batchCode ?? b.batchNumber ?? b.id),
-          countryCode: String(
-            b.countryCode ?? String(b.code ?? "CH").split("-")[0] ?? "CH",
-          ) as BatchOptionForProfit["countryCode"],
-          labaAmount: Number(b.labaBersih ?? b.labaAmount ?? 0),
-          totalPc: Number(b.totalPc ?? b.totalPcs ?? 0),
-          date: String(b.date ?? b.batchDate ?? "-"),
-          status: String(b.status ?? "Open"),
+        this.batches = pd.availableBatches.map((b: Record<string, unknown>) => {
+          const id = String(b.id);
+          const live = liveBatchMap.get(id);
+          return {
+            id,
+            batchNumber:
+              live?.batchNumber ||
+              String(b.code ?? b.batchCode ?? b.batchNumber ?? id),
+            countryCode: (live?.countryCode ||
+              String(
+                b.countryCode ?? String(b.code ?? "CH").split("-")[0] ?? "CH",
+              )) as BatchOptionForProfit["countryCode"],
+            labaAmount: Number(
+              b.labaBersih ?? b.labaAmount ?? live?.labaAmount ?? 0,
+            ),
+            totalPc: live
+              ? live.totalPc
+              : Number(b.totalPc ?? b.totalPcs ?? 0),
+            date: live?.date || String(b.date ?? b.batchDate ?? "-"),
+            status: live?.status || String(b.status ?? "Open"),
+          };
+        });
+      } else if (liveBatchMap.size > 0) {
+        this.batches = Array.from(liveBatchMap.values()).map((live) => ({
+          id: live.id,
+          batchNumber: live.batchNumber,
+          countryCode: live.countryCode,
+          labaAmount: live.labaAmount ?? 0,
+          totalPc: live.totalPc,
+          date: live.date,
+          status: live.status,
         }));
       }
       if (Array.isArray(pd?.periods) && pd.periods.length > 0) {

@@ -80,7 +80,9 @@ export function useTaxInvoices() {
     return invoices.filter((item) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const matchId = item.id.toLowerCase().includes(q);
+        const matchId =
+          item.id.toLowerCase().includes(q) ||
+          (item.invoiceNumber || "").toLowerCase().includes(q);
         const matchName = item.buyerName.toLowerCase().includes(q);
         const matchHandle = item.buyerHandle.toLowerCase().includes(q);
         const matchBatch = item.batches.some(

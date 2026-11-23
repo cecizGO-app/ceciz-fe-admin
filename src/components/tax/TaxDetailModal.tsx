@@ -99,7 +99,7 @@ export const TaxDetailModal: React.FC<TaxDetailModalProps> = ({
         {/* Header matching user wireframe */}
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-[#18181B] tracking-tight">
-            Detail Tagihan Tax &middot; {item.id}
+            Detail Tagihan Tax &middot; {item.invoiceNumber || item.id}
           </DialogTitle>
           <div className="text-xs sm:text-sm text-[#71717A] flex flex-wrap items-center gap-2">
             <span className="font-semibold text-[#18181B]">{item.buyerName}</span>
@@ -120,7 +120,7 @@ export const TaxDetailModal: React.FC<TaxDetailModalProps> = ({
         {downloadSuccess && (
           <div className="rounded-[12px] bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs text-emerald-800 font-semibold flex items-center gap-2 animate-in fade-in duration-200">
             <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Invoice PDF untuk {item.id} berhasil diunduh ke perangkat Anda.</span>
+            <span>Invoice PDF untuk {item.invoiceNumber || item.id} berhasil diunduh ke perangkat Anda.</span>
           </div>
         )}
 

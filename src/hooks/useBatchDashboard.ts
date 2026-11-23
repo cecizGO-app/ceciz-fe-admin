@@ -205,12 +205,25 @@ export function useBatchDashboard() {
     setCalcModalOpen(true);
   };
 
-  const handleSaveCalculation = (batchNumber: string, labaBersih: number) => {
+  const handleSaveCalculation = async (
+    batchNumber: string,
+    labaBersih: number,
+  ) => {
+    const target = batches.find((b) => b.batchNumber === batchNumber);
     setBatches((prev) =>
       prev.map((b) =>
         b.batchNumber === batchNumber ? { ...b, labaAmount: labaBersih } : b,
       ),
     );
+
+    if (target?.id) {
+      try {
+        await patchBatchApi(target.id, { labaBersih });
+      } catch (err) {
+        console.warn("Gagal menyimpan laba bersih ke backend:", err);
+      }
+    }
+
     showToast(
       `Internal calculation untuk ${batchNumber} tersimpan! Laba bersih: Rp ${formatRupiah(labaBersih)}`,
     );

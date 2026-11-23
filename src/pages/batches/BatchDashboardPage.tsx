@@ -175,6 +175,12 @@ export const BatchDashboardPage: React.FC<BatchDashboardPageProps> = ({
           onOpenChange={setCalcModalOpen}
           batchNumber={selectedBatchForCalc.batchNumber}
           initialLaba={selectedBatchForCalc.labaAmount}
+          batchFinancials={{
+            totalHargaJual: selectedBatchForCalc.hargaTotal,
+            hargaTFSeller: selectedBatchForCalc.hargaTfSeller,
+            feeNyelem: selectedBatchForCalc.feeNyelem,
+            feeRekap: selectedBatchForCalc.feeRekap,
+          }}
           isArrivedINA={
             selectedBatchForCalc.status === "Closed" ||
             selectedBatchForCalc.status === "Archived"

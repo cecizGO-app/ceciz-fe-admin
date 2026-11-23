@@ -250,7 +250,7 @@ export const TaxTable: React.FC<TaxTableProps> = ({
                     {/* Invoice & Buyer */}
                     <TableCell className="py-3 px-4 align-top">
                       <div className="font-bold text-xs sm:text-[13px] text-[#18181B] tracking-tight">
-                        {item.id}
+                        {item.invoiceNumber || item.id}
                       </div>
                       <div className="text-xs font-semibold text-[#18181B] mt-0.5">
                         {item.buyerName}
@@ -263,12 +263,14 @@ export const TaxTable: React.FC<TaxTableProps> = ({
                     {/* Batch Tercakup */}
                     <TableCell className="py-3 px-4 align-top">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {item.batches.map((batch, idx) => (
+                        {Array.from(
+                          new Set(item.batches.map((b) => b.batchCode)),
+                        ).map((batchCode, idx) => (
                           <span
-                            key={`${batch.batchCode}-${idx}`}
+                            key={`${batchCode}-${idx}`}
                             className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FFF0F7] border border-[#FBCFE8] text-[11px] font-bold text-[#EC4899]"
                           >
-                            {batch.batchCode}
+                            {batchCode}
                           </span>
                         ))}
                       </div>

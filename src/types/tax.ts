@@ -26,7 +26,8 @@ export interface BatchItemRef {
 }
 
 export interface TaxInvoiceItem {
-  id: string; // e.g. "TAX-023"
+  id: string; // DB ID or code
+  invoiceNumber?: string; // e.g. "TAX-2026-001"
   buyerName: string;
   buyerHandle: string;
   buyerPhone: string;

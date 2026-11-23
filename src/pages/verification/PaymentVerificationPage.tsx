@@ -78,7 +78,13 @@ export const PaymentVerificationPage: React.FC = () => {
       try {
         const detail = await getPaymentByIdApi(item.id);
         if (detail) {
-          setSelectedProofItem(mapBackendPaymentToFrontend(detail));
+          const mappedDetail = mapBackendPaymentToFrontend(detail);
+          setSelectedProofItem({
+            ...mappedDetail,
+            buyerUsername: detail.buyer?.idLine?.trim()
+              ? mappedDetail.buyerUsername
+              : item.buyerUsername || mappedDetail.buyerUsername,
+          });
         }
       } catch (err) {
         console.warn("Backend get payment by ID failed, using cached item:", err);
