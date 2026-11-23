@@ -147,7 +147,7 @@ export const BuyerApprovalPage: React.FC<BuyerApprovalPageProps> = ({
       });
       showNotice(
         "success",
-        `Akun ${item.dnLine} (@${item.idLine}) disetujui masuk ke ${item.lineGroup.replace("_", " ")}.`,
+        `Akun ${item.dnLine} (@${item.idLine}) disetujui${item.lineGroup ? ` masuk ke ${item.lineGroup.replace("_", " ")}` : ""}.`,
       );
       await loadData();
     } catch (err) {
@@ -498,10 +498,14 @@ export const BuyerApprovalPage: React.FC<BuyerApprovalPageProps> = ({
                       </div>
                       <span
                         className={`text-xs font-semibold ${
-                          item.lineGroup === "GO_1" ? "text-[#EC4899]" : "text-[#2563EB]"
+                          item.lineGroup === "GO_1"
+                            ? "text-[#EC4899]"
+                            : item.lineGroup === "GO_2"
+                              ? "text-[#2563EB]"
+                              : "text-[#A1A1AA]"
                         }`}
                       >
-                        {item.lineGroup.replace("_", " ")}
+                        {item.lineGroup ? item.lineGroup.replace("_", " ") : "Belum pilih"}
                       </span>
                     </div>
 
@@ -630,10 +634,14 @@ export const BuyerApprovalPage: React.FC<BuyerApprovalPageProps> = ({
                           <TableCell className="py-3.5">
                             <span
                               className={`text-xs font-semibold ${
-                                item.lineGroup === "GO_1" ? "text-[#EC4899]" : "text-[#2563EB]"
+                                item.lineGroup === "GO_1"
+                                  ? "text-[#EC4899]"
+                                  : item.lineGroup === "GO_2"
+                                    ? "text-[#2563EB]"
+                                    : "text-[#A1A1AA]"
                               }`}
                             >
-                              {item.lineGroup.replace("_", " ")}
+                              {item.lineGroup ? item.lineGroup.replace("_", " ") : "Belum pilih"}
                             </span>
                           </TableCell>
                           <TableCell className="py-3.5 text-xs text-[#71717A] whitespace-nowrap">

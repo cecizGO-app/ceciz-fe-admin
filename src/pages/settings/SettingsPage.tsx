@@ -42,71 +42,64 @@ export const SettingsPage: React.FC = () => {
     }, 3000);
   };
 
-  const handleSaveCheckout = () => {
+  const handleSaveCheckout = async () => {
     setSavingSection("checkout");
-    setTimeout(() => {
-      settingsService.updateSection("checkoutLinks", settings.checkoutLinks);
-      setSavingSection(null);
-      showToast("Link checkout buyer berhasil disimpan & diterapkan!");
-    }, 300);
+    const updated = await settingsService.updateSectionAsync("checkoutLinks", settings.checkoutLinks);
+    setSettings(updated);
+    setSavingSection(null);
+    showToast("Link checkout buyer berhasil disimpan & diterapkan!");
   };
 
-  const handleSaveFeeNyelem = () => {
+  const handleSaveFeeNyelem = async () => {
     setSavingSection("feeNyelem");
-    setTimeout(() => {
-      settingsService.updateSection("feeNyelem", settings.feeNyelem);
-      setSavingSection(null);
-      showToast("Fee nyelem berhasil disimpan!");
-    }, 300);
+    const updated = await settingsService.updateSectionAsync("feeNyelem", settings.feeNyelem);
+    setSettings(updated);
+    setSavingSection(null);
+    showToast("Fee nyelem berhasil disimpan ke server!");
   };
 
-  const handleSaveDailyRates = () => {
+  const handleSaveDailyRates = async () => {
     setSavingSection("dailyRates");
-    setTimeout(() => {
-      settingsService.updateSection("dailyRates", settings.dailyRates);
-      setSavingSection(null);
-      showToast("Rate harian berhasil diperbarui!");
-    }, 300);
+    const updated = await settingsService.updateSectionAsync("dailyRates", settings.dailyRates);
+    setSettings(updated);
+    setSavingSection(null);
+    showToast("Rate harian berhasil disimpan ke server!");
   };
 
-  const handleSaveFeeRekap = () => {
+  const handleSaveFeeRekap = async () => {
     setSavingSection("feeRekap");
-    setTimeout(() => {
-      settingsService.updateSection("feeRekap", settings.feeRekap);
-      setSavingSection(null);
-      showToast("Fee rekap tiered berhasil disimpan!");
-    }, 300);
+    const updated = await settingsService.updateSectionAsync("feeRekap", settings.feeRekap);
+    setSettings(updated);
+    setSavingSection(null);
+    showToast("Fee rekap tiered PRD berhasil disimpan ke server!");
   };
 
-  const handleSavePenaltyRules = () => {
+  const handleSavePenaltyRules = async () => {
     setSavingSection("penaltyRules");
-    setTimeout(() => {
-      settingsService.updateSection("penaltyRules", settings.penaltyRules);
-      setSavingSection(null);
-      showToast("Penalty rules berhasil disimpan!");
-    }, 300);
+    const updated = await settingsService.updateSectionAsync("penaltyRules", settings.penaltyRules);
+    setSettings(updated);
+    setSavingSection(null);
+    showToast("Penalty rules berhasil disimpan ke server!");
   };
 
-  const handleSaveTaxRate = () => {
+  const handleSaveTaxRate = async () => {
     setSavingSection("taxRate");
-    setTimeout(() => {
-      settingsService.updateSection("taxRate", settings.taxRate);
-      setSavingSection(null);
-      showToast("Tax rate berhasil disimpan!");
-    }, 300);
+    const updated = await settingsService.updateSectionAsync("taxRate", settings.taxRate);
+    setSettings(updated);
+    setSavingSection(null);
+    showToast("Tax rate berhasil disimpan ke server!");
   };
 
-  const handleSaveStorage = () => {
+  const handleSaveStorage = async () => {
     setSavingSection("storage");
-    setTimeout(() => {
-      settingsService.updateSection("storage", settings.storage);
-      setSavingSection(null);
-      showToast("Maximum storage duration berhasil disimpan!");
-    }, 300);
+    const updated = await settingsService.updateSectionAsync("storage", settings.storage);
+    setSettings(updated);
+    setSavingSection(null);
+    showToast("Maximum storage duration berhasil disimpan ke server!");
   };
 
-  const handleResetDefaults = () => {
-    const defaultData = settingsService.resetToDefault();
+  const handleResetDefaults = async () => {
+    const defaultData = await settingsService.resetToDefaultAsync();
     setSettings(defaultData);
     showToast("Semua pengaturan dikembalikan ke default.");
   };

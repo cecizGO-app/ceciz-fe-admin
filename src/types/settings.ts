@@ -1,3 +1,6 @@
+import type { FeeRekapTier } from "@/lib/calculations/fee-rekap";
+export type { FeeRekapTier };
+
 export interface BuyerCheckoutLinks {
   googleFormUrl: string;
   shopeeCheckoutUrl: string;
@@ -19,9 +22,7 @@ export interface DailyRatesSettings {
 }
 
 export interface FeeRekapSettings {
-  tier1_1_10: number; // Tier 1 · 1-10 PC
-  tier2_11_25: number; // Tier 2 · 11-25 PC
-  tier3_26_plus: number; // Tier 3 · 26+ PC
+  tiers: FeeRekapTier[];
 }
 
 export interface PenaltyRulesSettings {

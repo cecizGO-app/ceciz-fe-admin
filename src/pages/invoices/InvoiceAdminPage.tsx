@@ -159,7 +159,9 @@ export const InvoiceAdminPage: React.FC = () => {
     try {
       await generateBatchInvoicesApi({
         batchId: selectedBatchId,
-        deadlinePayment: deadlineInput || undefined,
+        deadlinePayment: deadlineInput
+          ? `${deadlineInput}T23:59:59+07:00`
+          : undefined,
       });
       setGenerateOpen(false);
       setSelectedBatchId("");

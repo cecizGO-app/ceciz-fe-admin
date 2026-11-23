@@ -1,5 +1,5 @@
 import type { CountryCode, OrderRow, CalculationSummary } from "@/types/batch";
-import { calculateFeeRekap } from "./fee-rekap";
+import { calculateFeeRekap, type FeeRekapTier } from "./fee-rekap";
 
 export interface BatchPreviewInput {
   countryCode: CountryCode;
@@ -12,6 +12,7 @@ export interface BatchPreviewInput {
   feeGO: number;
   feeNyelem: number; // For CH/TH/KR: per pc (default 2000). For JP: total batch. For INA: fee adm nyelem.
   hargaCOShopeeSeller?: number; // Khusus INA
+  feeRekapTiers?: FeeRekapTier[];
 }
 
 export interface BatchPreviewResult {
@@ -38,6 +39,7 @@ export function calculateBatchPreview(
     feeGO,
     feeNyelem,
     hargaCOShopeeSeller = 0,
+    feeRekapTiers,
   } = input;
 
   const isJapan = countryCode === "JP";
@@ -58,8 +60,8 @@ export function calculateBatchPreview(
     return sum + qty * harga;
   }, 0);
 
-  // 2. Fee Rekap Tiered (berdasarkan total pcs dalam batch)
-  const { fee: feeRekap, tierLabel } = calculateFeeRekap(totalQty);
+  // 2. Fee Rekap Tiered (berdasarkan total pcs dalam batch + tier dari Settings)
+  const { fee: feeRekap, tierLabel } = calculateFeeRekap(totalQty, feeRekapTiers);
 
   // 3. Konversi ke IDR & Shipping Luar Negeri
   let konversiIDR = 0;

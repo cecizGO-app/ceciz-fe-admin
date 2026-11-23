@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { type TaxInvoiceItem, formatReadableDateTime } from "@/types/tax";
+import { formatReadableDateTime } from "@/types/tax";
 import { getTaxPreviewApi } from "@/services/tax.service";
 
 interface ReleaseItemPreview {
@@ -98,10 +98,17 @@ const mockUnbilledItems: ReleaseItemPreview[] = [
   },
 ];
 
+export interface TaxReleaseRequestPayload {
+  releaseName: string;
+  releasePeriod: string;
+  deadlinePayment: string;
+  notes?: string;
+}
+
 interface ReleaseTaxWizardModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccessRelease: (newInvoices: TaxInvoiceItem[], periodName: string) => void;
+  onSuccessRelease: (payload: TaxReleaseRequestPayload) => Promise<void> | void;
 }
 
 export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
@@ -111,6 +118,7 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [previewItems, setPreviewItems] = useState<ReleaseItemPreview[]>(mockUnbilledItems);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Step 2 Configuration state
   const [releaseName, setReleaseName] = useState("TAGIHAN TAX 24");
@@ -149,53 +157,21 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
     else if (currentStep === 2) setCurrentStep(1);
   };
 
-  const handleConfirm = () => {
-    // Generate new mock invoices released via wizard
-    const generatedInvoices: TaxInvoiceItem[] = [
-      {
-        id: "TAX-024",
-        buyerName: "Amanda Manopo",
-        buyerHandle: "@amandamn",
-        buyerPhone: "0812-7766-5544",
-        buyerLineId: "amandamn",
-        status: "Unpaid",
-        batches: [
-          {
-            batchCode: "CH-025",
-            country: "CH",
-            itemName: "IVE Switch Photocard",
-            qty: 3,
-            isPhotocard: true,
-            itemTax: 21000,
-          },
-          {
-            batchCode: "KR-019",
-            country: "KR",
-            itemName: "NCT Wish Album",
-            qty: 2,
-            isPhotocard: false,
-            itemTax: 96000,
-          },
-        ],
-        totalItemsCount: 5,
-        itemSummary: "3 PC, 2 Album",
-        totalAmount: 117000,
-        penaltyAmount: 0,
-        penaltyWaived: false,
-        deadline: formatReadableDateTime(deadlineDateTime),
-        rawDeadline: new Date(deadlineDateTime).toISOString(),
-        maxCheckoutDate: maxCheckoutDate,
-        period: releaseName,
-        periodMonth: period,
-        hasProof: false,
-        proofStatus: "none",
-        notes: buyerNotes.trim(),
-      },
-    ];
-
-    onSuccessRelease(generatedInvoices, period);
-    onOpenChange(false);
-    setCurrentStep(1);
+  const handleConfirm = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onSuccessRelease({
+        releaseName: releaseName.trim() || "TAGIHAN TAX",
+        releasePeriod: period.trim() || releaseName.trim(),
+        deadlinePayment: new Date(deadlineDateTime).toISOString(),
+        notes: buyerNotes.trim() || undefined,
+      });
+      onOpenChange(false);
+      setCurrentStep(1);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -554,11 +530,12 @@ export const ReleaseTaxWizardModal: React.FC<ReleaseTaxWizardModalProps> = ({
                 </button>
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={handleConfirm}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[12px] bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all cursor-pointer disabled:opacity-60"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Konfirmasi &amp; Rilis Tagihan</span>
+                  <span>{isSubmitting ? "Merilis..." : "Konfirmasi & Rilis Tagihan"}</span>
                 </button>
               </div>
             </div>
